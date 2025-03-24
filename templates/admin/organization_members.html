@@ -19,6 +19,12 @@
         </div>
     </div>
     <div class="card-body">
+        <!-- Section Help -->
+        <div class="section-help mb-4">
+            <h6><i class="fas fa-info-circle"></i> Member Management</h6>
+            <p>Add, remove, or change roles of organization members. The organization owner has full administrative control over the organization's settings and members.</p>
+        </div>
+        
         <div class="alert alert-info">
             <p><strong>Organization Owner:</strong> 
                 {% if organization.owner %}
@@ -33,18 +39,26 @@
             <div class="row">
                 <div class="col-md-8">
                     <div class="mb-3">
-                        <label for="new_member" class="form-label">Add New Member</label>
+                        <label for="new_member" class="form-label">Add New Member
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Select a user to add as a member of this organization">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </label>
                         <select class="form-select" id="new_member" name="new_member">
                             <option value="">-- Select a user --</option>
                             {% for user in available_users %}
                             <option value="{{ user.id }}">{{ user.username }} ({{ user.email }})</option>
                             {% endfor %}
                         </select>
+                        <div class="form-text">Only users who are not already members of this organization will appear in this list</div>
                     </div>
                 </div>
                 <div class="col-md-4 d-flex align-items-end">
                     <button type="submit" name="action" value="add_member" class="btn btn-primary">
                         <i class="fas fa-user-plus"></i> Add Member
+                        <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Add the selected user to this organization">
+                            <i class="fas fa-question"></i>
+                        </span>
                     </button>
                 </div>
             </div>
@@ -55,10 +69,26 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Actions</th>
+                        <th>Username
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="User's login identifier">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </th>
+                        <th>Email
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="User's contact email address">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </th>
+                        <th>Role
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="User's role within this organization">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </th>
+                        <th>Actions
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Available actions for this member">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
@@ -79,16 +109,25 @@
                                 <input type="hidden" name="member_id" value="{{ member.id }}">
                                 <button type="submit" name="action" value="remove_member" class="btn btn-sm btn-danger">
                                     <i class="fas fa-user-minus"></i> Remove
+                                    <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Remove this user from the organization">
+                                        <i class="fas fa-question"></i>
+                                    </span>
                                 </button>
                             </form>
                             <form method="post" class="d-inline">
                                 <input type="hidden" name="member_id" value="{{ member.id }}">
                                 <button type="submit" name="action" value="make_owner" class="btn btn-sm btn-primary">
                                     <i class="fas fa-user-shield"></i> Make Owner
+                                    <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Transfer ownership of this organization to this user">
+                                        <i class="fas fa-question"></i>
+                                    </span>
                                 </button>
                             </form>
                             {% else %}
                             <span class="text-muted">Cannot modify owner</span>
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="The organization owner cannot be removed or modified">
+                                <i class="fas fa-question"></i>
+                            </span>
                             {% endif %}
                         </td>
                     </tr>
