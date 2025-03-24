@@ -42,44 +42,88 @@ class KenyaLawScraper:
             soup = BeautifulSoup(response.text, 'html.parser')
             cases = []
             
-            # Look for case listings in the document list (table rows)
-            case_listings = soup.select('table.document-list-items tr.document-list-item')
+            # Find the document table - based on the HTML structure from the Kenya Law website
+            doc_table = soup.select_one('table.doc-table')
             
-            # If we didn't find cases in a table, try article elements
-            if not case_listings:
-                case_listings = soup.select('main#top article.document-list-item')
+            if doc_table:
+                # Find all table rows that are not the header row
+                case_listings = doc_table.select('tbody tr')
+                
+                # Extract case information from each listing
+                count = 0
+                for case in case_listings:
+                    # Skip if we've reached the limit
+                    if count >= limit:
+                        break
+                    
+                    # Skip date grouping rows (these have an id attribute)
+                    if case.select_one('td[id]'):
+                        continue
+                    
+                    # Find the title cell and link
+                    title_cell = case.select_one('td.cell-title')
+                    if title_cell:
+                        title_elem = title_cell.select_one('a')
+                        
+                        if title_elem:
+                            title = title_elem.text.strip()
+                            href = title_elem.get('href', '')
+                            
+                            # Normalize the URL
+                            if href.startswith('/'):
+                                link = urljoin(self.base_url, href)
+                            elif href.startswith('http'):
+                                link = href
+                            else:
+                                link = urljoin(self.base_url, '/' + href)
+                            
+                            # Get metadata - looking for date/court information in the title
+                            meta = {}
+                            
+                            # Extract date from title if present
+                            date_match = re.search(r'\((\d+\s+\w+\s+\d{4})\)', title)
+                            if date_match:
+                                meta['Date'] = date_match.group(1)
+                            
+                            # Extract case type if present
+                            type_match = re.search(r'\((Judgment|Ruling|Advisory Opinion|Order)\)', title)
+                            if type_match:
+                                meta['Type'] = type_match.group(1)
+                            
+                            # Extract case number if present
+                            case_num_match = re.search(r'\((Petition|Reference|Application|Civil Appeal|Criminal Appeal)\s+[^)]+\)', title)
+                            if case_num_match:
+                                meta['Case Number'] = case_num_match.group(0).strip('()')
+                            
+                            # Create case dictionary and add to results
+                            cases.append({
+                                'title': title,
+                                'link': link,
+                                'metadata': meta
+                            })
+                            count += 1
             
-            # If still not found, try any div with document-list-item class
-            if not case_listings:
-                case_listings = soup.select('.document-list-item')
-            
-            # Extract case information from each listing
-            count = 0
-            for case in case_listings:
-                # Skip if we've reached the limit
-                if count >= limit:
-                    break
+            # If no cases found in the table, try alternative selectors
+            if not cases:
+                # Look for case links in articles
+                article_links = soup.select('main#top article a')
                 
-                # Try to find the title and link in various ways
-                title_elem = None
-                link = None
-                
-                # Try to find title in h3 or h4 elements
-                for h_tag in ['h3', 'h4']:
-                    if title_elem is None:
-                        title_elem = case.select_one(f'{h_tag} a')
-                
-                # If not found, try any link with content
-                if title_elem is None:
-                    links = case.select('a')
-                    for a in links:
-                        if a.text.strip() and not a.has_attr('aria-label'):
-                            title_elem = a
-                            break
-                
-                if title_elem:
-                    title = title_elem.text.strip()
-                    href = title_elem.get('href', '')
+                count = 0
+                for link_elem in article_links:
+                    # Skip if we've reached the limit
+                    if count >= limit:
+                        break
+                    
+                    # Skip links without text
+                    if not link_elem.text.strip():
+                        continue
+                    
+                    # Skip navigation links
+                    if link_elem.has_attr('aria-label') or 'nav-link' in link_elem.get('class', []):
+                        continue
+                    
+                    title = link_elem.text.strip()
+                    href = link_elem.get('href', '')
                     
                     # Normalize the URL
                     if href.startswith('/'):
@@ -89,32 +133,11 @@ class KenyaLawScraper:
                     else:
                         link = urljoin(self.base_url, '/' + href)
                     
-                    # Get metadata
-                    meta = {}
-                    
-                    # Look for a date field
-                    date_elem = case.select_one('.document-list-date')
-                    if date_elem:
-                        meta['Date'] = date_elem.text.strip()
-                    
-                    # Look for other metadata
-                    meta_elems = case.select('.meta')
-                    for elem in meta_elems:
-                        text = elem.text.strip()
-                        # Split by common separators to get key-value pairs
-                        for separator in [':', '-', '–']:
-                            if separator in text:
-                                parts = text.split(separator, 1)
-                                key = parts[0].strip()
-                                value = parts[1].strip()
-                                meta[key] = value
-                                break
-                    
                     # Create case dictionary and add to results
                     cases.append({
                         'title': title,
                         'link': link,
-                        'metadata': meta
+                        'metadata': {}
                     })
                     count += 1
             
