@@ -173,36 +173,36 @@
                                 </thead>
                                 <tbody>
                                     {% set day_counter = 0 %}
-                                    {% for week in range((days_in_month + first_day_weekday + (7 - (days_in_month + first_day_weekday) % 7) % 7) // 7) %}
+                                    <!-- Calculate the number of weeks to display in the month view -->
+                                    {% set num_weeks = (days_in_month + first_day_weekday + (7 - (days_in_month + first_day_weekday) % 7) % 7) // 7 %}
+                                    {% for week in range(num_weeks) %}
                                         <tr>
                                             {% for day in range(7) %}
-                                                {% set actual_day = day_counter - first_day_weekday + 1 %}
-                                                {% set day_date = start_date + timedelta(days=actual_day - 1) if actual_day > 0 and actual_day <= days_in_month else None %}
-                                                <td class="{% if day_date and day_date.month != current_date.month %}text-muted{% endif %} {% if day_date and day_date == current_date %}bg-light{% endif %}" style="height: 120px; width: 14.28%; vertical-align: top;">
-                                                    {% if day_date %}
-                                                        <div class="d-flex justify-content-between">
-                                                            <span>{{ day_date.day }}</span>
-                                                            <a href="{{ url_for('events.create') }}?date={{ day_date.strftime('%Y-%m-%d') }}" class="text-primary small">
-                                                                <i class="fas fa-plus-circle"></i>
-                                                            </a>
-                                                        </div>
-                                                        <div class="mt-1">
-                                                            {% if day_date in events_by_date %}
-                                                                {% for event in events_by_date[day_date][:3] %}
-                                                                    <div class="calendar-event p-1 mb-1 rounded small {% if event.priority == 1 %}bg-danger text-white{% elif event.priority == 2 %}bg-warning{% else %}bg-light{% endif %} {% if event.conflict_status %}border border-danger{% endif %}">
-                                                                        <a href="{{ url_for('events.view', event_id=event.id) }}" class="{% if event.priority == 1 %}text-white{% else %}text-dark{% endif %} text-decoration-none">
-                                                                            {{ event.start_time.strftime('%H:%M') }} {{ event.title }}
-                                                                        </a>
-                                                                    </div>
-                                                                {% endfor %}
-                                                                {% if events_by_date[day_date]|length > 3 %}
-                                                                    <div class="text-muted small">
-                                                                        + {{ events_by_date[day_date]|length - 3 }} more
-                                                                    </div>
-                                                                {% endif %}
+                                                {% set current_day = day_counter %}
+                                                {% set day_date = start_range + timedelta(days=current_day) %}
+                                                <td class="{% if day_date.month != start_date.month %}text-muted{% endif %} {% if day_date == current_date %}bg-light{% endif %}" style="height: 120px; width: 14.28%; vertical-align: top;">
+                                                    <div class="d-flex justify-content-between">
+                                                        <span>{{ day_date.day }}</span>
+                                                        <a href="{{ url_for('events.create') }}?date={{ day_date.strftime('%Y-%m-%d') }}" class="text-primary small">
+                                                            <i class="fas fa-plus-circle"></i>
+                                                        </a>
+                                                    </div>
+                                                    <div class="mt-1">
+                                                        {% if day_date in events_by_date %}
+                                                            {% for event in events_by_date[day_date][:3] %}
+                                                                <div class="calendar-event p-1 mb-1 rounded small {% if event.priority == 1 %}bg-danger text-white{% elif event.priority == 2 %}bg-warning{% else %}bg-light{% endif %} {% if event.conflict_status %}border border-danger{% endif %}">
+                                                                    <a href="{{ url_for('events.view', event_id=event.id) }}" class="{% if event.priority == 1 %}text-white{% else %}text-dark{% endif %} text-decoration-none">
+                                                                        {{ event.start_time.strftime('%H:%M') }} {{ event.title }}
+                                                                    </a>
+                                                                </div>
+                                                            {% endfor %}
+                                                            {% if events_by_date[day_date]|length > 3 %}
+                                                                <div class="text-muted small">
+                                                                    + {{ events_by_date[day_date]|length - 3 }} more
+                                                                </div>
                                                             {% endif %}
-                                                        </div>
-                                                    {% endif %}
+                                                        {% endif %}
+                                                    </div>
                                                 </td>
                                                 {% set day_counter = day_counter + 1 %}
                                             {% endfor %}

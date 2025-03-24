@@ -57,8 +57,8 @@ def index():
 @login_required
 def calendar():
     """Calendar view of events"""
-    # Get view type (month, week, day) - for dashboard always default to month
-    view_type = 'month'
+    # Default to month view for dashboard
+    view_type = request.args.get('view', 'month')
     
     # Get date parameters
     date_str = request.args.get('date')
@@ -70,20 +70,35 @@ def calendar():
     else:
         current_date = datetime.now().date()
     
-    # Calculate date range based on view type
-    start_date = current_date.replace(day=1)
-    if start_date.month == 12:
-        end_date = datetime(start_date.year + 1, 1, 1).date() - timedelta(days=1)
-    else:
-        end_date = datetime(start_date.year, start_date.month + 1, 1).date() - timedelta(days=1)
-    
-    # We need to include the days from the previous and next months to fill the calendar grid
-    first_day_weekday = start_date.weekday()
-    start_range = start_date - timedelta(days=first_day_weekday)
-    
-    last_day_weekday = end_date.weekday()
-    days_to_next_month = 6 - last_day_weekday
-    end_range = end_date + timedelta(days=days_to_next_month)
+    # For month view, always start at the first day of the month
+    if view_type == 'month':
+        # Calculate date range for month view
+        start_date = current_date.replace(day=1)
+        if start_date.month == 12:
+            end_date = datetime(start_date.year + 1, 1, 1).date() - timedelta(days=1)
+        else:
+            end_date = datetime(start_date.year, start_date.month + 1, 1).date() - timedelta(days=1)
+            
+        # Include days from previous/next months to fill calendar grid
+        first_day_weekday = start_date.weekday()
+        start_range = start_date - timedelta(days=first_day_weekday)
+        
+        last_day_weekday = end_date.weekday()
+        days_to_next_month = 6 - last_day_weekday
+        end_range = end_date + timedelta(days=days_to_next_month)
+        
+    elif view_type == 'week':
+        # Calculate date range for week view
+        start_date = current_date - timedelta(days=current_date.weekday())
+        end_date = start_date + timedelta(days=6)
+        start_range = start_date
+        end_range = end_date
+        
+    else:  # day view
+        start_date = current_date
+        end_date = current_date
+        start_range = start_date
+        end_range = end_date
     
     # Get events for the date range
     events = Event.query.filter(
@@ -118,18 +133,22 @@ def calendar():
         db.session.commit()
     
     # Calculate navigation dates
-    if current_date.month == 1:
-        prev_month = datetime(current_date.year - 1, 12, 1).date()
-    else:
-        prev_month = datetime(current_date.year, current_date.month - 1, 1).date()
-        
-    if current_date.month == 12:
-        next_month = datetime(current_date.year + 1, 1, 1).date()
-    else:
-        next_month = datetime(current_date.year, current_date.month + 1, 1).date()
-    
-    prev_date = prev_month
-    next_date = next_month
+    if view_type == 'month':
+        if current_date.month == 1:
+            prev_date = datetime(current_date.year - 1, 12, 1).date()
+        else:
+            prev_date = datetime(current_date.year, current_date.month - 1, 1).date()
+            
+        if current_date.month == 12:
+            next_date = datetime(current_date.year + 1, 1, 1).date()
+        else:
+            next_date = datetime(current_date.year, current_date.month + 1, 1).date()
+    elif view_type == 'week':
+        prev_date = current_date - timedelta(days=7)
+        next_date = current_date + timedelta(days=7)
+    else:  # day view
+        prev_date = current_date - timedelta(days=1)
+        next_date = current_date + timedelta(days=1)
     
     # Get cases for the filter sidebar
     cases = Case.query.filter_by(user_id=current_user.id).order_by(Case.title).all()
@@ -143,6 +162,8 @@ def calendar():
         current_date=current_date,
         start_date=start_date,
         end_date=end_date,
+        start_range=start_range,
+        end_range=end_range,
         events_by_date=events_by_date,
         conflicts=conflicts,
         prev_date=prev_date,
