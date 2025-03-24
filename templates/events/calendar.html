@@ -178,9 +178,8 @@
                                     {% for week in range(num_weeks) %}
                                         <tr>
                                             {% for day in range(7) %}
-                                                {% set current_day = day_counter %}
                                                 {% if start_range %}
-                                                    {% set day_date = start_range + timedelta(days=current_day) %}
+                                                    {% set day_date = start_range + timedelta(days=day_counter) %}
                                                     <td class="{% if day_date.month != start_date.month %}text-muted{% endif %} {% if day_date == current_date %}bg-light{% endif %}" style="height: 120px; width: 14.28%; vertical-align: top;">
                                                         <div class="d-flex justify-content-between">
                                                             <span>{{ day_date.day }}</span>
