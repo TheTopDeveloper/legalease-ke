@@ -16,6 +16,116 @@ from datetime import datetime, timedelta
 # Configure logging
 logger = logging.getLogger(__name__)
 
+# Check if Twilio is available
+try:
+    from twilio.rest import Client
+    from twilio.base.exceptions import TwilioRestException
+    TWILIO_AVAILABLE = True
+except ImportError:
+    TWILIO_AVAILABLE = False
+    logger.warning("Twilio package not available. Using mock SMS service instead.")
+except Exception as e:
+    TWILIO_AVAILABLE = False
+    logger.warning(f"Error importing Twilio: {str(e)}. Using mock SMS service instead.")
+
+class TwilioSMSService:
+    """
+    Twilio SMS service for sending real SMS messages.
+    Requires valid Twilio credentials in environment variables:
+    - TWILIO_ACCOUNT_SID
+    - TWILIO_AUTH_TOKEN
+    - TWILIO_PHONE_NUMBER
+    """
+    
+    def __init__(self):
+        """Initialize the Twilio SMS service"""
+        self.account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
+        self.auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
+        self.phone_number = os.environ.get('TWILIO_PHONE_NUMBER')
+        self.client = None
+        self.sent_messages = []  # Keep a local record for consistency with mock
+        
+        if not self.account_sid or not self.auth_token or not self.phone_number:
+            logger.warning("Missing Twilio credentials. SMS sending will fail.")
+        else:
+            try:
+                self.client = Client(self.account_sid, self.auth_token)
+            except Exception as e:
+                logger.error(f"Failed to initialize Twilio client: {str(e)}")
+    
+    def send_sms(self, to_phone_number, message):
+        """
+        Send an SMS message using Twilio
+        
+        Args:
+            to_phone_number: Recipient phone number
+            message: SMS message content
+            
+        Returns:
+            Dict with success status and message ID
+        """
+        if not self.client:
+            logger.error("Twilio client not initialized. Check credentials.")
+            return {'success': False, 'error': 'Twilio client not initialized'}
+        
+        # Ensure phone number is in international format
+        if not to_phone_number.startswith('+'):
+            # If no country code, assume Kenya (+254)
+            if to_phone_number.startswith('0'):
+                to_phone_number = '+254' + to_phone_number[1:]
+            else:
+                to_phone_number = '+' + to_phone_number
+        
+        try:
+            # Send message through Twilio
+            twilio_message = self.client.messages.create(
+                body=message,
+                from_=self.phone_number,
+                to=to_phone_number
+            )
+            
+            # Store in sent messages for consistency with mock
+            self.sent_messages.append({
+                'to': to_phone_number,
+                'message': message,
+                'timestamp': datetime.utcnow(),
+                'message_id': twilio_message.sid
+            })
+            
+            logger.info(f"SMS sent via Twilio to {to_phone_number}")
+            return {
+                'success': True,
+                'message_id': twilio_message.sid
+            }
+            
+        except TwilioRestException as e:
+            logger.error(f"Twilio error: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
+        except Exception as e:
+            logger.error(f"Failed to send SMS via Twilio: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
+    
+    def get_sent_messages(self, to_phone_number=None):
+        """
+        Get sent messages from local cache
+        
+        Args:
+            to_phone_number: Optional filter by recipient
+            
+        Returns:
+            List of sent messages
+        """
+        if to_phone_number:
+            return [msg for msg in self.sent_messages if msg['to'] == to_phone_number]
+        return self.sent_messages
+
+
 class MockSMSService:
     """
     Mock SMS service for testing without actual SMS provider.
@@ -79,9 +189,24 @@ class NotificationService:
         Initialize notification service
         
         Args:
-            sms_service: SMS service to use (defaults to MockSMSService)
+            sms_service: SMS service to use (defaults to TwilioSMSService if available, otherwise MockSMSService)
         """
-        self.sms_service = sms_service or MockSMSService()
+        if sms_service:
+            self.sms_service = sms_service
+        else:
+            # Use Twilio if available and credentials are set
+            twilio_creds_available = all([
+                os.environ.get('TWILIO_ACCOUNT_SID'),
+                os.environ.get('TWILIO_AUTH_TOKEN'),
+                os.environ.get('TWILIO_PHONE_NUMBER')
+            ])
+            
+            if TWILIO_AVAILABLE and twilio_creds_available:
+                logger.info("Using Twilio SMS service for notifications")
+                self.sms_service = TwilioSMSService()
+            else:
+                logger.info("Using Mock SMS service for notifications")
+                self.sms_service = MockSMSService()
     
     def send_court_date_reminder(self, user, case, event):
         """
