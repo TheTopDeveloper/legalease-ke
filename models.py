@@ -307,10 +307,19 @@ class UserProfile(db.Model):
     
     def add_points(self, points):
         """Add points and update level if necessary"""
+        # Initialize total_points if None
+        if self.total_points is None:
+            self.total_points = 0
+            
         self.total_points += points
         
         # Update level (simple level calculation based on points)
         new_level = 1 + (self.total_points // 100)  # Level up every 100 points
+        
+        # Initialize level if None
+        if self.level is None:
+            self.level = 1
+            
         if new_level > self.level:
             self.level = new_level
             # Update title based on level

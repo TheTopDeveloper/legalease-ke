@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from app import db
-from models import UserProfile, Achievement, UserAchievement, Activity, Challenge, UserChallenge
+from models import User, UserProfile, Achievement, UserAchievement, Activity, Challenge, UserChallenge
 
 # Create blueprint
 gamification_bp = Blueprint('gamification', __name__, url_prefix='/gamification')
