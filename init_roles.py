@@ -14,9 +14,8 @@ logger = logging.getLogger(__name__)
 def init_roles_and_permissions():
     """Initialize default roles and permissions"""
     
-    with app.app_context():
-        # First, create all permissions
-        logger.info("Creating permissions...")
+    # First, create all permissions
+    logger.info("Creating permissions...")
         
         # Get all permission constants from the Permissions class
         permissions_list = []
