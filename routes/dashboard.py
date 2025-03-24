@@ -98,14 +98,18 @@ def calendar():
     
     next_month = end_date
     
-    return render_template('dashboard/calendar.html',
+    return render_template('events/calendar.html',
                           start_date=start_date,
                           end_date=end_date,
                           first_day_weekday=first_day_weekday,
                           days_in_month=days_in_month,
                           events_by_date=events_by_date,
                           prev_month=prev_month,
-                          next_month=next_month)
+                          next_month=next_month,
+                          view_type='month',
+                          current_date=start_date,
+                          cases=Case.query.filter_by(user_id=current_user.id).all(),
+                          timedelta=timedelta)
 
 # Import request here to avoid circular imports
 from flask import request
