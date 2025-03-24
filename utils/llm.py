@@ -52,7 +52,7 @@ class OllamaClient:
             }
             
             logger.debug(f"Sending request to OLLAMA: {url}, model: {model}")
-            response = requests.post(url, json=payload)
+            response = requests.post(url, json=payload, timeout=5)  # Add a 5 second timeout
             response.raise_for_status()
             
             result = response.json()
@@ -62,7 +62,8 @@ class OllamaClient:
         
         except Exception as e:
             logger.error(f"Error generating text with OLLAMA: {str(e)}")
-            return f"Error: Unable to generate text. {str(e)}"
+            # Return None instead of an error message to allow fallback handling
+            return None
     
     def get_embedding(self, text: str, model: Optional[str] = None) -> List[float]:
         """
@@ -125,7 +126,7 @@ class OllamaClient:
             }
             
             logger.debug(f"Sending chat request to OLLAMA: {url}, model: {model}")
-            response = requests.post(url, json=payload)
+            response = requests.post(url, json=payload, timeout=5)  # Add a 5 second timeout
             response.raise_for_status()
             
             result = response.json()
@@ -136,7 +137,8 @@ class OllamaClient:
         
         except Exception as e:
             logger.error(f"Error generating chat response with OLLAMA: {str(e)}")
-            return f"Error: Unable to generate response. {str(e)}"
+            # Return None instead of an error message to allow fallback handling
+            return None
 
 class LegalAssistant:
     """
@@ -183,6 +185,18 @@ class LegalAssistant:
         """
         
         response = self.llm_client.generate(prompt, temperature=0.1)
+        
+        # If LLM connection failed, return a default analysis with a notice
+        if response is None:
+            return {
+                'full_analysis': "Unable to analyze case due to AI service unavailability. Please try again later.",
+                'summary': "AI service unavailable",
+                'legal_issues': "Unable to extract legal issues at this time",
+                'legal_principles': "Unable to extract legal principles at this time",
+                'decision': "Unable to extract decision at this time",
+                'precedents_cited': "Unable to extract precedents at this time",
+                'statutes_referenced': "Unable to extract statutes at this time"
+            }
         
         # Attempt to extract structured information
         analysis = {
@@ -252,6 +266,18 @@ class LegalAssistant:
         """
         
         response = self.llm_client.generate(prompt, temperature=0.1)
+        
+        # If LLM connection failed, return a default analysis with a notice
+        if response is None:
+            return {
+                'full_analysis': "Unable to analyze statute due to AI service unavailability. Please try again later.",
+                'title': "AI service unavailable",
+                'purpose': "Unable to extract purpose at this time",
+                'key_definitions': "Unable to extract key definitions at this time",
+                'main_provisions': "Unable to extract main provisions at this time",
+                'obligations': "Unable to extract obligations at this time",
+                'penalties': "Unable to extract penalties at this time"
+            }
         
         # Attempt to extract structured information
         analysis = {

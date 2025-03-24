@@ -1,0 +1,23 @@
+
+{{ law_firm_letterhead }}
+
+{{ date }}
+
+{{ recipient_name }}
+{{ recipient_address }}
+
+Dear Sir/Madam,
+
+RE: {{ demand_subject }}
+
+We act for {{ client_name }} (our client), and have been instructed to address you as follows:
+
+{{ demand_content }}
+
+TAKE NOTICE that unless we receive your payment/response within {{ response_period }} days from the date of this letter, we have firm instructions to institute legal proceedings against you without further reference to you and at your own risk as to costs and incidental expenses.
+
+Yours faithfully,
+
+{{ lawyer_name }}
+{{ lawyer_title }}
+{{ law_firm }}

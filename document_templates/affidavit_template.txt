@@ -1,0 +1,28 @@
+
+REPUBLIC OF KENYA
+IN THE {{ court_name }} AT {{ court_location }}
+
+{{ case_type }} CASE NO. {{ case_number }} OF {{ year }}
+
+BETWEEN
+
+{{ plaintiff }} ............................................................. PLAINTIFF
+
+AND
+
+{{ defendant }} ........................................................... DEFENDANT
+
+AFFIDAVIT
+
+I, {{ deponent_name }} of Post Office Box Number {{ deponent_address }} and residing at {{ deponent_residence }}, {{ deponent_occupation }}, do make oath and state as follows:
+
+{{ affidavit_content }}
+
+SWORN at {{ city }}            )
+this {{ day }} day of {{ month }} {{ year }}  ) ________________________
+by the said {{ deponent_name }}    )          DEPONENT
+                                  )
+BEFORE ME                        )
+                                  )
+                                  )
+COMMISSIONER FOR OATHS            )

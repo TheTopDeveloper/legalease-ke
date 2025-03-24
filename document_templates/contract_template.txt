@@ -1,0 +1,42 @@
+
+{{ contract_title|upper }}
+
+THIS AGREEMENT is made on the {{ day }} day of {{ month }} {{ year }}
+
+BETWEEN:
+
+{{ party1_name }} of {{ party1_address }} (hereinafter referred to as "{{ party1_reference }}")
+
+AND
+
+{{ party2_name }} of {{ party2_address }} (hereinafter referred to as "{{ party2_reference }}")
+
+WHEREAS:
+
+{{ recitals }}
+
+NOW THEREFORE IT IS HEREBY AGREED as follows:
+
+{{ contract_clauses }}
+
+IN WITNESS WHEREOF the parties hereto have executed this Agreement on the day and year first above written.
+
+SIGNED by {{ party1_name }}        )
+                                  )
+                                  ) ___________________________
+in the presence of:               )
+                                  
+Witness: ______________________
+Name: _________________________
+Address: ______________________
+Occupation: ___________________
+
+SIGNED by {{ party2_name }}        )
+                                  )
+                                  ) ___________________________
+in the presence of:               )
+                                  
+Witness: ______________________
+Name: _________________________
+Address: ______________________
+Occupation: ___________________

@@ -1,0 +1,41 @@
+
+{{ law_firm_letterhead }}
+
+{{ date }}
+
+{{ client_name }}
+{{ client_address }}
+
+Dear {{ client_salutation }},
+
+RE: LEGAL OPINION - {{ opinion_subject }}
+
+We refer to your letter dated {{ reference_date }} wherein you sought our opinion on {{ opinion_subject }}.
+
+1. BACKGROUND
+
+{{ background }}
+
+2. ISSUES FOR CONSIDERATION
+
+{{ issues }}
+
+3. APPLICABLE LAW
+
+{{ applicable_law }}
+
+4. ANALYSIS
+
+{{ analysis }}
+
+5. OPINION
+
+{{ opinion }}
+
+Please note that this opinion is based on the information provided to us and the laws of Kenya as at the date of this opinion. Should you require any clarification or have any further queries, please do not hesitate to contact the undersigned.
+
+Yours faithfully,
+
+{{ lawyer_name }}
+{{ lawyer_title }}
+{{ law_firm }}

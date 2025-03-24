@@ -1,0 +1,25 @@
+
+REPUBLIC OF KENYA
+IN THE {{ court_name }} AT {{ court_location }}
+
+{{ case_type }} CASE NO. {{ case_number }} OF {{ year }}
+
+BETWEEN
+
+{{ plaintiff }} ............................................................. PLAINTIFF
+
+AND
+
+{{ defendant }} ........................................................... DEFENDANT
+
+{{ document_title|upper }}
+
+{{ document_content }}
+
+DATED at {{ city }} this {{ day }} day of {{ month }} {{ year }}
+
+DRAWN & FILED BY:
+{{ law_firm }}
+Advocates for the {{ party }}
+{{ address }}
+{{ contact_info }}

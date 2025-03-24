@@ -407,12 +407,81 @@ Yours faithfully,
             # Generate document using LLM
             document = self.legal_assistant.draft_legal_document(document_type, context, instructions)
             
+            # If LLM returned None (connection failed), use template-based fallback
+            if document is None:
+                logger.warning(f"LLM connection failed, using template-based fallback for {document_type}")
+                return self._generate_template_fallback(document_type, context)
+            
             logger.info(f"Generated {document_type} document using AI")
             return document
         
         except Exception as e:
             logger.error(f"Error generating {document_type} document using AI: {str(e)}")
-            return f"Error generating document: {str(e)}"
+            return self._generate_template_fallback(document_type, context)
+            
+    def _generate_template_fallback(self, document_type: str, context: Dict[str, Any]) -> str:
+        """
+        Generate a document using templates when AI is not available
+        
+        Args:
+            document_type: Type of document to generate
+            context: Context information
+            
+        Returns:
+            Template-based document
+        """
+        try:
+            # Use appropriate template based on document type
+            if document_type.lower() in ['pleading', 'plaint', 'application', 'petition']:
+                template_name = "pleading_template.txt"
+            elif document_type.lower() in ['contract', 'agreement']:
+                template_name = "contract_template.txt"
+            elif document_type.lower() in ['legal opinion', 'opinion', 'legal advice']:
+                template_name = "legal_opinion_template.txt"
+            elif document_type.lower() in ['affidavit', 'sworn statement']:
+                template_name = "affidavit_template.txt"
+            elif document_type.lower() in ['demand letter', 'letter of demand']:
+                template_name = "demand_letter_template.txt"
+            else:
+                # Default to generic template
+                template_name = "pleading_template.txt"
+            
+            # Add current date information if not provided
+            now = datetime.datetime.now()
+            if 'day' not in context:
+                context['day'] = now.day
+            if 'month' not in context:
+                context['month'] = now.strftime('%B')
+            if 'year' not in context:
+                context['year'] = now.year
+            
+            # Add placeholder text for required fields if missing
+            required_fields = ['court_name', 'court_location', 'case_number', 'plaintiff', 
+                              'defendant', 'document_title', 'document_content', 'city',
+                              'law_firm', 'party', 'address', 'contact_info']
+                              
+            for field in required_fields:
+                if field not in context:
+                    context[field] = f"[INSERT {field.upper()}]"
+            
+            # Generate document from template
+            document = self.generate_document_from_template(template_name, context)
+            logger.info(f"Generated {document_type} document using template fallback")
+            
+            return document
+        
+        except Exception as e:
+            logger.error(f"Error in template fallback for {document_type}: {str(e)}")
+            return f"""
+DOCUMENT GENERATION FALLBACK
+
+Document Type: {document_type}
+
+Unable to generate document due to AI service unavailability.
+Please try again later or use the template editor to create this document manually.
+
+Error details: {str(e)}
+"""
     
     def extract_document_metadata(self, document: str) -> Dict[str, Any]:
         """
