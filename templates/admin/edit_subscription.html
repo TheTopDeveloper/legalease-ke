@@ -1,0 +1,99 @@
+{% extends "layout.html" %}
+
+{% block title %}Edit Subscription Plan{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header bg-primary text-white">
+          <h1 class="h3 mb-0">Edit Subscription Plan</h1>
+        </div>
+        <div class="card-body">
+          <form method="post">
+            <div class="mb-3">
+              <label for="name" class="form-label">Plan Name</label>
+              <input type="text" class="form-control" id="name" name="name" value="{{ subscription.name }}" required>
+              <div class="form-text">
+                Use lowercase without spaces (e.g., basic, premium, enterprise)
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="price" class="form-label">Price (KSh)</label>
+                <input type="number" class="form-control" id="price" name="price" min="0" step="0.01" value="{{ subscription.price }}" required>
+              </div>
+              <div class="col-md-6">
+                <label for="duration_days" class="form-label">Duration (Days)</label>
+                <input type="number" class="form-control" id="duration_days" name="duration_days" min="1" value="{{ subscription.duration_days }}" required>
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="max_cases" class="form-label">Maximum Cases</label>
+                <input type="number" class="form-control" id="max_cases" name="max_cases" min="1" value="{{ subscription.max_cases }}" required>
+              </div>
+              <div class="col-md-6">
+                <label for="tokens_included" class="form-label">Tokens Included</label>
+                <input type="number" class="form-control" id="tokens_included" name="tokens_included" min="0" value="{{ subscription.tokens_included }}" required>
+              </div>
+            </div>
+            
+            <div class="mb-3 form-check">
+              <input type="checkbox" class="form-check-input" id="is_organization" name="is_organization" value="true" {% if subscription.is_organization %}checked{% endif %}>
+              <label class="form-check-label" for="is_organization">Organization Plan</label>
+            </div>
+            
+            <div class="mb-3 organization-field" {% if not subscription.is_organization %}style="display:none;"{% endif %}>
+              <label for="max_users" class="form-label">Maximum Users</label>
+              <input type="number" class="form-control" id="max_users" name="max_users" min="1" value="{{ subscription.max_users }}">
+            </div>
+            
+            <div class="mb-3 form-check">
+              <input type="checkbox" class="form-check-input" id="is_active" name="is_active" value="true" {% if subscription.is_active %}checked{% endif %}>
+              <label class="form-check-label" for="is_active">Active</label>
+            </div>
+            
+            <div class="mb-3">
+              <label for="features" class="form-label">Features (One per line)</label>
+              <textarea class="form-control" id="features" name="features" rows="5">{{ subscription.features }}</textarea>
+              <div class="form-text">Enter each feature on a new line, e.g.:
+                <br>Access to all cases
+                <br>Unlimited legal research
+                <br>Document generation
+              </div>
+            </div>
+            
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+              <a href="{{ url_for('billing.admin_subscriptions') }}" class="btn btn-secondary me-md-2">Cancel</a>
+              <button type="submit" class="btn btn-primary">Update Plan</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Show/hide organization fields based on checkbox
+  const isOrganizationCheckbox = document.getElementById('is_organization');
+  const organizationFields = document.querySelectorAll('.organization-field');
+  
+  function toggleOrganizationFields() {
+    organizationFields.forEach(field => {
+      field.style.display = isOrganizationCheckbox.checked ? 'block' : 'none';
+    });
+  }
+  
+  isOrganizationCheckbox.addEventListener('change', toggleOrganizationFields);
+  
+  // Initial toggle
+  toggleOrganizationFields();
+});
+</script>
+{% endblock %}

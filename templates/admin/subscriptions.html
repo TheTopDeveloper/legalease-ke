@@ -1,0 +1,158 @@
+{% extends "layout.html" %}
+
+{% block title %}Manage Subscription Plans{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Manage Subscription Plans</h1>
+    <a href="{{ url_for('billing.create_subscription') }}" class="btn btn-primary">
+      <i class="fas fa-plus-circle"></i> Add New Plan
+    </a>
+  </div>
+  
+  {% if subscriptions %}
+    <div class="card">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Price (KSh)</th>
+                <th>Duration</th>
+                <th>Cases</th>
+                <th>Tokens</th>
+                <th>Organization</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for subscription in subscriptions %}
+              <tr>
+                <td>{{ subscription.name|capitalize }}</td>
+                <td>{{ subscription.price|int }}</td>
+                <td>{{ subscription.duration_days }} days</td>
+                <td>{{ subscription.max_cases }}</td>
+                <td>{{ subscription.tokens_included }}</td>
+                <td>
+                  {% if subscription.is_organization %}
+                    <span class="badge bg-info">Yes ({{ subscription.max_users }} users)</span>
+                  {% else %}
+                    <span class="badge bg-secondary">No</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if subscription.is_active %}
+                    <span class="badge bg-success">Active</span>
+                  {% else %}
+                    <span class="badge bg-danger">Inactive</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="{{ url_for('billing.edit_subscription', subscription_id=subscription.id) }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-edit"></i> Edit
+                  </a>
+                  <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#detailsModal{{ subscription.id }}">
+                    <i class="fas fa-info-circle"></i> Details
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Subscription Detail Modals -->
+    {% for subscription in subscriptions %}
+    <div class="modal fade" id="detailsModal{{ subscription.id }}" tabindex="-1" aria-labelledby="detailsModalLabel{{ subscription.id }}" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="detailsModalLabel{{ subscription.id }}">{{ subscription.name|capitalize }} Plan Details</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <table class="table">
+              <tbody>
+                <tr>
+                  <th>Name:</th>
+                  <td>{{ subscription.name|capitalize }}</td>
+                </tr>
+                <tr>
+                  <th>Price:</th>
+                  <td>KSh {{ subscription.price|int }}</td>
+                </tr>
+                <tr>
+                  <th>Duration:</th>
+                  <td>{{ subscription.duration_days }} days</td>
+                </tr>
+                <tr>
+                  <th>Max Cases:</th>
+                  <td>{{ subscription.max_cases }}</td>
+                </tr>
+                <tr>
+                  <th>Tokens Included:</th>
+                  <td>{{ subscription.tokens_included }}</td>
+                </tr>
+                <tr>
+                  <th>Organization Plan:</th>
+                  <td>{{ 'Yes' if subscription.is_organization else 'No' }}</td>
+                </tr>
+                {% if subscription.is_organization %}
+                <tr>
+                  <th>Max Users:</th>
+                  <td>{{ subscription.max_users }}</td>
+                </tr>
+                {% endif %}
+                <tr>
+                  <th>Active:</th>
+                  <td>{{ 'Yes' if subscription.is_active else 'No' }}</td>
+                </tr>
+                <tr>
+                  <th>Created:</th>
+                  <td>{{ subscription.created_at.strftime('%Y-%m-%d') }}</td>
+                </tr>
+                {% if subscription.features %}
+                <tr>
+                  <th>Features:</th>
+                  <td>
+                    <ul>
+                      {% for feature in subscription.features.split('\n') %}
+                        {% if feature.strip() %}
+                        <li>{{ feature }}</li>
+                        {% endif %}
+                      {% endfor %}
+                    </ul>
+                  </td>
+                </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+          <div class="modal-footer">
+            <a href="{{ url_for('billing.edit_subscription', subscription_id=subscription.id) }}" class="btn btn-primary">Edit</a>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+    
+  {% else %}
+    <div class="alert alert-info">
+      <p>No subscription plans have been created yet.</p>
+    </div>
+    <a href="{{ url_for('billing.create_subscription') }}" class="btn btn-primary">
+      Create Your First Subscription Plan
+    </a>
+  {% endif %}
+  
+  <div class="mt-4">
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">Back to Dashboard</a>
+  </div>
+</div>
+{% endblock %}

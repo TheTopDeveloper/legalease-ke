@@ -1,0 +1,84 @@
+{% extends "layout.html" %}
+
+{% block title %}Create Token Package{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header bg-success text-white">
+          <h1 class="h3 mb-0">Create Token Package</h1>
+        </div>
+        <div class="card-body">
+          <form method="post">
+            <div class="mb-3">
+              <label for="name" class="form-label">Package Name</label>
+              <input type="text" class="form-control" id="name" name="name" required>
+              <div class="form-text">
+                Examples: Small Package, Medium Package, Premium Package
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="token_count" class="form-label">Token Count</label>
+                <input type="number" class="form-control" id="token_count" name="token_count" min="10" required>
+              </div>
+              <div class="col-md-6">
+                <label for="price" class="form-label">Price (KSh)</label>
+                <input type="number" class="form-control" id="price" name="price" min="0" step="0.01" required>
+              </div>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label">Price per Token</label>
+              <input type="text" class="form-control" id="price_per_token" readonly>
+              <div class="form-text">
+                This will be calculated automatically based on the token count and price.
+              </div>
+            </div>
+            
+            <div class="mb-3 form-check">
+              <input type="checkbox" class="form-check-input" id="is_active" name="is_active" value="true" checked>
+              <label class="form-check-label" for="is_active">Active</label>
+            </div>
+            
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+              <a href="{{ url_for('billing.admin_tokens') }}" class="btn btn-secondary me-md-2">Cancel</a>
+              <button type="submit" class="btn btn-success">Create Package</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Calculate price per token
+  const tokenCountInput = document.getElementById('token_count');
+  const priceInput = document.getElementById('price');
+  const pricePerTokenInput = document.getElementById('price_per_token');
+  
+  function calculatePricePerToken() {
+    const tokenCount = parseInt(tokenCountInput.value) || 0;
+    const price = parseFloat(priceInput.value) || 0;
+    
+    if (tokenCount > 0) {
+      const pricePerToken = price / tokenCount;
+      pricePerTokenInput.value = pricePerToken.toFixed(2) + ' KSh';
+    } else {
+      pricePerTokenInput.value = '';
+    }
+  }
+  
+  tokenCountInput.addEventListener('input', calculatePricePerToken);
+  priceInput.addEventListener('input', calculatePricePerToken);
+  
+  // Initial calculation
+  calculatePricePerToken();
+});
+</script>
+{% endblock %}

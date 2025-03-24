@@ -1,0 +1,63 @@
+{% extends "layout.html" %}
+
+{% block title %}Give Tokens{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header bg-info text-white">
+          <h1 class="h3 mb-0">Give Tokens to User</h1>
+        </div>
+        <div class="card-body">
+          <p class="text-muted mb-4">
+            Use this form to give tokens to users for free (for demos, testing, or promotions).
+          </p>
+          
+          <form method="post">
+            <div class="mb-3">
+              <label for="user_id" class="form-label">Select User</label>
+              <select class="form-select" id="user_id" name="user_id" required>
+                <option value="">Choose a user...</option>
+                {% for user in users %}
+                <option value="{{ user.id }}">
+                  {{ user.username }} ({{ user.email }}) - Current balance: {{ user.tokens_available }} tokens
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            
+            <div class="mb-3">
+              <label for="token_count" class="form-label">Number of Tokens</label>
+              <input type="number" class="form-control" id="token_count" name="token_count" min="1" value="100" required>
+            </div>
+            
+            <div class="mb-3">
+              <label for="reason" class="form-label">Reason</label>
+              <select class="form-select" id="reason" name="reason" required>
+                <option value="Demo">Demo</option>
+                <option value="Testing">Testing</option>
+                <option value="Promotion">Promotion</option>
+                <option value="Compensation">Compensation</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+              <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary me-md-2">Cancel</a>
+              <button type="submit" class="btn btn-primary">Give Tokens</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <div class="mt-4">
+        <a href="{{ url_for('billing.admin_tokens') }}" class="btn btn-secondary">
+          <i class="fas fa-arrow-left"></i> Back to Token Packages
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

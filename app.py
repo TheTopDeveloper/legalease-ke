@@ -38,7 +38,10 @@ login_manager.login_view = "auth.login"
 # Create database tables within app context
 with app.app_context():
     # Import models here to avoid circular imports
-    from models import User, Case, Document, Contract, Client
+    from models import (
+        User, Case, Document, Contract, Client, Event, LegalResearch,
+        LegalCitation, Subscription, TokenPackage, Payment, TokenUsage
+    )
     db.create_all()
     logger.info("Database tables created")
 
@@ -49,6 +52,7 @@ from routes.documents import documents_bp
 from routes.research import research_bp
 from routes.contracts import contracts_bp
 from routes.dashboard import dashboard_bp
+from routes.billing import billing_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(cases_bp)
@@ -56,6 +60,7 @@ app.register_blueprint(documents_bp)
 app.register_blueprint(research_bp)
 app.register_blueprint(contracts_bp)
 app.register_blueprint(dashboard_bp)
+app.register_blueprint(billing_bp)
 
 # Load user loader callback
 from models import User

@@ -1,0 +1,69 @@
+{% extends "layout.html" %}
+
+{% block title %}Manage Token Packages{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Manage Token Packages</h1>
+    <a href="{{ url_for('billing.create_token_package') }}" class="btn btn-success">
+      <i class="fas fa-plus-circle"></i> Add New Package
+    </a>
+  </div>
+  
+  {% if token_packages %}
+    <div class="card">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Token Count</th>
+                <th>Price (KSh)</th>
+                <th>Price per Token</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for package in token_packages %}
+              <tr>
+                <td>{{ package.name }}</td>
+                <td>{{ package.token_count }}</td>
+                <td>{{ package.price|int }}</td>
+                <td>{{ (package.price / package.token_count)|round(2) }}</td>
+                <td>
+                  {% if package.is_active %}
+                    <span class="badge bg-success">Active</span>
+                  {% else %}
+                    <span class="badge bg-danger">Inactive</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="{{ url_for('billing.edit_token_package', package_id=package.id) }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-edit"></i> Edit
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+  {% else %}
+    <div class="alert alert-info">
+      <p>No token packages have been created yet.</p>
+    </div>
+    <a href="{{ url_for('billing.create_token_package') }}" class="btn btn-success">
+      Create Your First Token Package
+    </a>
+  {% endif %}
+  
+  <div class="mt-4">
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">Back to Dashboard</a>
+  </div>
+</div>
+{% endblock %}
