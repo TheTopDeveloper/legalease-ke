@@ -1,0 +1,50 @@
+Page Title: 
+      
+  Search
+
+    - Kenya Law
+
+=== DIV CLASSES ===
+['skip-links']
+['container']
+['header-primary-logo', 'd-none', 'd-lg-block', 'pb-3']
+['container']
+['d-flex', 'justify-content-between', 'align-items-center']
+['input-group']
+['container']
+['collapse', 'navbar-collapse']
+['d-lg-none', 'mt-3']
+['input-group']
+['container', 'pt-lg-5', 'pt-2', 'pb-5']
+['container']
+['row']
+['col-md-10']
+['font-weight-bold']
+['col-md-2', 'text-end']
+
+=== HEADING ELEMENTS ===
+
+=== MAJOR SECTIONS ===
+Section: main - ID: top - Class:  - Title: No title
+
+=== FIRST 20 LINKS ===
+Link: Skip to document content - URL: #top
+Link: Go to main menu - URL: #main-nav
+Link: Go to search - URL: #header-search
+Link: About Us - URL: https://kenyalaw.org/kl/index.php?id=115
+Link: Judicial Profiles - URL: https://kenyalaw.org/kl/index.php?id=157
+Link: Product Catalogue - URL: https://kenyalaw.org/kl/index.php?id=1990
+Link: Careers - URL: https://kenyalaw.org/kl/index.php?id=2003
+Link: Contact Us - URL: https://kenyalaw.org/kl/index.php?id=3158
+Link: Site Map - URL: https://kenyalaw.org/kl/index.php?id=3386
+Link:  - URL: /
+Link:  - URL: /
+Link: Home - URL: /
+Link: Case Law - URL: /judgments/
+Link: Superior Courts - URL: /judgments/court-class/superior-courts/
+Link: Subordinate Courts - URL: /judgments/court-class/subordinate-courts/
+Link: Small Claims Court - URL: /judgments/court-class/small-claims-court/
+Link: Civil and Human Rights Tribunals - URL: /judgments/court-class/civil-and-human-rights-tribunals/
+Link: Commercial Tribunals - URL: /judgments/court-class/commercial-tribunals/
+Link: Environment and Land Tribunals - URL: /judgments/court-class/environment-and-land-tribunals/
+Link: Intellectual Property Tribunals - URL: /judgments/court-class/intellectual-property-tribunals/
