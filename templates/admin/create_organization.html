@@ -1,68 +1,108 @@
-{% extends "base.html" %}
+{% extends 'admin/layout.html' %}
 
-{% block header %}Create New Organization{% endblock %}
+{% block title %}Create Organization | Admin - Kenyan Legal Assistant{% endblock %}
 
-{% block content %}
-<div class="row mb-4">
-    <div class="col">
-        <a href="{{ url_for('admin.organizations') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Back to Organizations
-        </a>
-    </div>
-</div>
+{% block breadcrumb %}
+<li class="admin-breadcrumb-item"><a href="{{ url_for('admin.organizations') }}">Organization Management</a></li>
+<li class="admin-breadcrumb-item active" aria-current="page">Create Organization</li>
+{% endblock %}
 
-<div class="card shadow">
+{% block admin_content %}
+<div class="card admin-card">
     <div class="card-header">
-        <h5 class="card-title mb-0">Create New Organization</h5>
+        <h5 class="card-title"><i class="fas fa-building-circle-plus me-2"></i> Create New Organization</h5>
+        <div class="action-buttons">
+            <a href="{{ url_for('admin.organizations') }}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left"></i><span class="d-none d-md-inline"> Back to Organizations</span>
+            </a>
+        </div>
     </div>
     <div class="card-body">
+        <!-- Section Help -->
+        <div class="section-help mb-4">
+            <h6><i class="fas fa-info-circle"></i> Create a New Organization</h6>
+            <p>Create a new law firm or organization account in the system. Organizations can have multiple members and separate billing information.</p>
+        </div>
+
         <form method="post">
             <div class="mb-3">
-                <label for="name" class="form-label">Organization Name</label>
+                <label for="name" class="form-label">Organization Name
+                    <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="The official name of the law firm or organization">
+                        <i class="fas fa-question"></i>
+                    </span>
+                </label>
                 <input type="text" class="form-control" id="name" name="name" required>
-                <div class="form-text">The name of the organization</div>
+                <div class="form-text">The name of the organization as it will appear in the system</div>
             </div>
             
             <div class="mb-3">
-                <label for="description" class="form-label">Description</label>
+                <label for="description" class="form-label">Description
+                    <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="A brief description of the organization, including its practice areas or specialties">
+                        <i class="fas fa-question"></i>
+                    </span>
+                </label>
                 <textarea class="form-control" id="description" name="description" rows="3"></textarea>
-                <div class="form-text">Brief description of the organization</div>
+                <div class="form-text">Brief description of the organization's purpose and activities</div>
             </div>
             
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
+                        <label for="email" class="form-label">Email
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="The primary contact email for this organization">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </label>
                         <input type="email" class="form-control" id="email" name="email">
+                        <div class="form-text">Used for official communications from the system</div>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="mb-3">
-                        <label for="phone" class="form-label">Phone</label>
+                        <label for="phone" class="form-label">Phone
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="The primary contact phone number for this organization">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </label>
                         <input type="text" class="form-control" id="phone" name="phone">
+                        <div class="form-text">Include country code for international numbers</div>
                     </div>
                 </div>
             </div>
             
             <div class="mb-3">
-                <label for="address" class="form-label">Address</label>
+                <label for="address" class="form-label">Address
+                    <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="The physical address of the organization">
+                        <i class="fas fa-question"></i>
+                    </span>
+                </label>
                 <textarea class="form-control" id="address" name="address" rows="2"></textarea>
+                <div class="form-text">Complete postal address including city and postal code</div>
             </div>
             
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">
-                        <label for="account_type" class="form-label">Account Type</label>
+                        <label for="account_type" class="form-label">Account Type
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="The subscription tier for this organization; determines access level and features">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </label>
                         <select class="form-select" id="account_type" name="account_type">
                             <option value="basic">Basic</option>
                             <option value="premium">Premium</option>
                             <option value="enterprise">Enterprise</option>
                         </select>
+                        <div class="form-text">Determines the features and limits available to this organization</div>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="mb-3">
-                        <label for="owner_id" class="form-label">Organization Owner</label>
+                        <label for="owner_id" class="form-label">Organization Owner
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="The user responsible for managing the organization's settings and members">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </label>
                         <select class="form-select" id="owner_id" name="owner_id">
                             <option value="">-- Select a user --</option>
                             {% for user in users %}
@@ -76,12 +116,23 @@
             
             <div class="mb-3 form-check">
                 <input type="checkbox" class="form-check-input" id="is_active" name="is_active" checked>
-                <label class="form-check-label" for="is_active">Organization is active</label>
+                <label class="form-check-label" for="is_active">Organization is active
+                    <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="When checked, the organization is active and members can access the system">
+                        <i class="fas fa-question"></i>
+                    </span>
+                </label>
             </div>
             
             <div class="mt-4">
-                <button type="submit" class="btn btn-primary">Create Organization</button>
-                <a href="{{ url_for('admin.organizations') }}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-building-circle-check me-1"></i> Create Organization
+                    <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Create the organization with the entered details">
+                        <i class="fas fa-question"></i>
+                    </span>
+                </button>
+                <a href="{{ url_for('admin.organizations') }}" class="btn btn-secondary">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </a>
             </div>
         </form>
     </div>
