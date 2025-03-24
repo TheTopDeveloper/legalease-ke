@@ -136,9 +136,43 @@ class Document(db.Model):
     
     # Foreign keys
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    template_id = db.Column(db.Integer, db.ForeignKey('document_template.id'), nullable=True)
+    
+    # Relationships
+    template = db.relationship('DocumentTemplate', backref='documents')
     
     def __repr__(self):
         return f'<Document {self.id}: {self.title}>'
+
+class DocumentTemplate(db.Model):
+    """Template model for document generation"""
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    template_type = db.Column(db.String(50), nullable=False)  # Pleading, Affidavit, Contract, etc.
+    content = db.Column(db.Text, nullable=False)
+    is_public = db.Column(db.Boolean, default=False)  # Whether template is available to all users
+    placeholder_vars = db.Column(db.Text)  # JSON string of variables used in the template
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Foreign keys
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    
+    # Relationships
+    user = db.relationship('User', backref='templates')
+    
+    def get_variables(self):
+        """Get list of variables used in the template"""
+        if not self.placeholder_vars:
+            return []
+        try:
+            return json.loads(self.placeholder_vars)
+        except:
+            return []
+    
+    def __repr__(self):
+        return f'<DocumentTemplate {self.id}: {self.title}>'
 
 class Contract(db.Model):
     """Contract model representing legal contracts in the system"""

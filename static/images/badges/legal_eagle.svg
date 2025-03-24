@@ -1,60 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-  <!-- Badge background -->
-  <circle cx="60" cy="60" r="58" fill="#1e3799" stroke="#4a69bd" stroke-width="4"/>
-  
-  <!-- Eagle silhouette -->
-  <g transform="translate(60, 55) scale(0.6)">
-    <!-- Eagle head -->
-    <path d="M0,-40 C5,-42 10,-38 12,-33 C15,-30 13,-25 10,-22 L15,-20 C17,-15 12,-12 8,-14 C12,-10 8,-5 5,-8 
-             C0,-5 -5,-8 -7,-12 C-10,-10 -13,-12 -12,-16 L-7,-18 C-10,-21 -12,-26 -10,-30 C-8,-35 -5,-38 0,-40 Z" 
-          fill="#f5f6fa" stroke="#333" stroke-width="1.5"/>
-    
-    <!-- Eagle beak -->
-    <path d="M0,-20 C3,-18 7,-20 8,-18 C6,-14 4,-14 0,-16 C-4,-14 -6,-14 -8,-18 C-7,-20 -3,-18 0,-20 Z" 
-          fill="#feca57" stroke="#333" stroke-width="0.5"/>
-    
-    <!-- Eagle eye -->
-    <circle cx="5" cy="-25" r="2" fill="#333"/>
-    <circle cx="-5" cy="-25" r="2" fill="#333"/>
-    
-    <!-- Eagle wings -->
-    <path d="M10,-15 C20,-18 30,-10 40,5 C35,0 25,0 20,5 C30,5 40,15 45,30 C35,20 25,15 15,15 C25,25 30,40 25,55 
-             C20,45 10,35 5,30 C8,40 5,50 0,60 C-5,50 -8,40 -5,30 C-10,35 -20,45 -25,55 C-30,40 -25,25 -15,15 
-             C-25,15 -35,20 -45,30 C-40,15 -30,5 -20,5 C-25,0 -35,0 -40,5 C-30,-10 -20,-18 -10,-15 C-5,-20 5,-20 10,-15 Z" 
-          fill="#f5f6fa" stroke="#333" stroke-width="2"/>
-  </g>
-  
-  <!-- Law book stack -->
-  <g transform="translate(60, 90) scale(0.3)">
-    <rect x="-80" y="0" width="160" height="20" rx="2" ry="2" fill="#e74c3c" stroke="#333" stroke-width="3"/>
-    <rect x="-75" y="-20" width="150" height="20" rx="2" ry="2" fill="#3498db" stroke="#333" stroke-width="3"/>
-    <rect x="-70" y="-40" width="140" height="20" rx="2" ry="2" fill="#2ecc71" stroke="#333" stroke-width="3"/>
-    
-    <!-- Book lines -->
-    <g stroke="#333" stroke-width="2">
-      <line x1="-60" y1="10" x2="-20" y2="10"/>
-      <line x1="20" y1="10" x2="60" y2="10"/>
-      <line x1="-55" y1="-10" x2="-15" y2="-10"/>
-      <line x1="15" y1="-10" x2="55" y2="-10"/>
-      <line x1="-50" y1="-30" x2="-10" y2="-30"/>
-      <line x1="10" y1="-30" x2="50" y2="-30"/>
+<svg width="200px" height="200px" viewBox="0 0 200 200" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Legal Eagle Badge</title>
+    <defs>
+        <linearGradient x1="0%" y1="0%" x2="100%" y2="100%" id="eagleGradient">
+            <stop stop-color="#2196F3" offset="0%"></stop>
+            <stop stop-color="#1565C0" offset="100%"></stop>
+        </linearGradient>
+        <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
+            <feOffset dx="0" dy="2" result="offsetblur" />
+            <feComponentTransfer>
+                <feFuncA type="linear" slope="0.5" />
+            </feComponentTransfer>
+            <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+            </feMerge>
+        </filter>
+    </defs>
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <!-- Badge Background Circle -->
+        <circle fill="url(#eagleGradient)" cx="100" cy="100" r="90"></circle>
+        <circle stroke="#FFFFFF" stroke-width="6" cx="100" cy="100" r="85"></circle>
+        
+        <!-- Inner Circle -->
+        <circle fill="#FFFFFF" cx="100" cy="100" r="65"></circle>
+        
+        <!-- Eagle Silhouette -->
+        <path d="M100,60 C95,60 90,62 85,65 C75,72 70,80 70,90 C70,95 72,100 75,105 L65,115 L75,120 L70,130 L85,125 L90,140 L100,125 L110,140 L115,125 L130,130 L125,120 L135,115 L125,105 C128,100 130,95 130,90 C130,80 125,72 115,65 C110,62 105,60 100,60 Z" 
+              fill="#2196F3" filter="url(#shadow)"></path>
+        
+        <!-- Law Book -->
+        <rect x="85" y="85" width="30" height="20" rx="2" fill="#BBDEFB"></rect>
+        <rect x="90" y="85" width="5" height="20" fill="#64B5F6"></rect>
+        <rect x="100" y="85" width="5" height="20" fill="#64B5F6"></rect>
+        <rect x="110" y="85" width="5" height="20" fill="#64B5F6"></rect>
+        
+        <!-- Stars -->
+        <g transform="translate(100, 100)" fill="#FFD54F">
+            <circle cx="-40" cy="-40" r="4"></circle>
+            <circle cx="40" cy="-40" r="4"></circle>
+            <circle cx="-40" cy="40" r="4"></circle>
+            <circle cx="40" cy="40" r="4"></circle>
+            <circle cx="0" cy="-55" r="4"></circle>
+            <circle cx="0" cy="55" r="4"></circle>
+            <circle cx="-55" cy="0" r="4"></circle>
+            <circle cx="55" cy="0" r="4"></circle>
+        </g>
+        
+        <!-- Badge Text -->
+        <text font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#333333" text-anchor="middle" x="100" y="170">
+            LEGAL EAGLE
+        </text>
     </g>
-  </g>
-  
-  <!-- Magnifying glass -->
-  <g transform="translate(85, 40) rotate(25) scale(0.15)">
-    <circle cx="0" cy="0" r="50" fill="none" stroke="#f5f6fa" stroke-width="8"/>
-    <line x1="35" y1="35" x2="90" y2="90" stroke="#f5f6fa" stroke-width="12" stroke-linecap="round"/>
-  </g>
-  
-  <!-- Award ribbon -->
-  <g transform="translate(60, 105) scale(0.6)">
-    <path d="M0,-15 L15,5 L0,-5 L-15,5 Z" fill="#feca57"/>
-  </g>
-  
-  <!-- Badge text -->
-  <g text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">
-    <text x="60" y="95" font-size="12" fill="#ffffff">LEGAL EAGLE</text>
-  </g>
 </svg>

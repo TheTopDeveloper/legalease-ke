@@ -1,0 +1,171 @@
+{% extends "layout.html" %}
+
+{% block title %}Document Templates - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}Document Templates{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h2>Document Templates</h2>
+        <p class="text-muted">Create and manage document templates that can be reused and shared</p>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <a href="{{ url_for('templates.create') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Create Template
+        </a>
+    </div>
+</div>
+
+<!-- Your Templates -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Your Templates</h4>
+    </div>
+    <div class="card-body p-0">
+        {% if user_templates %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Variables</th>
+                        <th>Sharing</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for template in user_templates %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('templates.view', template_id=template.id) }}" class="text-decoration-none">
+                                {{ template.title }}
+                            </a>
+                        </td>
+                        <td>{{ template.template_type }}</td>
+                        <td>
+                            {% set variables = template.get_variables() %}
+                            {% if variables %}
+                            <span class="badge bg-info">{{ variables|length }} variable(s)</span>
+                            {% else %}
+                            <span class="badge bg-secondary">No variables</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if template.is_public %}
+                            <span class="badge bg-success">Public</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Private</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ template.created_at.strftime('%d %b %Y') }}</td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{{ url_for('templates.use_template', template_id=template.id) }}" class="btn btn-sm btn-success" title="Use Template">
+                                    <i class="fas fa-file-alt"></i>
+                                </a>
+                                <a href="{{ url_for('templates.edit', template_id=template.id) }}" class="btn btn-sm btn-primary" title="Edit Template">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteTemplateModal{{ template.id }}" title="Delete Template">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Delete Modal -->
+                            <div class="modal fade" id="deleteTemplateModal{{ template.id }}" tabindex="-1" aria-labelledby="deleteTemplateModalLabel{{ template.id }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="deleteTemplateModalLabel{{ template.id }}">Confirm Deletion</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Are you sure you want to delete the template <strong>{{ template.title }}</strong>?
+                                            <p class="text-danger mt-2">This action cannot be undone.</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <form action="{{ url_for('templates.delete', template_id=template.id) }}" method="POST">
+                                                <button type="submit" class="btn btn-danger">Delete Template</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-4 text-center">
+            <p>You haven't created any templates yet.</p>
+            <a href="{{ url_for('templates.create') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Create Your First Template
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Public Templates -->
+<div class="card">
+    <div class="card-header bg-success text-white">
+        <h4 class="mb-0">Public Templates</h4>
+    </div>
+    <div class="card-body p-0">
+        {% if public_templates %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Variables</th>
+                        <th>Created By</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for template in public_templates %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('templates.view', template_id=template.id) }}" class="text-decoration-none">
+                                {{ template.title }}
+                            </a>
+                        </td>
+                        <td>{{ template.template_type }}</td>
+                        <td>
+                            {% set variables = template.get_variables() %}
+                            {% if variables %}
+                            <span class="badge bg-info">{{ variables|length }} variable(s)</span>
+                            {% else %}
+                            <span class="badge bg-secondary">No variables</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ template.user.username }}</td>
+                        <td>{{ template.created_at.strftime('%d %b %Y') }}</td>
+                        <td>
+                            <a href="{{ url_for('templates.use_template', template_id=template.id) }}" class="btn btn-sm btn-success" title="Use Template">
+                                <i class="fas fa-file-alt"></i> Use
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-4 text-center">
+            <p>There are no public templates available.</p>
+            <p class="text-muted">When other users share their templates, they will appear here.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

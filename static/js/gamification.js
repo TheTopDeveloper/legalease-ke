@@ -1,35 +1,31 @@
 /**
- * Gamification JavaScript module for handling gamification features
+ * Gamification functionality for the Kenya Law Assistant platform
  */
 
-// Store gamification state
-const gamificationState = {
-    dailyRewardClaimed: false,
-    lastStreak: 0,
-    achievements: []
-};
-
-// Toast container to display achievement notifications
 document.addEventListener('DOMContentLoaded', function() {
-    // Create toast container if it doesn't exist
-    if (!document.querySelector('.toast-container')) {
-        const toastContainer = document.createElement('div');
-        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
-        toastContainer.style.zIndex = '11';
-        document.body.appendChild(toastContainer);
-    }
-    
-    // Record login activity on page load for authenticated users
-    if (document.body.dataset.authenticated === 'true') {
-        recordActivity('login', 'User logged in');
-    }
-    
-    // Initialize reward box animations if on daily rewards page
-    initDailyRewards();
-    
-    // Initialize achievement sharing
-    initAchievementSharing();
+    initGamificationElements();
 });
+
+/**
+ * Initialize all gamification UI elements
+ */
+function initGamificationElements() {
+    // Initialize achievement notifications if any are present
+    initAchievementNotifications();
+    
+    // Initialize daily rewards functionality if on the relevant page
+    if (document.getElementById('claimRewardBtn')) {
+        initDailyRewards();
+    }
+    
+    // Initialize sharing functionality if on the achievements page
+    if (document.querySelectorAll('.share-btn').length > 0) {
+        initAchievementSharing();
+    }
+    
+    // Initialize activity recording for various user actions
+    initActivityTracking();
+}
 
 /**
  * Record a user activity and potentially earn points and achievements
@@ -38,43 +34,39 @@ document.addEventListener('DOMContentLoaded', function() {
  * @param {Function} callback - Optional callback function after activity is recorded
  */
 function recordActivity(activityType, description, callback) {
-    // Create activity data
-    const activityData = {
-        activity_type: activityType,
-        description: description
-    };
-    
-    // Send to server
-    fetch('/gamification/record_activity', {
+    fetch('/gamification/record-activity', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
+            'X-CSRFToken': getCsrfToken() // Get CSRF token
         },
-        body: JSON.stringify(activityData)
+        body: JSON.stringify({
+            activity_type: activityType,
+            description: description
+        })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            console.log(`Recorded activity: ${activityType}, earned ${data.points_earned} points`);
-            
-            // Show points notification
-            showPointsNotification(data.points_earned, activityType);
-            
-            // Show level up notification if applicable
-            if (data.level_up) {
-                showLevelUpNotification(data.level);
+            // Check if points were earned
+            if (data.points > 0) {
+                showPointsNotification(data.points, activityType);
             }
             
-            // Show achievement notifications if any new ones were earned
-            if (data.new_achievements && data.new_achievements.length > 0) {
-                data.new_achievements.forEach(achievement => {
+            // Check if new level was reached
+            if (data.new_level) {
+                showLevelUpNotification(data.new_level);
+            }
+            
+            // Check if achievements were earned
+            if (data.achievements && data.achievements.length > 0) {
+                data.achievements.forEach(achievement => {
                     showAchievementNotification(achievement);
                 });
             }
             
-            // Call callback if provided
-            if (typeof callback === 'function') {
+            // Execute callback if provided
+            if (callback && typeof callback === 'function') {
                 callback(data);
             }
         }
@@ -90,32 +82,26 @@ function recordActivity(activityType, description, callback) {
  * @param {string} activityType - Type of activity
  */
 function showPointsNotification(points, activityType) {
-    // Create toast for points
-    const pointsToast = document.createElement('div');
-    pointsToast.className = 'toast points-toast';
-    pointsToast.setAttribute('role', 'alert');
-    pointsToast.setAttribute('aria-live', 'assertive');
-    pointsToast.setAttribute('aria-atomic', 'true');
-    pointsToast.innerHTML = `
-        <div class="toast-header bg-success text-white">
-            <i class="bi bi-plus-circle me-2"></i>
-            <strong class="me-auto">Points Earned</strong>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-            <p class="mb-0">+${points} points for ${activityType.replace('_', ' ')}</p>
+    // Create and show a toast notification
+    const formattedActivity = activityType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    const toastHtml = `
+        <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
+            <div class="toast-header bg-success text-white">
+                <i class="bi bi-stars me-2"></i>
+                <strong class="me-auto">Points Earned</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                <strong>+${points} points</strong> earned for ${formattedActivity}!
+            </div>
         </div>
     `;
     
-    // Add to container and show
-    document.querySelector('.toast-container').appendChild(pointsToast);
-    const toast = new bootstrap.Toast(pointsToast, { autohide: true, delay: 3000 });
-    toast.show();
+    // Add toast to container and show it
+    showToast(toastHtml);
     
-    // Remove after hidden
-    pointsToast.addEventListener('hidden.bs.toast', function() {
-        pointsToast.remove();
-    });
+    // Optionally play sound
+    playSound('points');
 }
 
 /**
@@ -123,33 +109,27 @@ function showPointsNotification(points, activityType) {
  * @param {number} level - New level reached
  */
 function showLevelUpNotification(level) {
-    // Create toast for level up
-    const levelUpToast = document.createElement('div');
-    levelUpToast.className = 'toast level-up-toast';
-    levelUpToast.setAttribute('role', 'alert');
-    levelUpToast.setAttribute('aria-live', 'assertive');
-    levelUpToast.setAttribute('aria-atomic', 'true');
-    levelUpToast.innerHTML = `
-        <div class="toast-header bg-primary text-white">
-            <i class="bi bi-arrow-up-circle me-2"></i>
-            <strong class="me-auto">Level Up!</strong>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-            <h5 class="mb-1">Congratulations!</h5>
-            <p class="mb-0">You've reached level ${level}</p>
+    const toastHtml = `
+        <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+            <div class="toast-header bg-primary text-white">
+                <i class="bi bi-arrow-up-circle-fill me-2"></i>
+                <strong class="me-auto">Level Up!</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                <div class="text-center mb-2">
+                    <span class="badge rounded-pill bg-primary px-3 py-2" style="font-size: 1.2rem;">Level ${level}</span>
+                </div>
+                <p class="mb-0">Congratulations! You've reached level ${level}!</p>
+            </div>
         </div>
     `;
     
-    // Add to container and show
-    document.querySelector('.toast-container').appendChild(levelUpToast);
-    const toast = new bootstrap.Toast(levelUpToast, { autohide: true, delay: 5000 });
-    toast.show();
+    // Add toast to container and show it
+    showToast(toastHtml);
     
-    // Remove after hidden
-    levelUpToast.addEventListener('hidden.bs.toast', function() {
-        levelUpToast.remove();
-    });
+    // Optionally play sound
+    playSound('levelup');
 }
 
 /**
@@ -157,173 +137,182 @@ function showLevelUpNotification(level) {
  * @param {Object} achievement - Achievement object
  */
 function showAchievementNotification(achievement) {
-    // Create toast for achievement
-    const achievementToast = document.createElement('div');
-    achievementToast.className = 'toast achievement-toast';
-    achievementToast.setAttribute('role', 'alert');
-    achievementToast.setAttribute('aria-live', 'assertive');
-    achievementToast.setAttribute('aria-atomic', 'true');
-    achievementToast.innerHTML = `
-        <div class="toast-header bg-warning text-dark">
-            <i class="${achievement.icon || 'bi bi-trophy'} me-2"></i>
-            <strong class="me-auto">Achievement Unlocked!</strong>
-            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-            <h5 class="mb-1">${achievement.name}</h5>
-            <p class="mb-1">${achievement.description}</p>
-            <span class="badge bg-warning text-dark">+${achievement.points} Points</span>
+    let iconHtml = '';
+    if (achievement.icon && achievement.icon.endsWith('.svg')) {
+        iconHtml = `<img src="/static/images/badges/${achievement.icon}" alt="${achievement.name}" class="me-2" style="height: 24px;">`;
+    } else {
+        iconHtml = `<i class="${achievement.icon || 'bi bi-trophy-fill'} me-2"></i>`;
+    }
+    
+    const toastHtml = `
+        <div class="toast achievement-toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+            <div class="toast-header bg-warning text-dark">
+                ${iconHtml}
+                <strong class="me-auto">Achievement Unlocked!</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="flex-shrink-0">
+                        ${achievement.icon && achievement.icon.endsWith('.svg') 
+                          ? `<img src="/static/images/badges/${achievement.icon}" alt="${achievement.name}" class="me-2" style="height: 48px;">` 
+                          : `<i class="${achievement.icon || 'bi bi-trophy-fill'} me-2" style="font-size: 2rem;"></i>`}
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h5 class="mb-0">${achievement.name}</h5>
+                        <p class="mb-0 text-muted">${achievement.points} points</p>
+                    </div>
+                </div>
+                <p class="mb-0">${achievement.description}</p>
+            </div>
         </div>
     `;
     
-    // Add to container and show
-    document.querySelector('.toast-container').appendChild(achievementToast);
-    const toast = new bootstrap.Toast(achievementToast, { autohide: true, delay: 6000 });
-    toast.show();
+    // Add toast to container and show it
+    showToast(toastHtml);
     
-    // Play achievement sound if available
-    const achievementSound = document.getElementById('achievement-sound');
-    if (achievementSound) {
-        achievementSound.play().catch(e => console.log('Could not play achievement sound'));
-    }
-    
-    // Remove after hidden
-    achievementToast.addEventListener('hidden.bs.toast', function() {
-        achievementToast.remove();
-    });
+    // Optionally play achievement sound
+    playSound('achievement');
 }
 
 /**
  * Initialize daily rewards functionality
  */
 function initDailyRewards() {
-    const rewardBox = document.getElementById('daily-reward-box');
-    if (!rewardBox) return;
+    const claimRewardBtn = document.getElementById('claimRewardBtn');
+    if (!claimRewardBtn) return;
     
-    // Add click handler to reward box
-    rewardBox.addEventListener('click', function() {
-        if (gamificationState.dailyRewardClaimed) return;
-        
-        // Visual effect before claiming
-        rewardBox.classList.add('pulse');
-        
-        setTimeout(() => {
-            // Claim reward via AJAX
-            fetch('/gamification/claim_daily_reward', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Show reward animation
-                    rewardBox.classList.remove('pulse');
-                    rewardBox.classList.add('claimed');
-                    
-                    // Update state
-                    gamificationState.dailyRewardClaimed = true;
-                    
-                    // Show token reward
-                    const rewardAmount = document.createElement('div');
-                    rewardAmount.className = 'reward-amount';
-                    rewardAmount.innerHTML = `<span class="tokens">+${data.tokens} tokens</span>`;
-                    rewardBox.appendChild(rewardAmount);
-                    
-                    // Update UI elements
-                    const tokenDisplay = document.getElementById('user-tokens');
-                    if (tokenDisplay) {
-                        tokenDisplay.textContent = data.total_tokens;
-                    }
-                    
-                    // Show streak status
-                    if (data.streak_days > 0) {
-                        const streakInfo = document.getElementById('streak-info');
-                        if (streakInfo) {
-                            streakInfo.textContent = `Current streak: ${data.streak_days} days`;
-                            
-                            // Highlight if longest streak was achieved
-                            if (data.streak_days > gamificationState.lastStreak && data.streak_days > 1) {
-                                streakInfo.classList.add('text-success');
-                                streakInfo.innerHTML += ' <span class="badge bg-success">New record!</span>';
-                            }
-                        }
-                    }
-                    
-                    // Achievement earned for streak
-                    if (data.achievement_earned) {
-                        showAchievementNotification(data.achievement_earned);
-                    }
-                    
-                    // Update streak state
-                    gamificationState.lastStreak = data.streak_days;
-                    
-                    // Update UI message
-                    const rewardMessage = document.getElementById('reward-message');
-                    if (rewardMessage) {
-                        rewardMessage.textContent = 'Reward claimed! Come back tomorrow for more.';
-                    }
-                    
-                    // Play sound effect if available
-                    const rewardSound = document.getElementById('reward-sound');
-                    if (rewardSound) {
-                        rewardSound.play().catch(e => console.log('Could not play reward sound'));
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Error claiming reward:', error);
-                rewardBox.classList.remove('pulse');
-            });
-        }, 800);
-    });
+    // Button already has event listeners from daily_reward.html
 }
 
 /**
  * Initialize achievement sharing functionality
  */
 function initAchievementSharing() {
-    // Set up share buttons for achievements
-    const shareButtons = document.querySelectorAll('.achievement-share-btn');
-    shareButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            const achievementId = this.dataset.achievementId;
-            const shareType = this.dataset.shareType || 'twitter';
-            
-            // Record sharing activity
-            recordActivity('share_achievement', `Shared achievement ${achievementId} on ${shareType}`);
-            
-            // Generate share URL based on type
-            let shareUrl = '';
-            const achievementName = this.dataset.achievementName || 'an achievement';
-            const shareText = encodeURIComponent(`I just earned the ${achievementName} badge on the Kenyan Legal Assistant platform! #LegalTech #Achievement`);
-            const appUrl = encodeURIComponent(window.location.origin);
-            
-            switch(shareType) {
-                case 'twitter':
-                    shareUrl = `https://twitter.com/intent/tweet?text=${shareText}&url=${appUrl}`;
-                    break;
-                case 'linkedin':
-                    shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${appUrl}&title=${shareText}`;
-                    break;
-                case 'facebook':
-                    shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${appUrl}&quote=${shareText}`;
-                    break;
-                case 'whatsapp':
-                    shareUrl = `https://wa.me/?text=${shareText} ${appUrl}`;
-                    break;
-            }
-            
-            // Open share window
-            if (shareUrl) {
-                window.open(shareUrl, '_blank', 'width=600,height=400');
-            }
+    // Handled in social_share.html
+}
+
+/**
+ * Initialize activity tracking for user actions
+ */
+function initActivityTracking() {
+    // Track research activities
+    const researchForms = document.querySelectorAll('form[data-track-activity="research"]');
+    researchForms.forEach(form => {
+        form.addEventListener('submit', function() {
+            recordActivity('research', 'Conducted legal research');
         });
     });
+    
+    // Track case creation
+    const caseCreateForms = document.querySelectorAll('form[data-track-activity="create_case"]');
+    caseCreateForms.forEach(form => {
+        form.addEventListener('submit', function() {
+            recordActivity('create_case', 'Created a new case');
+        });
+    });
+    
+    // Track document creation
+    const docCreateForms = document.querySelectorAll('form[data-track-activity="create_document"]');
+    docCreateForms.forEach(form => {
+        form.addEventListener('submit', function() {
+            recordActivity('create_document', 'Created a new document');
+        });
+    });
+}
+
+/**
+ * Initialize achievement notifications
+ */
+function initAchievementNotifications() {
+    // Create toast container if it doesn't exist
+    let toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        toastContainer.style.zIndex = '11';
+        document.body.appendChild(toastContainer);
+    }
+}
+
+/**
+ * Helper function to show a toast notification
+ * @param {string} toastHtml - HTML content of the toast
+ */
+function showToast(toastHtml) {
+    // Create toast container if it doesn't exist
+    let toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        toastContainer.style.zIndex = '11';
+        document.body.appendChild(toastContainer);
+    }
+    
+    // Add toast to container
+    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+    
+    // Initialize and show the toast
+    const toastElement = toastContainer.querySelector('.toast:last-child');
+    const toast = new bootstrap.Toast(toastElement);
+    toast.show();
+    
+    // Remove toast from DOM after it's hidden
+    toastElement.addEventListener('hidden.bs.toast', function() {
+        this.remove();
+    });
+}
+
+/**
+ * Play a sound effect
+ * @param {string} soundType - Type of sound to play (points, levelup, achievement)
+ */
+function playSound(soundType) {
+    // Check if audio should be muted based on user preferences
+    const muted = localStorage.getItem('gamification_sound_muted') === 'true';
+    if (muted) return;
+    
+    let soundUrl;
+    switch (soundType) {
+        case 'points':
+            soundUrl = '/static/sounds/point.mp3';
+            break;
+        case 'levelup':
+            soundUrl = '/static/sounds/levelup.mp3';
+            break;
+        case 'achievement':
+            soundUrl = '/static/sounds/achievement.mp3';
+            break;
+        default:
+            return;
+    }
+    
+    // Create and play audio
+    const audio = new Audio(soundUrl);
+    audio.volume = 0.5;
+    audio.play().catch(err => {
+        console.log('Audio playback failed:', err);
+    });
+}
+
+/**
+ * Get CSRF token from cookies
+ * @returns {string} CSRF token
+ */
+function getCsrfToken() {
+    // Get CSRF token from cookie
+    const csrfCookie = document.cookie.split(';').find(cookie => cookie.trim().startsWith('csrftoken='));
+    if (csrfCookie) {
+        return csrfCookie.split('=')[1];
+    }
+    
+    // Fallback to meta tag
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    if (csrfMeta) {
+        return csrfMeta.getAttribute('content');
+    }
+    
+    return '';
 }
 
 /**
@@ -332,19 +321,6 @@ function initAchievementSharing() {
  * @returns {string} Formatted date string
  */
 function formatStreakDate(date) {
-    return date.toLocaleDateString('en-US', { 
-        weekday: 'short', 
-        month: 'short', 
-        day: 'numeric' 
-    });
+    const options = { month: 'short', day: 'numeric' };
+    return date.toLocaleDateString(undefined, options);
 }
-
-// Expose functions globally
-window.gamification = {
-    recordActivity,
-    showPointsNotification,
-    showLevelUpNotification,
-    showAchievementNotification,
-    initDailyRewards,
-    initAchievementSharing
-};
