@@ -201,6 +201,8 @@ def calendar():
         current_date=current_date,
         start_date=start_date,
         end_date=end_date,
+        start_range=start_range,
+        end_range=end_range,
         events_by_date=events_by_date,
         conflicts=conflicts,
         prev_date=prev_date,
