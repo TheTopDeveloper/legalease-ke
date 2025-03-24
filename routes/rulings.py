@@ -774,13 +774,18 @@ def import_rulings():
                 
                 imported_count = 0
                 for case in cases:
+                    # Get the URL from the 'link' key (the scraper returns 'link' not 'url')
+                    case_url = case.get('link', '')
+                    if not case_url:
+                        continue
+                        
                     # Check if ruling already exists with this URL
-                    existing = Ruling.query.filter_by(url=case['url']).first()
+                    existing = Ruling.query.filter_by(url=case_url).first()
                     if existing:
                         continue
                     
                     # Get full case details
-                    case_details = scraper.get_case_details(case['url'])
+                    case_details = scraper.get_case_details(case_url)
                     
                     if not case_details:
                         continue
@@ -819,7 +824,7 @@ def import_rulings():
                         court=court_name,
                         date_of_ruling=date_of_ruling,
                         citation=citation,
-                        url=case['url'],
+                        url=case_url,
                         summary=summary,
                         full_text=full_text,
                         user_id=current_user.id
