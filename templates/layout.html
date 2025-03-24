@@ -40,6 +40,21 @@
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint.startswith('research.') %}active{% endif %}" href="{{ url_for('research.index') }}">Research</a>
                     </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if request.endpoint.startswith('billing.') %}active{% endif %}" href="#" id="billingDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-credit-card"></i> Billing
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="billingDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('billing.subscriptions') }}">Subscriptions</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('billing.tokens') }}">Buy Tokens</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('billing.payment_history') }}">Payment History</a></li>
+                            {% if current_user.role == 'admin' %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('billing.admin_subscriptions') }}">Manage Subscriptions</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('billing.admin_tokens') }}">Manage Token Packages</a></li>
+                            {% endif %}
+                        </ul>
+                    </li>
                     {% endif %}
                 </ul>
                 <ul class="navbar-nav">
@@ -108,6 +123,8 @@
                         <li><a href="{{ url_for('documents.index') }}" class="text-light">Documents</a></li>
                         <li><a href="{{ url_for('contracts.index') }}" class="text-light">Contracts</a></li>
                         <li><a href="{{ url_for('research.index') }}" class="text-light">Research</a></li>
+                        <li><a href="{{ url_for('billing.subscriptions') }}" class="text-light">Subscriptions</a></li>
+                        <li><a href="{{ url_for('billing.tokens') }}" class="text-light">Tokens</a></li>
                     </ul>
                 </div>
                 <div class="col-md-3">

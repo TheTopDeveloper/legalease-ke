@@ -135,50 +135,84 @@ def buy_tokens(package_id):
         flash(f'Payment error: {str(e)}', 'danger')
         return redirect(url_for('billing.tokens'))
 
+@billing_bp.route('/mock-payment/<transaction_id>')
+def mock_payment(transaction_id):
+    """Mock payment page for testing without actual payment gateway"""
+    payment = Payment.query.filter_by(transaction_id=transaction_id).first_or_404()
+    
+    # Store payment ID in session for easier access later
+    session['payment_id'] = payment.id
+    
+    # Get related records if available
+    subscription = None
+    token_package = None
+    
+    if payment.payment_type == 'subscription' and payment.subscription_id:
+        subscription = Subscription.query.get(payment.subscription_id)
+    
+    if payment.payment_type == 'tokens' and payment.token_package_id:
+        token_package = TokenPackage.query.get(payment.token_package_id)
+    
+    return render_template(
+        'billing/mock_payment.html',
+        payment=payment,
+        subscription=subscription,
+        token_package=token_package,
+        transaction_id=transaction_id
+    )
+
+@billing_bp.route('/process-payment/<transaction_id>', methods=['POST'])
+def process_payment(transaction_id):
+    """Process the mock payment"""
+    action = request.form.get('action', 'cancel')
+    
+    if action not in ['complete', 'fail', 'cancel']:
+        flash('Invalid payment action.', 'danger')
+        return redirect(url_for('billing.payment_status'))
+    
+    payment_system = PesaPalPayment()
+    
+    if action == 'complete':
+        # Process successful payment
+        success, message = payment_system.process_payment(transaction_id, status='completed')
+        if success:
+            flash('Payment completed successfully!', 'success')
+            # Clear payment ID from session
+            if 'payment_id' in session:
+                session.pop('payment_id')
+            
+            # Redirect based on payment type
+            payment = Payment.query.filter_by(transaction_id=transaction_id).first()
+            if payment:
+                if payment.payment_type == 'subscription':
+                    return redirect(url_for('billing.subscriptions'))
+                elif payment.payment_type == 'tokens':
+                    return redirect(url_for('billing.tokens'))
+            
+            # Default redirect
+            return redirect(url_for('dashboard.index'))
+        else:
+            flash(f'Payment processing issue: {message}', 'warning')
+    
+    elif action == 'fail':
+        # Process failed payment
+        payment_system.process_payment(transaction_id, status='failed')
+        flash('Payment failed.', 'danger')
+    
+    else:  # cancel
+        # Cancel payment
+        payment_system.process_payment(transaction_id, status='cancelled')
+        flash('Payment cancelled.', 'warning')
+    
+    return redirect(url_for('billing.payment_status'))
+
 @billing_bp.route('/payment/callback')
 def payment_callback():
-    """Handle payment callback from PesaPal"""
-    # Get parameters from callback
-    order_tracking_id = request.args.get('OrderTrackingId')
-    order_merchant_reference = request.args.get('OrderMerchantReference')
-    order_notification_type = request.args.get('OrderNotificationType')
-    
-    if order_tracking_id:
-        # Process the payment notification
-        pesapal = PesaPalPayment()
-        try:
-            success, message = pesapal.process_ipn_notification(order_tracking_id, order_notification_type)
-            
-            if success:
-                flash('Payment completed successfully!', 'success')
-                # Clear payment ID from session
-                if 'payment_id' in session:
-                    session.pop('payment_id')
-                    
-                # Redirect based on payment type
-                payment_id = session.get('payment_id')
-                if payment_id:
-                    payment = Payment.query.get(payment_id)
-                    if payment:
-                        if payment.payment_type == 'subscription':
-                            return redirect(url_for('billing.subscriptions'))
-                        elif payment.payment_type == 'tokens':
-                            return redirect(url_for('billing.tokens'))
-                
-                # Default redirect
-                return redirect(url_for('dashboard.index'))
-                
-            else:
-                flash(f'Payment processing issue: {message}', 'warning')
-                return redirect(url_for('billing.payment_status'))
-                
-        except Exception as e:
-            flash(f'Error processing payment: {str(e)}', 'danger')
-            return redirect(url_for('billing.payment_status'))
-    
-    # If no tracking ID, redirect to payment status page
-    flash('No payment information received.', 'warning')
-    return redirect(url_for('billing.payment_status'))
+    """Handle payment callback from payment gateway"""
+    # For compatibility with future payment gateway implementation
+    # Just redirect to dashboard for now
+    flash('Payment completed!', 'success')
+    return redirect(url_for('dashboard.index'))
 
 @billing_bp.route('/payment/status')
 @login_required
@@ -198,41 +232,8 @@ def payment_status():
             session.pop('payment_id')
         return redirect(url_for('dashboard.index'))
     
-    # If payment is pending, check status with PesaPal
-    if payment.status == 'pending':
-        try:
-            # Get payment data
-            payment_data = json.loads(payment.payment_data)
-            order_tracking_id = payment_data.get('order_tracking_id')
-            
-            if order_tracking_id:
-                pesapal = PesaPalPayment()
-                status_data = pesapal.get_transaction_status(order_tracking_id)
-                
-                # Process status data
-                payment_status = status_data.get('payment_status_info', {}).get('payment_status')
-                
-                if payment_status == "COMPLETED":
-                    # Process successful payment
-                    success, message = pesapal.process_ipn_notification(order_tracking_id, "CONFIRMATION")
-                    if success:
-                        flash('Payment completed successfully!', 'success')
-                        # Clear payment ID from session
-                        if 'payment_id' in session:
-                            session.pop('payment_id')
-                        
-                        if payment.payment_type == 'subscription':
-                            return redirect(url_for('billing.subscriptions'))
-                        else:
-                            return redirect(url_for('billing.tokens'))
-                
-                elif payment_status == "FAILED":
-                    payment.status = 'failed'
-                    db.session.commit()
-                    flash('Payment failed.', 'danger')
-                    
-        except Exception as e:
-            flash(f'Error checking payment status: {str(e)}', 'danger')
+    # For our mock payment system, we just show the payment status
+    # This will be replaced with actual status checks when using a real payment gateway
     
     return render_template('billing/payment_status.html', payment=payment)
 
