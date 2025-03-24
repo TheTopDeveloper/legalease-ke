@@ -1,0 +1,177 @@
+{% extends "layout.html" %}
+
+{% block title %}Create Portal User - Kenya Legal Assistant{% endblock %}
+
+{% block header %}
+<h1 class="h2">Create Portal User</h1>
+<p class="lead">Create a new portal user for {{ client.name }}</p>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-user-plus"></i> New Portal User</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('document_sharing.create_portal_user', client_id=client.id) }}">
+                    <div class="mb-4">
+                        <h6>Client Information</h6>
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label text-muted">Client:</label>
+                            <div class="col-sm-9">
+                                <p class="form-control-plaintext">{{ client.name }}</p>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label text-muted">Email:</label>
+                            <div class="col-sm-9">
+                                <p class="form-control-plaintext">{{ client.email }}</p>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label text-muted">Phone:</label>
+                            <div class="col-sm-9">
+                                <p class="form-control-plaintext">{{ client.phone }}</p>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label text-muted">Type:</label>
+                            <div class="col-sm-9">
+                                <p class="form-control-plaintext">{{ client.client_type }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="mb-4">
+                        <h6>Portal User Information</h6>
+                        <div class="alert alert-info mb-3">
+                            <i class="fas fa-info-circle me-2"></i> The portal user will receive login credentials via email once created.
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                            <div class="form-text">The user will use this email to log in to the client portal.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Initial Password <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="password" name="password" required>
+                                <button class="btn btn-outline-secondary" type="button" id="toggle-password">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-secondary" type="button" id="generate-password">
+                                    Generate
+                                </button>
+                            </div>
+                            <div class="form-text">The user can change this password after logging in.</div>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="send-notification" name="send_notification" checked>
+                            <label class="form-check-label" for="send-notification">Send welcome email with login instructions</label>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('document_sharing.index') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times me-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-1"></i> Create Portal User
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Information</h5>
+            </div>
+            <div class="card-body">
+                <h6>About Portal Users</h6>
+                <p>Portal users allow your clients to access a secure client portal where they can view documents you've shared with them.</p>
+                
+                <h6 class="mt-4">Multiple Users</h6>
+                <p>You can create multiple portal users for a single client organization. This is useful when different individuals need access to different documents.</p>
+                
+                <h6 class="mt-4">User Management</h6>
+                <p>After creating a portal user, you can:</p>
+                <ul>
+                    <li>Reset their password</li>
+                    <li>Generate secure access tokens</li>
+                    <li>Track their document access</li>
+                    <li>Revoke access if needed</li>
+                </ul>
+                
+                <h6 class="mt-4">Password Requirements</h6>
+                <p>Ensure that initial passwords are secure. Good passwords:</p>
+                <ul>
+                    <li>Are at least 8 characters long</li>
+                    <li>Contain uppercase and lowercase letters</li>
+                    <li>Include numbers or special characters</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle password visibility
+        const passwordInput = document.getElementById('password');
+        const togglePasswordButton = document.getElementById('toggle-password');
+        
+        togglePasswordButton.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            // Toggle icon
+            const icon = this.querySelector('i');
+            if (type === 'text') {
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+        
+        // Generate secure password
+        const generatePasswordButton = document.getElementById('generate-password');
+        
+        generatePasswordButton.addEventListener('click', function() {
+            // Generate a random password
+            const length = 12;
+            const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_-+=';
+            let password = '';
+            
+            for (let i = 0; i < length; i++) {
+                const randomIndex = Math.floor(Math.random() * charset.length);
+                password += charset[randomIndex];
+            }
+            
+            // Set the password
+            passwordInput.value = password;
+            
+            // Show the password
+            passwordInput.setAttribute('type', 'text');
+            const icon = togglePasswordButton.querySelector('i');
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        });
+    });
+</script>
+{% endblock %}
