@@ -1,91 +1,156 @@
-{% extends 'base.html' %}
+{% extends 'admin/layout.html' %}
 
-{% block title %}Admin Dashboard{% endblock %}
+{% block title %}Admin Dashboard | Kenyan Legal Assistant{% endblock %}
 
-{% block content %}
-<div class="container mt-4">
-    <h1 class="mb-4">Admin Dashboard</h1>
+{% block breadcrumb %}
+<li class="admin-breadcrumb-item active" aria-current="page">Dashboard</li>
+{% endblock %}
+
+{% block admin_content %}
+<!-- Dashboard Stats -->
+<div class="row mb-4">
+    <div class="col-md-4 col-sm-6">
+        <div class="admin-stats-card">
+            <div class="stats-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stats-number">{{ user_count }}</div>
+            <div class="stats-label">Total Users</div>
+        </div>
+    </div>
     
-    <div class="row">
-        <div class="col-md-3">
-            <div class="list-group mb-4">
-                <a href="{{ url_for('admin.index') }}" class="list-group-item list-group-item-action active">Dashboard</a>
-                <a href="{{ url_for('admin.users') }}" class="list-group-item list-group-item-action">User Management</a>
-                <a href="{{ url_for('admin.roles') }}" class="list-group-item list-group-item-action">Role Management</a>
-                <a href="{{ url_for('admin.organizations') }}" class="list-group-item list-group-item-action">Organization Management</a>
-                <a href="{{ url_for('admin.system_settings') }}" class="list-group-item list-group-item-action">System Settings</a>
-                <a href="{{ url_for('billing.admin_subscriptions') }}" class="list-group-item list-group-item-action">Subscription Plans</a>
-                <a href="{{ url_for('billing.admin_tokens') }}" class="list-group-item list-group-item-action">Token Packages</a>
+    <div class="col-md-4 col-sm-6">
+        <div class="admin-stats-card">
+            <div class="stats-icon">
+                <i class="fas fa-user-check"></i>
+            </div>
+            <div class="stats-number">{{ active_users }}</div>
+            <div class="stats-label">Active Users</div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 col-sm-6">
+        <div class="admin-stats-card">
+            <div class="stats-icon">
+                <i class="fas fa-building"></i>
+            </div>
+            <div class="stats-number">{{ organization_count }}</div>
+            <div class="stats-label">Organizations</div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card admin-card mb-4">
+    <div class="card-header">
+        <h5 class="card-title"><i class="fas fa-bolt me-2"></i> Quick Actions</h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-3 col-sm-6">
+                <a href="{{ url_for('admin.create_user') }}" class="btn btn-outline-primary d-flex flex-column align-items-center justify-content-center p-3 h-100 w-100">
+                    <i class="fas fa-user-plus mb-2" style="font-size: 1.5rem;"></i>
+                    <span>Add User</span>
+                </a>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <a href="{{ url_for('admin.create_role') }}" class="btn btn-outline-primary d-flex flex-column align-items-center justify-content-center p-3 h-100 w-100">
+                    <i class="fas fa-user-tag mb-2" style="font-size: 1.5rem;"></i>
+                    <span>Add Role</span>
+                </a>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <a href="{{ url_for('admin.create_organization') }}" class="btn btn-outline-primary d-flex flex-column align-items-center justify-content-center p-3 h-100 w-100">
+                    <i class="fas fa-building mb-2" style="font-size: 1.5rem;"></i>
+                    <span>Add Organization</span>
+                </a>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <a href="{{ url_for('admin.system_settings') }}" class="btn btn-outline-primary d-flex flex-column align-items-center justify-content-center p-3 h-100 w-100">
+                    <i class="fas fa-cogs mb-2" style="font-size: 1.5rem;"></i>
+                    <span>Settings</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Users -->
+<div class="card admin-card">
+    <div class="card-header">
+        <h5 class="card-title"><i class="fas fa-clock me-2"></i> Recent Users</h5>
+        <div class="action-buttons">
+            <a href="{{ url_for('admin.users') }}" class="btn btn-sm btn-outline-secondary">
+                View All <i class="fas fa-arrow-right ms-1"></i>
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <!-- Desktop view -->
+        <div class="admin-table-container">
+            <div class="table-responsive-mobile">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in recent_users %}
+                        <tr>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'danger' if user.role == 'admin' else 'primary' if user.role == 'organization' else 'info' if user.role == 'organization_member' else 'secondary' }}">
+                                    {{ user.role }}
+                                </span>
+                            </td>
+                            <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i><span class="d-none d-md-inline"> Edit</span>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
         
-        <div class="col-md-9">
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="card mb-4">
-                        <div class="card-body text-center">
-                            <h3 class="card-title">{{ user_count }}</h3>
-                            <p class="card-text">Total Users</p>
-                        </div>
+        <!-- Mobile view -->
+        <div class="mobile-card-view">
+            {% for user in recent_users %}
+            <div class="mobile-card">
+                <div class="mobile-card-header">
+                    <h5 class="mobile-card-title">{{ user.username }}</h5>
+                    <div>
+                        <span class="badge bg-{{ 'danger' if user.role == 'admin' else 'primary' if user.role == 'organization' else 'info' if user.role == 'organization_member' else 'secondary' }}">
+                            {{ user.role }}
+                        </span>
                     </div>
                 </div>
-                
-                <div class="col-md-4">
-                    <div class="card mb-4">
-                        <div class="card-body text-center">
-                            <h3 class="card-title">{{ active_users }}</h3>
-                            <p class="card-text">Active Users</p>
-                        </div>
+                <div class="mobile-card-body">
+                    <div class="item">
+                        <div class="label">Email</div>
+                        <div class="value">{{ user.email }}</div>
+                    </div>
+                    <div class="item">
+                        <div class="label">Joined</div>
+                        <div class="value">{{ user.created_at.strftime('%Y-%m-%d') }}</div>
                     </div>
                 </div>
-                
-                <div class="col-md-4">
-                    <div class="card mb-4">
-                        <div class="card-body text-center">
-                            <h3 class="card-title">{{ organization_count }}</h3>
-                            <p class="card-text">Organizations</p>
-                        </div>
-                    </div>
+                <div class="mobile-card-footer">
+                    <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
                 </div>
             </div>
-            
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Recent Users</h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Username</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                    <th>Joined</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for user in recent_users %}
-                                <tr>
-                                    <td>{{ user.username }}</td>
-                                    <td>{{ user.email }}</td>
-                                    <td>
-                                        <span class="badge bg-{{ 'danger' if user.role == 'admin' else 'primary' if user.role == 'organization' else 'secondary' }}">
-                                            {{ user.role }}
-                                        </span>
-                                    </td>
-                                    <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
-                                    <td>
-                                        <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="btn btn-sm btn-primary">Edit</a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+            {% endfor %}
         </div>
     </div>
 </div>

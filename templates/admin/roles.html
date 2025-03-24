@@ -1,100 +1,209 @@
-{% extends "base.html" %}
+{% extends 'admin/layout.html' %}
 
-{% block header %}Manage Roles{% endblock %}
+{% block title %}Role Management | Admin - Kenyan Legal Assistant{% endblock %}
 
-{% block content %}
-<div class="row mb-4">
-    <div class="col">
-        <a href="{{ url_for('admin.create_role') }}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Create New Role
-        </a>
-    </div>
-</div>
+{% block breadcrumb %}
+<li class="admin-breadcrumb-item active" aria-current="page">Role Management</li>
+{% endblock %}
 
-<div class="card shadow">
+{% block admin_content %}
+<div class="card admin-card mb-4">
     <div class="card-header">
-        <h5 class="card-title mb-0">Roles</h5>
+        <h5 class="card-title"><i class="fas fa-user-tag me-2"></i> Role Management</h5>
+        <div class="action-buttons">
+            <a href="{{ url_for('admin.create_role') }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus"></i><span class="d-none d-md-inline"> Create New Role</span>
+            </a>
+        </div>
     </div>
     <div class="card-body">
+        <!-- Optional search filter for roles -->
+        <div class="admin-filters mb-4">
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="searchRoles" placeholder="Search roles..." onkeyup="filterRoles()">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <select class="form-select" id="filterRoleType" onchange="filterRoles()">
+                            <option value="">All Role Types</option>
+                            <option value="default">Default</option>
+                            <option value="custom">Custom</option>
+                            <option value="standard">Standard</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
         {% if roles %}
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Description</th>
-                        <th>Type</th>
-                        <th>Permissions</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for role in roles %}
-                    <tr>
-                        <td>{{ role.name }}</td>
-                        <td>{{ role.description }}</td>
-                        <td>
-                            {% if role.is_default %}
-                            <span class="badge bg-primary">Default</span>
-                            {% elif role.is_custom %}
-                            <span class="badge bg-success">Custom</span>
-                            {% else %}
-                            <span class="badge bg-secondary">Standard</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <button class="btn btn-sm btn-info" type="button" data-bs-toggle="collapse" data-bs-target="#permissions{{ role.id }}" aria-expanded="false">
-                                View Permissions ({{ role.permissions|length }})
-                            </button>
-                            <div class="collapse mt-2" id="permissions{{ role.id }}">
-                                {% if role.permissions %}
-                                <div class="d-flex flex-wrap gap-1">
-                                    {% for permission in role.permissions %}
-                                    <span class="badge bg-light text-dark">{{ permission.name }}</span>
-                                    {% endfor %}
-                                </div>
+        <!-- Desktop table view -->
+        <div class="admin-table-container">
+            <div class="table-responsive-mobile">
+                <table class="table table-hover" id="rolesTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Type</th>
+                            <th>Permissions</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for role in roles %}
+                        <tr data-role-name="{{ role.name|lower }}" data-role-type="{% if role.is_default %}default{% elif role.is_custom %}custom{% else %}standard{% endif %}">
+                            <td>{{ role.name }}</td>
+                            <td>{{ role.description }}</td>
+                            <td>
+                                {% if role.is_default %}
+                                <span class="badge bg-primary">Default</span>
+                                {% elif role.is_custom %}
+                                <span class="badge bg-success">Custom</span>
                                 {% else %}
-                                <span class="text-muted">No permissions assigned</span>
+                                <span class="badge bg-secondary">Standard</span>
                                 {% endif %}
-                            </div>
-                        </td>
-                        <td>
-                            {% if not role.is_default %}
-                            <a href="{{ url_for('admin.edit_role', role_id=role.id) }}" class="btn btn-sm btn-primary">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteRoleModal{{ role.id }}">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                            
-                            <!-- Delete Role Modal -->
-                            <div class="modal fade" id="deleteRoleModal{{ role.id }}" tabindex="-1" aria-labelledby="deleteRoleModalLabel{{ role.id }}" aria-hidden="true">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title" id="deleteRoleModalLabel{{ role.id }}">Delete Role</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            Are you sure you want to delete the role <strong>{{ role.name }}</strong>? This action cannot be undone.
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                            <form action="{{ url_for('admin.delete_role', role_id=role.id) }}" method="post">
-                                                <button type="submit" class="btn btn-danger">Delete</button>
-                                            </form>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-info" type="button" data-bs-toggle="collapse" data-bs-target="#permissions{{ role.id }}" aria-expanded="false">
+                                    View ({{ role.permissions|length }})
+                                </button>
+                                <div class="collapse mt-2" id="permissions{{ role.id }}">
+                                    {% if role.permissions %}
+                                    <div class="d-flex flex-wrap gap-1">
+                                        {% for permission in role.permissions %}
+                                        <span class="badge bg-light text-dark">{{ permission.name }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    {% else %}
+                                    <span class="text-muted">No permissions assigned</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                {% if not role.is_default %}
+                                <div class="admin-actions">
+                                    <a href="{{ url_for('admin.edit_role', role_id=role.id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-edit"></i><span class="d-none d-md-inline"> Edit</span>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteRoleModal{{ role.id }}">
+                                        <i class="fas fa-trash"></i><span class="d-none d-md-inline"> Delete</span>
+                                    </button>
+                                </div>
+                                
+                                <!-- Delete Role Modal -->
+                                <div class="modal fade" id="deleteRoleModal{{ role.id }}" tabindex="-1" aria-labelledby="deleteRoleModalLabel{{ role.id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="deleteRoleModalLabel{{ role.id }}">Delete Role</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                Are you sure you want to delete the role <strong>{{ role.name }}</strong>? This action cannot be undone.
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <form action="{{ url_for('admin.delete_role', role_id=role.id) }}" method="post">
+                                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                                </form>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
+                                {% else %}
+                                <span class="text-muted">Default (cannot modify)</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Mobile card view -->
+        <div class="mobile-card-view">
+            {% for role in roles %}
+            <div class="mobile-card" 
+                 data-role-name="{{ role.name|lower }}" 
+                 data-role-type="{% if role.is_default %}default{% elif role.is_custom %}custom{% else %}standard{% endif %}">
+                <div class="mobile-card-header">
+                    <h5 class="mobile-card-title">{{ role.name }}</h5>
+                    <div>
+                        {% if role.is_default %}
+                        <span class="badge bg-primary">Default</span>
+                        {% elif role.is_custom %}
+                        <span class="badge bg-success">Custom</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Standard</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="mobile-card-body">
+                    {% if role.description %}
+                    <div class="item">
+                        <div class="label">Description</div>
+                        <div class="value">{{ role.description }}</div>
+                    </div>
+                    {% endif %}
+                    <div class="item">
+                        <div class="label">Permissions</div>
+                        <div class="value">
+                            <button class="btn btn-sm btn-info" type="button" data-bs-toggle="collapse" data-bs-target="#permissionsMobile{{ role.id }}" aria-expanded="false">
+                                View ({{ role.permissions|length }})
+                            </button>
+                        </div>
+                    </div>
+                    <div class="collapse mt-2" id="permissionsMobile{{ role.id }}">
+                        {% if role.permissions %}
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for permission in role.permissions %}
+                            <span class="badge bg-light text-dark">{{ permission.name }}</span>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <span class="text-muted">No permissions assigned</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="mobile-card-footer">
+                    {% if not role.is_default %}
+                    <a href="{{ url_for('admin.edit_role', role_id=role.id) }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteRoleModalMobile{{ role.id }}">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                    
+                    <!-- Mobile Delete Role Modal -->
+                    <div class="modal fade" id="deleteRoleModalMobile{{ role.id }}" tabindex="-1" aria-labelledby="deleteRoleModalMobileLabel{{ role.id }}" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="deleteRoleModalMobileLabel{{ role.id }}">Delete Role</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    Are you sure you want to delete the role <strong>{{ role.name }}</strong>? This action cannot be undone.
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <form action="{{ url_for('admin.delete_role', role_id=role.id) }}" method="post">
+                                        <button type="submit" class="btn btn-danger">Delete</button>
+                                    </form>
+                                </div>
                             </div>
-                            {% else %}
-                            <span class="text-muted">Default (cannot modify)</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                        </div>
+                    </div>
+                    {% else %}
+                    <span class="text-muted">Default (cannot modify)</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
         </div>
         {% else %}
         <div class="alert alert-info">
@@ -104,19 +213,19 @@
     </div>
 </div>
 
-<div class="card shadow mt-4">
+<div class="card admin-card">
     <div class="card-header">
-        <h5 class="card-title mb-0">Available Permissions</h5>
+        <h5 class="card-title"><i class="fas fa-key me-2"></i> Available Permissions</h5>
     </div>
     <div class="card-body">
         {% if permissions %}
-        <div class="row">
+        <div class="row g-3">
             {% for permission in permissions %}
-            <div class="col-md-4 mb-2">
-                <div class="card">
+            <div class="col-xl-3 col-lg-4 col-md-6">
+                <div class="card h-100">
                     <div class="card-body">
-                        <h6 class="card-title">{{ permission.name }}</h6>
-                        <p class="card-text small text-muted">{{ permission.description }}</p>
+                        <h6 class="card-title text-truncate" title="{{ permission.name }}">{{ permission.name }}</h6>
+                        <p class="card-text small text-muted mb-0">{{ permission.description }}</p>
                     </div>
                 </div>
             </div>
@@ -129,4 +238,46 @@
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block admin_scripts %}
+<script>
+// Filter roles by search term and role type
+function filterRoles() {
+    const searchTerm = document.getElementById('searchRoles').value.toLowerCase();
+    const roleTypeFilter = document.getElementById('filterRoleType').value.toLowerCase();
+    
+    // Filter table rows
+    const tableRows = document.querySelectorAll('#rolesTable tbody tr');
+    tableRows.forEach(row => {
+        const roleName = row.getAttribute('data-role-name');
+        const roleType = row.getAttribute('data-role-type');
+        
+        const matchesSearch = roleName.includes(searchTerm);
+        const matchesType = roleTypeFilter === '' || roleType === roleTypeFilter;
+        
+        if (matchesSearch && matchesType) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Filter mobile cards
+    const mobileCards = document.querySelectorAll('.mobile-card');
+    mobileCards.forEach(card => {
+        const roleName = card.getAttribute('data-role-name');
+        const roleType = card.getAttribute('data-role-type');
+        
+        const matchesSearch = roleName.includes(searchTerm);
+        const matchesType = roleTypeFilter === '' || roleType === roleTypeFilter;
+        
+        if (matchesSearch && matchesType) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+</script>
 {% endblock %}
