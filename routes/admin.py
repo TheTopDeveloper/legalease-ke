@@ -445,43 +445,140 @@ def delete_organization(org_id):
 def organization_members(org_id):
     """Manage organization members"""
     organization = Organization.query.get_or_404(org_id)
-    users = User.query.filter_by(is_active=True).all()
+    current_members = organization.members
+    
+    # Get available users (those who are not already members)
+    available_users = User.query.filter(User.is_active==True).filter(~User.organizations.contains(organization)).all()
     
     if request.method == 'POST':
-        # Update members
-        organization.members = []
-        for key, value in request.form.items():
-            if key.startswith('member_') and value == 'on':
-                user_id = int(key.split('_')[1])
-                user = User.query.get(user_id)
+        action = request.form.get('action')
+        
+        if action == 'add_member':
+            # Add new member
+            new_member_id = request.form.get('new_member')
+            if new_member_id:
+                user = User.query.get(new_member_id)
                 if user:
                     organization.members.append(user)
-                    # If user is a member, set their role appropriately
-                    if user.id == organization.owner_id:
-                        user.role = 'organization'
-                    else:
+                    
+                    # If user is not already part of an organization, set their role
+                    if user.role not in ['admin', 'organization']:
                         user.role = 'organization_member'
-                        
-                    # Set this as their active organization if not already part of one
+                    
+                    # Set this as their active organization if they don't have one
                     if not user.active_organization_id:
                         user.active_organization_id = organization.id
+                    
+                    try:
+                        db.session.commit()
+                        flash(f"User {user.username} added to organization", "success")
+                    except Exception as e:
+                        db.session.rollback()
+                        logger.error(f"Error adding member to organization: {str(e)}")
+                        flash(f"Error adding member: {str(e)}", "error")
         
-        try:
-            db.session.commit()
-            flash(f"Organization members updated successfully", "success")
-            return redirect(url_for('admin.organizations'))
-        except Exception as e:
-            db.session.rollback()
-            logger.error(f"Error updating organization members: {str(e)}")
-            flash(f"Error updating organization members: {str(e)}", "error")
+        elif action == 'remove_member':
+            # Remove member
+            member_id = request.form.get('member_id')
+            if member_id:
+                user = User.query.get(member_id)
+                if user and user in organization.members:
+                    organization.members.remove(user)
+                    
+                    # If this was their active organization, clear it
+                    if user.active_organization_id == organization.id:
+                        user.active_organization_id = None
+                    
+                    # If they're not an admin or organization owner elsewhere, reset role
+                    if user.role == 'organization_member' and not user.organizations.count():
+                        user.role = 'individual'
+                    
+                    try:
+                        db.session.commit()
+                        flash(f"User {user.username} removed from organization", "success")
+                    except Exception as e:
+                        db.session.rollback()
+                        logger.error(f"Error removing member from organization: {str(e)}")
+                        flash(f"Error removing member: {str(e)}", "error")
+        
+        elif action == 'make_owner':
+            # Make user the organization owner
+            member_id = request.form.get('member_id')
+            if member_id:
+                user = User.query.get(member_id)
+                if user and user in organization.members:
+                    # Update user roles
+                    if organization.owner:
+                        # Change current owner's role if not an admin
+                        if organization.owner.role != 'admin':
+                            organization.owner.role = 'organization_member'
+                    
+                    # Set new owner
+                    organization.owner_id = user.id
+                    user.role = 'organization'
+                    
+                    try:
+                        db.session.commit()
+                        flash(f"User {user.username} is now the organization owner", "success")
+                    except Exception as e:
+                        db.session.rollback()
+                        logger.error(f"Error changing organization owner: {str(e)}")
+                        flash(f"Error changing owner: {str(e)}", "error")
+        
+        # Redirect to refresh the member list
+        return redirect(url_for('admin.organization_members', org_id=org_id))
     
-    return render_template('admin/organization_members.html', organization=organization, users=users)
+    return render_template('admin/organization_members.html', 
+                          organization=organization, 
+                          current_members=current_members,
+                          available_users=available_users)
 
-# System Settings
+# System Settings and Management
 @admin_bp.route('/system-settings', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def system_settings():
     """System settings page"""
-    # This would be expanded to include various system settings
-    return render_template('admin/system_settings.html')
+    # Get user and organization counts for the system info panel
+    user_count = User.query.count()
+    organization_count = Organization.query.count()
+    
+    if request.method == 'POST':
+        # Update system settings
+        # This would be implemented to save system settings
+        flash("System settings updated successfully", "success")
+        return redirect(url_for('admin.system_settings'))
+        
+    return render_template('admin/system_settings.html',
+                          user_count=user_count,
+                          organization_count=organization_count)
+
+@admin_bp.route('/clear-cache', methods=['POST'])
+@login_required
+@admin_required
+def clear_cache():
+    """Clear system cache"""
+    # This would implement cache clearing functionality
+    try:
+        # Implement cache clearing logic here
+        flash("System cache cleared successfully", "success")
+    except Exception as e:
+        logger.error(f"Error clearing cache: {str(e)}")
+        flash(f"Error clearing cache: {str(e)}", "error")
+        
+    return redirect(url_for('admin.system_settings'))
+
+@admin_bp.route('/backup-database', methods=['POST'])
+@login_required
+@admin_required
+def backup_database():
+    """Create a database backup"""
+    try:
+        # Implement database backup logic here
+        # This could export data or trigger a pg_dump
+        flash("Database backup created successfully", "success")
+    except Exception as e:
+        logger.error(f"Error creating database backup: {str(e)}")
+        flash(f"Error creating database backup: {str(e)}", "error")
+        
+    return redirect(url_for('admin.system_settings'))

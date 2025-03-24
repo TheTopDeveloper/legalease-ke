@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block header %}System Settings{% endblock %}
+
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">System Configuration</h5>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="mb-3">General Settings</h6>
+                    
+                    <div class="mb-3">
+                        <label for="system_name" class="form-label">System Name</label>
+                        <input type="text" class="form-control" id="system_name" name="system_name" value="Kenyan Legal Assistant">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="maintenance_mode" class="form-label">Maintenance Mode</label>
+                        <select class="form-select" id="maintenance_mode" name="maintenance_mode">
+                            <option value="off" selected>Off</option>
+                            <option value="on">On</option>
+                        </select>
+                        <div class="form-text">When on, only administrators can access the system</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="default_role" class="form-label">Default User Role</label>
+                        <select class="form-select" id="default_role" name="default_role">
+                            <option value="individual" selected>Individual</option>
+                            <option value="organization_member">Organization Member</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <h6 class="mb-3">Token Configuration</h6>
+                    
+                    <div class="mb-3">
+                        <label for="free_tokens" class="form-label">Free Token Allocation</label>
+                        <input type="number" class="form-control" id="free_tokens" name="free_tokens" value="50">
+                        <div class="form-text">Number of tokens given to new users on signup</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="token_expiry_days" class="form-label">Token Expiry (days)</label>
+                        <input type="number" class="form-control" id="token_expiry_days" name="token_expiry_days" value="365">
+                        <div class="form-text">Number of days before purchased tokens expire</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="daily_reward_tokens" class="form-label">Daily Reward Tokens</label>
+                        <input type="number" class="form-control" id="daily_reward_tokens" name="daily_reward_tokens" value="5">
+                        <div class="form-text">Tokens given for daily login streaks</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <h6 class="mb-3">Integration Settings</h6>
+                    
+                    <div class="mb-3">
+                        <label for="kenyalaw_api_enabled" class="form-label">Kenya Law API</label>
+                        <select class="form-select" id="kenyalaw_api_enabled" name="kenyalaw_api_enabled">
+                            <option value="1" selected>Enabled</option>
+                            <option value="0">Disabled</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="sms_provider" class="form-label">SMS Provider</label>
+                        <select class="form-select" id="sms_provider" name="sms_provider">
+                            <option value="mock" selected>Mock (Testing)</option>
+                            <option value="twilio">Twilio</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <h6 class="mb-3">Payment Configuration</h6>
+                    
+                    <div class="mb-3">
+                        <label for="payment_provider" class="form-label">Payment Provider</label>
+                        <select class="form-select" id="payment_provider" name="payment_provider">
+                            <option value="mock" selected>Mock (Testing)</option>
+                            <option value="pesapal">PesaPal</option>
+                            <option value="dpo">DPO</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="currency" class="form-label">Currency</label>
+                        <select class="form-select" id="currency" name="currency">
+                            <option value="KES" selected>Kenyan Shilling (KES)</option>
+                            <option value="USD">US Dollar (USD)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">Save Settings</button>
+                <button type="reset" class="btn btn-secondary">Reset</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header">
+        <h5 class="card-title mb-0">System Information</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <table class="table table-sm">
+                    <tbody>
+                        <tr>
+                            <th>System Version</th>
+                            <td>1.0.0</td>
+                        </tr>
+                        <tr>
+                            <th>Database Status</th>
+                            <td><span class="badge bg-success">Connected</span></td>
+                        </tr>
+                        <tr>
+                            <th>User Count</th>
+                            <td>{{ user_count }}</td>
+                        </tr>
+                        <tr>
+                            <th>Organization Count</th>
+                            <td>{{ organization_count }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <div class="alert alert-info">
+                    <h6>System Maintenance</h6>
+                    <p>Use these tools with caution.</p>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#cacheModal">
+                            <i class="fas fa-broom"></i> Clear System Cache
+                        </button>
+                        <button class="btn btn-sm btn-outline-warning" type="button" data-bs-toggle="modal" data-bs-target="#backupModal">
+                            <i class="fas fa-download"></i> Backup Database
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cache Clear Modal -->
+<div class="modal fade" id="cacheModal" tabindex="-1" aria-labelledby="cacheModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cacheModalLabel">Clear System Cache</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to clear the system cache? This will remove all cached data and may temporarily slow down the system.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('admin.clear_cache') }}" method="post">
+                    <button type="submit" class="btn btn-primary">Clear Cache</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Backup Modal -->
+<div class="modal fade" id="backupModal" tabindex="-1" aria-labelledby="backupModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="backupModalLabel">Backup Database</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                This will create a backup of the current database. Do you want to proceed?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('admin.backup_database') }}" method="post">
+                    <button type="submit" class="btn btn-primary">Create Backup</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

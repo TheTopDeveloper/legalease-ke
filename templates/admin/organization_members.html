@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block header %}Manage Organization Members{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <a href="{{ url_for('admin.edit_organization', org_id=organization.id) }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Organization Details
+        </a>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">{{ organization.name }} - Manage Members</h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-info">
+            <p><strong>Organization Owner:</strong> 
+                {% if organization.owner %}
+                {{ organization.owner.username }} ({{ organization.owner.email }})
+                {% else %}
+                <span class="text-muted">No owner assigned</span>
+                {% endif %}
+            </p>
+        </div>
+        
+        <form method="post" class="mb-4">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        <label for="new_member" class="form-label">Add New Member</label>
+                        <select class="form-select" id="new_member" name="new_member">
+                            <option value="">-- Select a user --</option>
+                            {% for user in available_users %}
+                            <option value="{{ user.id }}">{{ user.username }} ({{ user.email }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" name="action" value="add_member" class="btn btn-primary">
+                        <i class="fas fa-user-plus"></i> Add Member
+                    </button>
+                </div>
+            </div>
+        </form>
+        
+        {% if current_members %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in current_members %}
+                    <tr>
+                        <td>{{ member.username }}</td>
+                        <td>{{ member.email }}</td>
+                        <td>
+                            {% if organization.owner_id == member.id %}
+                            <span class="badge bg-primary">Owner</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Member</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if organization.owner_id != member.id %}
+                            <form method="post" class="d-inline">
+                                <input type="hidden" name="member_id" value="{{ member.id }}">
+                                <button type="submit" name="action" value="remove_member" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-user-minus"></i> Remove
+                                </button>
+                            </form>
+                            <form method="post" class="d-inline">
+                                <input type="hidden" name="member_id" value="{{ member.id }}">
+                                <button type="submit" name="action" value="make_owner" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-user-shield"></i> Make Owner
+                                </button>
+                            </form>
+                            {% else %}
+                            <span class="text-muted">Cannot modify owner</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-warning">
+            This organization has no members.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
