@@ -59,6 +59,7 @@ from routes.notifications import notifications_bp
 from routes.templates import templates_bp
 from routes.events import events_bp
 from routes.writing_assistant import writing_bp
+from routes.admin import admin_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(cases_bp)
@@ -72,6 +73,7 @@ app.register_blueprint(notifications_bp)
 app.register_blueprint(templates_bp)
 app.register_blueprint(events_bp)
 app.register_blueprint(writing_bp)
+app.register_blueprint(admin_bp)
 
 # Load user loader callback
 from models import User

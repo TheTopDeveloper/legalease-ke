@@ -68,6 +68,20 @@
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ url_for('billing.admin_subscriptions') }}">Manage Subscriptions</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('billing.admin_tokens') }}">Manage Token Packages</a></li>
+                    {% endif %}
+                        </ul>
+                    </li>
+                    {% if current_user.role == 'admin' %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if request.endpoint.startswith('admin.') %}active{% endif %}" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-shield"></i> Admin
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="adminDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('admin.index') }}">Dashboard</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.users') }}">Manage Users</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.roles') }}">Manage Roles</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.organizations') }}">Manage Organizations</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.system_settings') }}">System Settings</a></li>
                             {% endif %}
                         </ul>
                     </li>
