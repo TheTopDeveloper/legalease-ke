@@ -3,11 +3,14 @@ Initialize database with default gamification achievements and challenges.
 Run this script after setting up the database to add initial data.
 """
 
-import json
 import os
+import sys
+import json
 from datetime import datetime, timedelta
+
 from app import app, db
 from models import Achievement, Challenge
+from utils.gamification import GamificationService
 
 def create_achievements():
     """Create default achievements"""
@@ -87,20 +90,18 @@ def create_achievements():
     ]
     
     existing_achievements = {a.name: a for a in Achievement.query.all()}
+    count = 0
     
     for achievement_data in achievements:
         name = achievement_data['name']
         if name not in existing_achievements:
             achievement = Achievement(**achievement_data)
             db.session.add(achievement)
+            count += 1
             print(f"Added achievement: {name}")
-        else:
-            # Update existing achievement
-            for key, value in achievement_data.items():
-                setattr(existing_achievements[name], key, value)
-            print(f"Updated achievement: {name}")
     
     db.session.commit()
+    print(f"Created {count} new achievements")
 
 def create_challenges():
     """Create default challenges"""
@@ -108,7 +109,32 @@ def create_challenges():
     tomorrow = now + timedelta(days=1)
     next_week = now + timedelta(days=7)
     
-    challenges = [
+    # Daily challenges
+    daily_challenges = [
+        {
+            'title': 'Daily Login',
+            'description': 'Log in to the platform today.',
+            'challenge_type': 'daily',
+            'points': 10,
+            'requirements': json.dumps({'type': 'login', 'target': 1}),
+            'start_date': now,
+            'end_date': tomorrow,
+            'is_active': True
+        },
+        {
+            'title': 'Research Session',
+            'description': 'Conduct one legal research session today.',
+            'challenge_type': 'daily',
+            'points': 15,
+            'requirements': json.dumps({'type': 'research', 'target': 1}),
+            'start_date': now,
+            'end_date': tomorrow,
+            'is_active': True
+        }
+    ]
+    
+    # Weekly challenges
+    weekly_challenges = [
         {
             'title': 'Research Champion',
             'description': 'Conduct 3 legal research sessions in a week.',
@@ -124,54 +150,61 @@ def create_challenges():
             'description': 'Create 2 legal documents in a week.',
             'challenge_type': 'weekly',
             'points': 40,
-            'requirements': json.dumps({'type': 'document', 'target': 2}),
+            'requirements': json.dumps({'type': 'create_document', 'target': 2}),
             'start_date': now,
             'end_date': next_week,
-            'is_active': True
-        },
-        {
-            'title': 'Daily Login',
-            'description': 'Log in to the platform today.',
-            'challenge_type': 'daily',
-            'points': 10,
-            'requirements': json.dumps({'type': 'login', 'target': 1}),
-            'start_date': now,
-            'end_date': tomorrow,
             'is_active': True
         }
     ]
     
-    # Clear expired challenges
-    expired = Challenge.query.filter(Challenge.end_date < now).all()
-    for challenge in expired:
-        db.session.delete(challenge)
+    # First check if we already have active challenges
+    active_daily = Challenge.query.filter(
+        Challenge.challenge_type == 'daily',
+        Challenge.end_date > now,
+        Challenge.is_active == True
+    ).first()
     
-    # Add or update challenges
-    existing_challenges = {c.title: c for c in Challenge.query.filter(Challenge.end_date >= now).all()}
+    active_weekly = Challenge.query.filter(
+        Challenge.challenge_type == 'weekly',
+        Challenge.end_date > now,
+        Challenge.is_active == True
+    ).count()
     
-    for challenge_data in challenges:
-        title = challenge_data['title']
-        if title not in existing_challenges:
+    count = 0
+    
+    # Only add daily if we don't have one
+    if not active_daily:
+        # Add one random daily challenge
+        import random
+        challenge_data = random.choice(daily_challenges)
+        challenge = Challenge(**challenge_data)
+        db.session.add(challenge)
+        count += 1
+        print(f"Added daily challenge: {challenge_data['title']}")
+    
+    # Only add weekly if we don't have at least 2
+    if active_weekly < 2:
+        num_to_add = 2 - active_weekly
+        for i in range(min(num_to_add, len(weekly_challenges))):
+            challenge_data = weekly_challenges[i]
             challenge = Challenge(**challenge_data)
             db.session.add(challenge)
-            print(f"Added challenge: {title}")
-        else:
-            # Update existing challenge if needed
-            existing = existing_challenges[title]
-            if existing.challenge_type == 'daily' and existing.end_date < tomorrow:
-                # Update daily challenge
-                existing.start_date = now
-                existing.end_date = tomorrow
-                print(f"Updated daily challenge: {title}")
+            count += 1
+            print(f"Added weekly challenge: {challenge_data['title']}")
     
     db.session.commit()
+    print(f"Created {count} new challenges")
 
 def main():
     """Main function to initialize gamification data"""
     with app.app_context():
+        print("Creating achievements...")
         create_achievements()
+        
+        print("\nCreating challenges...")
         create_challenges()
-        print("Gamification data initialized successfully!")
+        
+        print("\nGamification data initialization complete!")
 
 if __name__ == "__main__":
     main()

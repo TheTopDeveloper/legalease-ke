@@ -1,75 +1,60 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background Circle -->
-  <circle cx="60" cy="60" r="55" fill="#2c3e50"/>
+  <!-- Badge background -->
+  <circle cx="60" cy="60" r="58" fill="#1e3799" stroke="#4a69bd" stroke-width="4"/>
   
-  <!-- Eagle Body -->
-  <g transform="translate(60, 60) scale(0.7)" fill="#f39c12">
-    <!-- Eagle Head -->
-    <ellipse cx="0" cy="-10" rx="15" ry="20" />
+  <!-- Eagle silhouette -->
+  <g transform="translate(60, 55) scale(0.6)">
+    <!-- Eagle head -->
+    <path d="M0,-40 C5,-42 10,-38 12,-33 C15,-30 13,-25 10,-22 L15,-20 C17,-15 12,-12 8,-14 C12,-10 8,-5 5,-8 
+             C0,-5 -5,-8 -7,-12 C-10,-10 -13,-12 -12,-16 L-7,-18 C-10,-21 -12,-26 -10,-30 C-8,-35 -5,-38 0,-40 Z" 
+          fill="#f5f6fa" stroke="#333" stroke-width="1.5"/>
     
-    <!-- Eagle Beak -->
-    <path d="M0,-15 L15,-10 L0,-5 Z" fill="#e67e22" />
+    <!-- Eagle beak -->
+    <path d="M0,-20 C3,-18 7,-20 8,-18 C6,-14 4,-14 0,-16 C-4,-14 -6,-14 -8,-18 C-7,-20 -3,-18 0,-20 Z" 
+          fill="#feca57" stroke="#333" stroke-width="0.5"/>
     
-    <!-- Eagle Wings -->
-    <path d="M0,0 C-20,5 -40,10 -45,40 C-30,20 -15,15 0,15 C15,15 30,20 45,40 C40,10 20,5 0,0 Z" />
+    <!-- Eagle eye -->
+    <circle cx="5" cy="-25" r="2" fill="#333"/>
+    <circle cx="-5" cy="-25" r="2" fill="#333"/>
     
-    <!-- Eagle Tail -->
-    <path d="M-10,15 L0,40 L10,15 Z" />
-    
-    <!-- Eagle Eye -->
-    <circle cx="-5" cy="-15" r="3" fill="#fff" />
-    <circle cx="-5" cy="-15" r="1.5" fill="#2c3e50" />
+    <!-- Eagle wings -->
+    <path d="M10,-15 C20,-18 30,-10 40,5 C35,0 25,0 20,5 C30,5 40,15 45,30 C35,20 25,15 15,15 C25,25 30,40 25,55 
+             C20,45 10,35 5,30 C8,40 5,50 0,60 C-5,50 -8,40 -5,30 C-10,35 -20,45 -25,55 C-30,40 -25,25 -15,15 
+             C-25,15 -35,20 -45,30 C-40,15 -30,5 -20,5 C-25,0 -35,0 -40,5 C-30,-10 -20,-18 -10,-15 C-5,-20 5,-20 10,-15 Z" 
+          fill="#f5f6fa" stroke="#333" stroke-width="2"/>
   </g>
   
-  <!-- Law Book -->
-  <g transform="translate(60, 90) scale(0.7)">
-    <!-- Book Cover -->
-    <rect x="-30" y="-20" width="60" height="40" rx="3" fill="#3498db" />
+  <!-- Law book stack -->
+  <g transform="translate(60, 90) scale(0.3)">
+    <rect x="-80" y="0" width="160" height="20" rx="2" ry="2" fill="#e74c3c" stroke="#333" stroke-width="3"/>
+    <rect x="-75" y="-20" width="150" height="20" rx="2" ry="2" fill="#3498db" stroke="#333" stroke-width="3"/>
+    <rect x="-70" y="-40" width="140" height="20" rx="2" ry="2" fill="#2ecc71" stroke="#333" stroke-width="3"/>
     
-    <!-- Book Binding -->
-    <rect x="-32" y="-20" width="4" height="40" fill="#2980b9" />
-    
-    <!-- Book Pages - Side View -->
-    <rect x="-28" y="-18" width="56" height="36" fill="#ecf0f1" />
-    
-    <!-- Book Text Lines -->
-    <g stroke="#7f8c8d" stroke-width="1">
-      <line x1="-20" y1="-10" x2="20" y2="-10" />
-      <line x1="-20" y1="0" x2="20" y2="0" />
-      <line x1="-20" y1="10" x2="20" y2="10" />
+    <!-- Book lines -->
+    <g stroke="#333" stroke-width="2">
+      <line x1="-60" y1="10" x2="-20" y2="10"/>
+      <line x1="20" y1="10" x2="60" y2="10"/>
+      <line x1="-55" y1="-10" x2="-15" y2="-10"/>
+      <line x1="15" y1="-10" x2="55" y2="-10"/>
+      <line x1="-50" y1="-30" x2="-10" y2="-30"/>
+      <line x1="10" y1="-30" x2="50" y2="-30"/>
     </g>
   </g>
   
-  <!-- Magnifying Glass -->
-  <g transform="translate(85, 35) rotate(15)">
-    <!-- Handle -->
-    <rect x="-3" y="15" width="6" height="20" rx="3" fill="#7f8c8d" />
-    
-    <!-- Glass Frame -->
-    <circle cx="0" cy="0" r="15" fill="none" stroke="#7f8c8d" stroke-width="4" />
-    
-    <!-- Glass -->
-    <circle cx="0" cy="0" r="12" fill="#ecf0f1" opacity="0.5" />
-    
-    <!-- Reflection -->
-    <path d="M-7,-7 L-4,-4" stroke="#fff" stroke-width="2" stroke-linecap="round" />
+  <!-- Magnifying glass -->
+  <g transform="translate(85, 40) rotate(25) scale(0.15)">
+    <circle cx="0" cy="0" r="50" fill="none" stroke="#f5f6fa" stroke-width="8"/>
+    <line x1="35" y1="35" x2="90" y2="90" stroke="#f5f6fa" stroke-width="12" stroke-linecap="round"/>
   </g>
   
-  <!-- Number 10 -->
-  <g transform="translate(40, 35)">
-    <!-- Circle Background -->
-    <circle cx="0" cy="0" r="12" fill="#3498db" />
-    
-    <!-- Number -->
-    <text x="0" y="5" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#fff" text-anchor="middle">10</text>
+  <!-- Award ribbon -->
+  <g transform="translate(60, 105) scale(0.6)">
+    <path d="M0,-15 L15,5 L0,-5 L-15,5 Z" fill="#feca57"/>
   </g>
   
-  <!-- Decorative Elements -->
-  <g fill="#f1c40f" opacity="0.8">
-    <circle cx="25" cy="25" r="2" />
-    <circle cx="95" cy="25" r="2" />
-    <circle cx="25" cy="95" r="2" />
-    <circle cx="95" cy="95" r="2" />
+  <!-- Badge text -->
+  <g text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">
+    <text x="60" y="95" font-size="12" fill="#ffffff">LEGAL EAGLE</text>
   </g>
 </svg>

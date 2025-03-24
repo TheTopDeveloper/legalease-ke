@@ -1,191 +1,224 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
-{% block title %}Your Achievements - Kenyan Legal Assistant{% endblock %}
-
-{% block head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/gamification.css') }}">
-{% endblock %}
+{% block title %}Achievements{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            <div class="card shadow">
-                <div class="card-body">
-                    <h2 class="text-center mb-4">Your Achievements</h2>
-                    
-                    <div class="row mb-4">
-                        <div class="col-md-4 text-center">
-                            <div class="user-level">Level {{ user_profile.level }}</div>
-                            <div class="user-title">{{ user_profile.title }}</div>
-                            <div class="level-progress">
-                                <div class="level-progress-bar">
-                                    <div class="level-progress-fill" style="width: {{ level_progress }}%;"></div>
-                                </div>
-                                <div class="level-info">
-                                    <span>Level {{ user_profile.level }}</span>
-                                    <span>{{ user_profile.total_points }} / {{ points_to_next_level }} points</span>
-                                    <span>Level {{ user_profile.level + 1 }}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 text-center">
-                            <h5>Current Streak</h5>
-                            <div class="d-flex align-items-center justify-content-center">
-                                <i class="bi bi-calendar-check text-primary me-2"></i>
-                                <span class="fs-1 fw-bold">{{ user_profile.streak_days }}</span>
-                                <span class="ms-2">days</span>
-                            </div>
-                            <div class="small text-muted">Longest streak: {{ user_profile.longest_streak }} days</div>
-                            {% if user_profile.streak_days > 0 %}
-                                <a href="{{ url_for('gamification.daily_rewards') }}" class="btn btn-sm btn-outline-primary mt-2">View Streak</a>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-4 text-center">
-                            <h5>Unlocked</h5>
-                            <div class="d-flex align-items-center justify-content-center">
-                                <i class="bi bi-trophy text-warning me-2"></i>
-                                <span class="fs-1 fw-bold">{{ earned_achievements|length }}</span>
-                                <span class="ms-2">/ {{ all_achievements|length }}</span>
-                            </div>
-                            <div class="small text-muted">{{ completion_percentage }}% completed</div>
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Achievements</h1>
+        <a href="{{ url_for('gamification.dashboard') }}" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Progress Overview -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-4 text-center">
+                    <h5>Level {{ user_profile.level }}: {{ user_profile.title }}</h5>
+                    <div class="progress mt-2" style="height: 10px;">
+                        <div class="progress-bar bg-primary" role="progressbar" 
+                             style="width: {{ level_progress }}%;"
+                             aria-valuenow="{{ level_progress }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
                         </div>
                     </div>
-                    
-                    <ul class="nav nav-tabs mb-4" id="achievementTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="earned-tab" data-bs-toggle="tab" data-bs-target="#earned" type="button" role="tab" aria-controls="earned" aria-selected="true">Earned ({{ earned_achievements|length }})</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="locked-tab" data-bs-toggle="tab" data-bs-target="#locked" type="button" role="tab" aria-controls="locked" aria-selected="false">Locked ({{ all_achievements|length - earned_achievements|length }})</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab" aria-controls="all" aria-selected="false">All ({{ all_achievements|length }})</button>
-                        </li>
-                    </ul>
-                    
-                    <div class="tab-content" id="achievementTabsContent">
-                        <div class="tab-pane fade show active" id="earned" role="tabpanel" aria-labelledby="earned-tab">
-                            {% if earned_achievements %}
-                                <div class="row">
-                                    {% for achievement in earned_achievements %}
-                                        <div class="col-md-6 mb-4">
-                                            <div class="achievement-card">
-                                                <div class="row align-items-center">
-                                                    <div class="col-4 text-center">
-                                                        <div class="achievement-badge">
-                                                            {% if achievement.icon.endswith('.svg') %}
-                                                                <img src="{{ url_for('static', filename='images/badges/' + achievement.icon) }}" alt="{{ achievement.name }}">
-                                                            {% else %}
-                                                                <i class="{{ achievement.icon }}"></i>
-                                                            {% endif %}
-                                                            <div class="achievement-points">+{{ achievement.points }}</div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-8">
-                                                        <h5 class="achievement-name">{{ achievement.name }}</h5>
-                                                        <p class="achievement-description">{{ achievement.description }}</p>
-                                                        <div class="d-flex align-items-center">
-                                                            <div class="badge bg-primary me-2">{{ achievement.category|capitalize }}</div>
-                                                            <a href="{{ url_for('gamification.social_share', achievement_id=achievement.id) }}" class="btn btn-sm btn-outline-success">
-                                                                <i class="bi bi-share"></i> Share
-                                                            </a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            {% else %}
-                                <div class="text-center py-5">
-                                    <i class="bi bi-trophy text-muted" style="font-size: 3rem;"></i>
-                                    <p class="mt-3">You haven't earned any achievements yet.</p>
-                                    <p>Keep using the platform to unlock achievements!</p>
-                                </div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="tab-pane fade" id="locked" role="tabpanel" aria-labelledby="locked-tab">
-                            {% if locked_achievements %}
-                                <div class="row">
-                                    {% for achievement in locked_achievements %}
-                                        <div class="col-md-6 mb-4">
-                                            <div class="achievement-card">
-                                                <div class="row align-items-center">
-                                                    <div class="col-4 text-center">
-                                                        <div class="achievement-badge locked">
-                                                            {% if achievement.icon.endswith('.svg') %}
-                                                                <img src="{{ url_for('static', filename='images/badges/' + achievement.icon) }}" alt="{{ achievement.name }}">
-                                                            {% else %}
-                                                                <i class="{{ achievement.icon }}"></i>
-                                                            {% endif %}
-                                                            <div class="achievement-points">+{{ achievement.points }}</div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-8">
-                                                        <h5 class="achievement-name text-muted">{{ achievement.name }}</h5>
-                                                        <p class="achievement-description">{{ achievement.description }}</p>
-                                                        <div class="badge bg-secondary">{{ achievement.category|capitalize }}</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            {% else %}
-                                <div class="text-center py-5">
-                                    <i class="bi bi-check-all text-success" style="font-size: 3rem;"></i>
-                                    <p class="mt-3">Congratulations! You've earned all available achievements.</p>
-                                </div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="tab-pane fade" id="all" role="tabpanel" aria-labelledby="all-tab">
-                            <div class="row">
-                                {% for achievement in all_achievements %}
-                                    <div class="col-md-6 mb-4">
-                                        <div class="achievement-card">
-                                            <div class="row align-items-center">
-                                                <div class="col-4 text-center">
-                                                    <div class="achievement-badge {% if achievement.id not in earned_ids %}locked{% endif %}">
-                                                        {% if achievement.icon.endswith('.svg') %}
-                                                            <img src="{{ url_for('static', filename='images/badges/' + achievement.icon) }}" alt="{{ achievement.name }}">
-                                                        {% else %}
-                                                            <i class="{{ achievement.icon }}"></i>
-                                                        {% endif %}
-                                                        <div class="achievement-points">+{{ achievement.points }}</div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-8">
-                                                    <h5 class="achievement-name {% if achievement.id not in earned_ids %}text-muted{% endif %}">{{ achievement.name }}</h5>
-                                                    <p class="achievement-description">{{ achievement.description }}</p>
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="badge {% if achievement.id in earned_ids %}bg-primary{% else %}bg-secondary{% endif %} me-2">{{ achievement.category|capitalize }}</div>
-                                                        {% if achievement.id in earned_ids %}
-                                                            <a href="{{ url_for('gamification.social_share', achievement_id=achievement.id) }}" class="btn btn-sm btn-outline-success">
-                                                                <i class="bi bi-share"></i> Share
-                                                            </a>
-                                                        {% endif %}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                {% endfor %}
+                    <small class="text-muted">{{ points_to_next_level }} points to next level</small>
+                </div>
+                <div class="col-md-4 text-center border-start border-end">
+                    <h2 class="mb-0">{{ user_profile.total_points }}</h2>
+                    <p class="text-muted">Total Points</p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="d-flex justify-content-center">
+                        <div class="position-relative">
+                            <div class="progress-circle" 
+                                 style="--progress: {{ completion_percentage }}; --size: 80px; --border: 8px; --color: #28a745;">
+                                <span class="position-absolute top-50 start-50 translate-middle">{{ completion_percentage }}%</span>
                             </div>
                         </div>
                     </div>
+                    <p class="text-muted mt-2">{{ earned_achievements|length }}/{{ all_achievements|length }} Achievements</p>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Sound effects -->
-<audio id="achievement-sound" src="{{ url_for('static', filename='sounds/achievement.mp3') }}" preload="auto"></audio>
+    <!-- Achievement Categories -->
+    <ul class="nav nav-tabs mb-4" id="achievementTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" 
+                    type="button" role="tab" aria-controls="all" aria-selected="true">
+                All
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="earned-tab" data-bs-toggle="tab" data-bs-target="#earned" 
+                    type="button" role="tab" aria-controls="earned" aria-selected="false">
+                Earned
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="locked-tab" data-bs-toggle="tab" data-bs-target="#locked" 
+                    type="button" role="tab" aria-controls="locked" aria-selected="false">
+                Locked
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="achievementTabsContent">
+        <!-- All Achievements -->
+        <div class="tab-pane fade show active" id="all" role="tabpanel" aria-labelledby="all-tab">
+            <div class="row g-4">
+                {% for achievement in all_achievements %}
+                    <div class="col-md-4 col-lg-3">
+                        <div class="card h-100 {% if achievement.id in earned_ids %}border-success{% else %}border-secondary opacity-75{% endif %}">
+                            <div class="card-body text-center">
+                                {% if achievement.icon.endswith('.svg') %}
+                                    <img src="{{ url_for('static', filename='images/badges/' + achievement.icon) }}" 
+                                         alt="{{ achievement.name }}" class="img-fluid mb-3" style="height: 80px;">
+                                {% else %}
+                                    <i class="{{ achievement.icon }} fa-3x mb-3 {% if achievement.id in earned_ids %}text-success{% else %}text-secondary{% endif %}"></i>
+                                {% endif %}
+                                
+                                <h5 class="card-title">{{ achievement.name }}</h5>
+                                <p class="card-text small mb-2">{{ achievement.description }}</p>
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    <span class="badge bg-primary">{{ achievement.points }} points</span>
+                                    {% if achievement.id in earned_ids %}
+                                        <span class="badge bg-success"><i class="bi bi-check"></i> Earned</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Locked</span>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if achievement.id in earned_ids %}
+                                    <a href="{{ url_for('gamification.social_share', achievement_id=achievement.id) }}" 
+                                       class="btn btn-outline-primary btn-sm mt-3">
+                                        <i class="bi bi-share"></i> Share
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Earned Achievements -->
+        <div class="tab-pane fade" id="earned" role="tabpanel" aria-labelledby="earned-tab">
+            <div class="row g-4">
+                {% for achievement in earned_achievements %}
+                    <div class="col-md-4 col-lg-3">
+                        <div class="card h-100 border-success">
+                            <div class="card-body text-center">
+                                {% if achievement.icon.endswith('.svg') %}
+                                    <img src="{{ url_for('static', filename='images/badges/' + achievement.icon) }}" 
+                                         alt="{{ achievement.name }}" class="img-fluid mb-3" style="height: 80px;">
+                                {% else %}
+                                    <i class="{{ achievement.icon }} fa-3x mb-3 text-success"></i>
+                                {% endif %}
+                                
+                                <h5 class="card-title">{{ achievement.name }}</h5>
+                                <p class="card-text small mb-2">{{ achievement.description }}</p>
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    <span class="badge bg-primary">{{ achievement.points }} points</span>
+                                    <span class="badge bg-success"><i class="bi bi-check"></i> Earned</span>
+                                </div>
+                                
+                                <a href="{{ url_for('gamification.social_share', achievement_id=achievement.id) }}" 
+                                   class="btn btn-outline-primary btn-sm mt-3">
+                                    <i class="bi bi-share"></i> Share
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="col-12 text-center my-5">
+                        <i class="bi bi-trophy text-muted" style="font-size: 4rem;"></i>
+                        <h4 class="mt-3 text-muted">No achievements earned yet</h4>
+                        <p class="text-muted">Complete activities to earn achievements!</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Locked Achievements -->
+        <div class="tab-pane fade" id="locked" role="tabpanel" aria-labelledby="locked-tab">
+            <div class="row g-4">
+                {% for achievement in locked_achievements %}
+                    <div class="col-md-4 col-lg-3">
+                        <div class="card h-100 border-secondary opacity-75">
+                            <div class="card-body text-center">
+                                {% if achievement.icon.endswith('.svg') %}
+                                    <img src="{{ url_for('static', filename='images/badges/' + achievement.icon) }}" 
+                                         alt="{{ achievement.name }}" class="img-fluid mb-3 opacity-50" style="height: 80px;">
+                                {% else %}
+                                    <i class="{{ achievement.icon }} fa-3x mb-3 text-secondary"></i>
+                                {% endif %}
+                                
+                                <h5 class="card-title">{{ achievement.name }}</h5>
+                                <p class="card-text small mb-2">{{ achievement.description }}</p>
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    <span class="badge bg-primary">{{ achievement.points }} points</span>
+                                    <span class="badge bg-secondary">Locked</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="col-12 text-center my-5">
+                        <i class="bi bi-check-all text-success" style="font-size: 4rem;"></i>
+                        <h4 class="mt-3 text-success">All achievements earned!</h4>
+                        <p class="text-muted">Congratulations! You've unlocked all available achievements.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
-{% block scripts %}
-<script src="{{ url_for('static', filename='js/gamification.js') }}"></script>
+{% block styles %}
+<style>
+    .progress-circle {
+        width: var(--size);
+        height: var(--size);
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        font-weight: bold;
+        font-size: calc(var(--size) / 4);
+    }
+    
+    .progress-circle::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: var(--border) solid #e9ecef;
+    }
+    
+    .progress-circle::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: var(--border) solid var(--color);
+        border-bottom-color: transparent;
+        border-left-color: transparent;
+        transform: rotate(calc(1deg * (var(--progress) * 3.6 - 90)));
+        transform-origin: center;
+    }
+</style>
 {% endblock %}

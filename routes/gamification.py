@@ -249,11 +249,17 @@ def claim_daily_reward():
             'message': 'You have already claimed your daily reward.'
         })
     
-    # Claim reward
-    tokens_earned = user_profile.claim_daily_reward()
+    # Calculate streak bonus for display
+    streak_bonus = 0
+    if user_profile.streak_days >= 7:
+        streak_bonus = 3
+    elif user_profile.streak_days >= 5:
+        streak_bonus = 2
+    elif user_profile.streak_days >= 3:
+        streak_bonus = 1
     
-    # Add tokens to user
-    current_user.add_tokens(tokens_earned)
+    # Claim reward (tokens already added to user in the claim_daily_reward method)
+    tokens_earned = user_profile.claim_daily_reward()
     
     # Record activity
     activity = Activity(
@@ -303,6 +309,8 @@ def claim_daily_reward():
     
     return jsonify({
         'success': True,
+        'base_tokens': DAILY_REWARD_TOKENS,
+        'streak_bonus': streak_bonus,
         'tokens': tokens_earned,
         'total_tokens': current_user.tokens_available,
         'streak_days': user_profile.streak_days,
