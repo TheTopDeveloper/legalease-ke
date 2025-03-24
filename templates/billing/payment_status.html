@@ -1,116 +1,112 @@
-{% extends "layout.html" %}
+{% extends 'layout.html' %}
 
-{% block title %}Payment Status{% endblock %}
+{% block title %}Payment Status - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}Payment Status{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-  <div class="row justify-content-center">
+<div class="row justify-content-center">
     <div class="col-md-8">
-      <div class="card">
-        <div class="card-header">
-          <h1 class="h3 mb-0">Payment Status</h1>
-        </div>
-        <div class="card-body">
-          {% if payment %}
-            <div class="text-center mb-4">
-              {% if payment.status == 'completed' %}
-                <div class="alert alert-success">
-                  <i class="fas fa-check-circle fa-3x mb-3"></i>
-                  <h4>Payment Successful!</h4>
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Payment Status</h5>
+            </div>
+            <div class="card-body">
+                {% if payment %}
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5>Payment Details</h5>
+                        <table class="table">
+                            <tr>
+                                <th>Transaction ID:</th>
+                                <td>{{ payment.transaction_id }}</td>
+                            </tr>
+                            <tr>
+                                <th>Amount:</th>
+                                <td>KSh {{ payment.amount|round(2) }}</td>
+                            </tr>
+                            <tr>
+                                <th>Type:</th>
+                                <td>{{ payment.payment_type|capitalize }}</td>
+                            </tr>
+                            <tr>
+                                <th>Method:</th>
+                                <td>{{ payment.payment_method|capitalize }}</td>
+                            </tr>
+                            <tr>
+                                <th>Date:</th>
+                                <td>{{ payment.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Status:</th>
+                                <td>
+                                    {% if payment.status == 'pending' %}
+                                    <span class="badge bg-warning">Pending</span>
+                                    {% elif payment.status == 'completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                    {% elif payment.status == 'failed' %}
+                                    <span class="badge bg-danger">Failed</span>
+                                    {% elif payment.status == 'cancelled' %}
+                                    <span class="badge bg-secondary">Cancelled</span>
+                                    {% else %}
+                                    <span class="badge bg-info">{{ payment.status|capitalize }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Status Information</h5>
+                        
+                        {% if payment.status == 'pending' %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-clock"></i> Your payment is being processed. Please wait or check back later.
+                        </div>
+                        {% elif payment.status == 'completed' %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> Your payment has been completed successfully!
+                        </div>
+                        {% elif payment.status == 'failed' %}
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i> There was an issue with your payment. Please try again.
+                        </div>
+                        {% elif payment.status == 'cancelled' %}
+                        <div class="alert alert-secondary">
+                            <i class="fas fa-ban"></i> Your payment has been cancelled.
+                        </div>
+                        {% endif %}
+                        
+                        {% if payment.status == 'pending' %}
+                        <div class="mt-4">
+                            <p>If you were interrupted during payment, you can:</p>
+                            <a href="{{ url_for('billing.mock_payment', transaction_id=payment.transaction_id) }}" class="btn btn-primary">
+                                <i class="fas fa-credit-card"></i> Return to Payment
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
-              {% elif payment.status == 'pending' %}
+                {% else %}
                 <div class="alert alert-warning">
-                  <i class="fas fa-clock fa-3x mb-3"></i>
-                  <h4>Payment Pending</h4>
-                  <p>Your payment is being processed. This page will refresh automatically every 30 seconds.</p>
+                    <i class="fas fa-exclamation-triangle"></i> No payment information available.
                 </div>
-              {% else %}
-                <div class="alert alert-danger">
-                  <i class="fas fa-exclamation-circle fa-3x mb-3"></i>
-                  <h4>Payment Failed</h4>
-                </div>
-              {% endif %}
+                {% endif %}
             </div>
-
-            <div class="table-responsive">
-              <table class="table">
-                <tbody>
-                  <tr>
-                    <th>Amount:</th>
-                    <td>KSh {{ payment.amount|int }}</td>
-                  </tr>
-                  <tr>
-                    <th>Payment Type:</th>
-                    <td>{{ payment.payment_type|capitalize }}</td>
-                  </tr>
-                  <tr>
-                    <th>Status:</th>
-                    <td>
-                      {% if payment.status == 'completed' %}
-                        <span class="badge bg-success">Completed</span>
-                      {% elif payment.status == 'pending' %}
-                        <span class="badge bg-warning text-dark">Pending</span>
-                      {% else %}
-                        <span class="badge bg-danger">Failed</span>
-                      {% endif %}
-                    </td>
-                  </tr>
-                  <tr>
-                    <th>Transaction ID:</th>
-                    <td>{{ payment.transaction_id }}</td>
-                  </tr>
-                  <tr>
-                    <th>Date:</th>
-                    <td>{{ payment.created_at.strftime('%d %B %Y, %H:%M') }}</td>
-                  </tr>
-                  {% if payment.completed_at %}
-                  <tr>
-                    <th>Completed At:</th>
-                    <td>{{ payment.completed_at.strftime('%d %B %Y, %H:%M') }}</td>
-                  </tr>
-                  {% endif %}
-                </tbody>
-              </table>
+            <div class="card-footer d-flex justify-content-between">
+                <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary">
+                    <i class="fas fa-tachometer-alt"></i> Return to Dashboard
+                </a>
+                {% if payment.payment_type == 'subscription' %}
+                <a href="{{ url_for('billing.subscriptions') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-list"></i> View Subscriptions
+                </a>
+                {% elif payment.payment_type == 'tokens' %}
+                <a href="{{ url_for('billing.tokens') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-coins"></i> View Token Packages
+                </a>
+                {% endif %}
             </div>
-
-            <div class="mt-4 text-center">
-              {% if payment.status == 'pending' %}
-                <button id="check-status" class="btn btn-primary">Check Status Now</button>
-              {% endif %}
-              
-              {% if payment.payment_type == 'subscription' %}
-                <a href="{{ url_for('billing.subscriptions') }}" class="btn btn-secondary">Back to Subscriptions</a>
-              {% elif payment.payment_type == 'tokens' %}
-                <a href="{{ url_for('billing.tokens') }}" class="btn btn-secondary">Back to Tokens</a>
-              {% else %}
-                <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">Back to Dashboard</a>
-              {% endif %}
-            </div>
-          {% else %}
-            <div class="alert alert-warning">
-              <p>No payment information found. Please try again or contact support.</p>
-            </div>
-            <div class="text-center">
-              <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">Back to Dashboard</a>
-            </div>
-          {% endif %}
         </div>
-      </div>
     </div>
-  </div>
 </div>
-
-{% if payment and payment.status == 'pending' %}
-<script>
-  // Auto-refresh the page every 30 seconds if payment is pending
-  setTimeout(function() {
-    window.location.reload();
-  }, 30000);
-  
-  // Check status button functionality
-  document.getElementById('check-status').addEventListener('click', function() {
-    window.location.reload();
-  });
-</script>
-{% endif %}
 {% endblock %}

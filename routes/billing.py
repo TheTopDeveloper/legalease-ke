@@ -247,24 +247,9 @@ def payment_history():
 
 @billing_bp.route('/ipn/notification', methods=['GET', 'POST'])
 def ipn_notification():
-    """Handle IPN notifications from PesaPal"""
-    # This endpoint will be called by PesaPal when payment status changes
-    
-    # Get parameters from request
-    order_tracking_id = request.args.get('OrderTrackingId')
-    order_merchant_reference = request.args.get('OrderMerchantReference')
-    order_notification_type = request.args.get('OrderNotificationType')
-    
-    if order_tracking_id:
-        # Process the payment notification
-        pesapal = PesaPalPayment()
-        try:
-            success, message = pesapal.process_ipn_notification(order_tracking_id, order_notification_type)
-            return jsonify({'success': success, 'message': message})
-        except Exception as e:
-            return jsonify({'success': False, 'message': str(e)}), 500
-    
-    return jsonify({'success': False, 'message': 'No OrderTrackingId provided'}), 400
+    """Handle IPN notifications - placeholder for future payment gateway integration"""
+    # This is a placeholder endpoint that will be implemented when integrating with a real payment gateway
+    return jsonify({'success': True, 'message': 'IPN notification handler placeholder'})
 
 
 # Admin routes for managing subscriptions and token packages
