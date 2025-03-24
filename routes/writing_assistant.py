@@ -142,8 +142,9 @@ def analyze_legal_writing(text, analysis_type='full'):
     Returns:
         Dictionary with analysis results
     """
+    # If LLM client is not available, provide a fallback response
     if not llm_client:
-        raise Exception("LLM client not available")
+        return generate_fallback_analysis(text, analysis_type)
     
     # Limit text size for analysis
     max_chars = 10000
@@ -218,6 +219,11 @@ ANALYSIS:"""
     try:
         analysis_result = llm_client.generate(prompt=prompt, temperature=0.3)
         
+        # If LLM returned None (connection failed), use fallback
+        if analysis_result is None:
+            logger.warning(f"LLM connection failed, using fallback analysis for {analysis_type}")
+            return generate_fallback_analysis(text, analysis_type)
+        
         # Structure the response
         result = {
             'original_text': text,
@@ -228,7 +234,91 @@ ANALYSIS:"""
         return result
     except Exception as e:
         logger.error(f"Error in LLM analysis: {str(e)}")
-        raise Exception(f"Unable to analyze text: {str(e)}")
+        return generate_fallback_analysis(text, analysis_type)
+
+
+def generate_fallback_analysis(text, analysis_type):
+    """
+    Generate a fallback analysis when LLM is not available
+    
+    Args:
+        text: The original text
+        analysis_type: Type of analysis requested
+        
+    Returns:
+        Dictionary with basic analysis guidance
+    """
+    # Generate appropriate fallback message based on analysis type
+    if analysis_type == 'tone':
+        analysis = """
+AI ASSISTANCE UNAVAILABLE
+
+Please review your text for the following tone aspects:
+1. Formal language: Legal documents should maintain formal language throughout
+2. Consistent tone: Check that the tone remains consistent from beginning to end
+3. Authoritative voice: Use clear, confident language appropriate for legal context
+4. Professional terminology: Avoid colloquialisms and informal expressions
+
+The AI-powered analysis is currently unavailable. Please try again later for detailed feedback.
+"""
+    elif analysis_type == 'complexity':
+        analysis = """
+AI ASSISTANCE UNAVAILABLE
+
+Please review your text for the following complexity aspects:
+1. Sentence length: Very long sentences can be difficult to understand
+2. Technical jargon: Use only necessary legal terms and explain them if needed
+3. Paragraph structure: Each paragraph should focus on a single concept
+4. Plain language: When possible, use simpler alternatives to complex terminology
+
+The AI-powered analysis is currently unavailable. Please try again later for detailed feedback.
+"""
+    elif analysis_type == 'clarity':
+        analysis = """
+AI ASSISTANCE UNAVAILABLE
+
+Please review your text for the following clarity aspects:
+1. Ambiguity: Check for terms or phrases with multiple possible interpretations
+2. Precision: Ensure specific details (dates, amounts, obligations) are clearly stated
+3. Logical flow: Information should be organized in a logical sequence
+4. Clear references: Pronouns should have clear antecedents
+
+The AI-powered analysis is currently unavailable. Please try again later for detailed feedback.
+"""
+    else:  # full analysis
+        analysis = """
+AI ASSISTANCE UNAVAILABLE
+
+Please review your legal document for:
+
+1. TONE
+   - Formal, consistent, and professional language
+   - Appropriate level of authority
+
+2. COMPLEXITY
+   - Readable sentence length and structure
+   - Necessary vs. excessive technical terminology
+   - Organized paragraph structure
+
+3. CLARITY
+   - Specific rather than vague language
+   - Precise statements of facts, obligations and rights
+   - Logical organization of information
+
+4. LEGAL FORMALITY
+   - Proper legal terminology
+   - Consistent citation format
+   - Standard legal document structure
+
+The AI-powered analysis is currently unavailable. Please try again later for detailed feedback.
+"""
+    
+    return {
+        'original_text': text,
+        'analysis': analysis,
+        'analysis_type': analysis_type,
+        'fallback': True
+    }
 
 def improve_legal_writing(text, improvements):
     """
@@ -241,8 +331,9 @@ def improve_legal_writing(text, improvements):
     Returns:
         Improved version of the text
     """
+    # If LLM client is not available, provide a fallback response
     if not llm_client:
-        raise Exception("LLM client not available")
+        return generate_fallback_improvement(text, improvements)
     
     # Limit text size
     max_chars = 8000
@@ -262,7 +353,46 @@ IMPROVED TEXT:"""
     
     try:
         improved_text = llm_client.generate(prompt=prompt, temperature=0.4, max_tokens=2000)
+        
+        # If LLM returned None (connection failed), use fallback
+        if improved_text is None:
+            logger.warning("LLM connection failed, using fallback improvement")
+            return generate_fallback_improvement(text, improvements)
+            
         return improved_text
     except Exception as e:
         logger.error(f"Error improving text: {str(e)}")
-        raise Exception(f"Unable to improve text: {str(e)}")
+        return generate_fallback_improvement(text, improvements)
+
+
+def generate_fallback_improvement(text, improvements):
+    """
+    Generate a fallback improvement message when LLM is not available
+    
+    Args:
+        text: The original text
+        improvements: Improvement suggestions
+        
+    Returns:
+        A message explaining that improvement is not available with guidance
+    """
+    return f"""
+AI ASSISTANCE UNAVAILABLE
+
+The AI-powered text improvement service is currently unavailable. Below is your original text.
+Please review it manually based on the improvement suggestions provided.
+
+IMPROVEMENT SUGGESTIONS:
+{improvements}
+
+To make these improvements manually:
+1. Focus on one suggestion at a time
+2. Work through your document paragraph by paragraph
+3. Read your text aloud to catch awkward phrasing
+4. Consider having a colleague review your edits
+
+Please try the AI improvement feature again later.
+
+----------- ORIGINAL TEXT -----------
+{text}
+"""
