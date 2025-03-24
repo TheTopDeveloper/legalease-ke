@@ -172,9 +172,16 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    <!-- For debugging -->
+                                    <!-- First day weekday: {{ first_day_weekday }} -->
+                                    <!-- Days in month: {{ days_in_month }} -->
+                                    <!-- Start date: {{ start_date }} -->
+                                    <!-- Start range: {{ start_range }} -->
+                                    
                                     {% set day_counter = 0 %}
                                     <!-- Calculate the number of weeks to display in the month view -->
                                     {% set num_weeks = (days_in_month + first_day_weekday + (7 - (days_in_month + first_day_weekday) % 7) % 7) // 7 %}
+                                    
                                     {% for week in range(num_weeks) %}
                                         <tr>
                                             {% for day in range(7) %}

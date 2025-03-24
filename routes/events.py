@@ -113,13 +113,26 @@ def calendar():
             end_date = date(start_date.year, start_date.month + 1, 1) - timedelta(days=1)
         
         # We need to include the days from the previous and next months to fill the calendar grid
+        # In Python, weekday() returns 0 for Monday, 6 for Sunday
+        # For calendar display, we want to show Sunday as first day (0)
         first_day_weekday = start_date.weekday()
+        # Adjust for Sunday-first calendar 
+        first_day_weekday = (first_day_weekday + 1) % 7  # Convert Monday=0 to Sunday=0
+        
+        # Calculate days needed from previous month to fill first row
         days_to_previous_month = first_day_weekday
         start_range = start_date - timedelta(days=days_to_previous_month)
         
+        # Calculate days needed from next month to fill last row
         last_day_weekday = end_date.weekday()
+        last_day_weekday = (last_day_weekday + 1) % 7  # Convert to Sunday-first
         days_to_next_month = 6 - last_day_weekday
         end_range = end_date + timedelta(days=days_to_next_month)
+        
+        # Log for debugging
+        logger.debug(f"Month view: start_date={start_date}, end_date={end_date}")
+        logger.debug(f"First day weekday: {first_day_weekday}, Last day weekday: {last_day_weekday}")
+        logger.debug(f"Calendar range: {start_range} to {end_range}")
         
     elif view_type == 'week':
         # Get the start of the week (Monday)
@@ -195,6 +208,9 @@ def calendar():
     # Calculate days in month for calendar grid
     days_in_month = (end_date - start_date).days + 1
     
+    # Adjust for Sunday-first calendar when passing to template
+    template_first_day_weekday = (start_date.weekday() + 1) % 7
+    
     return render_template(
         'events/calendar.html',
         view_type=view_type,
@@ -209,7 +225,7 @@ def calendar():
         next_date=next_date,
         cases=cases,
         days_in_month=days_in_month,
-        first_day_weekday=start_date.weekday(),
+        first_day_weekday=template_first_day_weekday,
         timedelta=timedelta
     )
 
