@@ -116,10 +116,7 @@ def create_user():
     roles = Role.query.all()
     form = CreateUserForm()
     
-    # Set custom role choices
-    custom_roles = [(str(role.id), role.name) for role in roles if role.is_custom]
-    custom_roles.insert(0, ('', 'No Custom Role'))
-    form.custom_role_id = SelectField('Custom Role (Optional)', choices=custom_roles, validators=[Optional()])
+    # We need to define this properly in the form in forms/admin.py instead of here
     
     if form.validate_on_submit():
         # Check if user already exists
@@ -145,9 +142,10 @@ def create_user():
         user.set_password(form.password.data)
         
         # Set custom role if provided
-        if form.custom_role_id.data:
+        custom_role_id = request.form.get('custom_role_id')
+        if custom_role_id:
             try:
-                user.custom_role_id = int(form.custom_role_id.data)
+                user.custom_role_id = int(custom_role_id)
             except ValueError:
                 pass
         

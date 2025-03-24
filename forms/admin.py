@@ -31,6 +31,7 @@ class CreateUserForm(FlaskForm):
     ])
     tokens_available = IntegerField('Available Tokens', default=50)
     is_active = BooleanField('Active Account', default=True)
+    # We handle custom_role_id in the template directly
 
 
 class EditUserForm(FlaskForm):
