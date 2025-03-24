@@ -1,0 +1,94 @@
+{% extends "layout.html" %}
+
+{% block title %}Add Document - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}Add Document to Case{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4>Add Document to "{{ case.title }}"</h4>
+                <a href="{{ url_for('cases.view', case_id=case.id) }}" class="btn btn-sm btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Case
+                </a>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('cases.add_document', case_id=case.id) }}">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="title" class="form-label">Document Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="document_type" class="form-label">Document Type <span class="text-danger">*</span></label>
+                            <select class="form-select" id="document_type" name="document_type" required>
+                                <option value="">Select Document Type</option>
+                                {% for document_type in document_types %}
+                                <option value="{{ document_type }}">{{ document_type }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="content" class="form-label">Document Content</label>
+                        <textarea class="form-control document-editor" id="content" name="content" rows="20"></textarea>
+                        <div class="form-text">You can paste your document content here or use the document generation feature.</div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="status" class="form-label">Document Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="Draft">Draft</option>
+                                <option value="Final">Final</option>
+                                <option value="Submitted">Submitted</option>
+                                <option value="Reviewed">Reviewed</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <a href="{{ url_for('documents.generate') }}?case_id={{ case.id }}" class="btn btn-info w-100">
+                                <i class="fas fa-magic"></i> Generate Document from Template
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('cases.view', case_id=case.id) }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Add Document</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Simple handle for inserting legal citations
+    document.addEventListener('DOMContentLoaded', function() {
+        const contentArea = document.getElementById('content');
+        
+        // Add keyboard shortcut for legal citation format
+        if (contentArea) {
+            contentArea.addEventListener('keydown', function(e) {
+                // Ctrl+Shift+C for citation format
+                if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+                    e.preventDefault();
+                    const cursorPos = this.selectionStart;
+                    const textBefore = this.value.substring(0, cursorPos);
+                    const textAfter = this.value.substring(cursorPos);
+                    
+                    this.value = textBefore + '[Citation: ]' + textAfter;
+                    this.selectionStart = cursorPos + 11;
+                    this.selectionEnd = cursorPos + 11;
+                    this.focus();
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

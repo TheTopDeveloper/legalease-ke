@@ -1,0 +1,90 @@
+{% extends "layout.html" %}
+
+{% block title %}Edit Client - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}Edit Client{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4>Edit Client</h4>
+                <a href="{{ url_for('cases.clients') }}" class="btn btn-sm btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Clients
+                </a>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('cases.edit_client', client_id=client.id) }}">
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label for="name" class="form-label">Client Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" name="name" value="{{ client.name }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="client_type" class="form-label">Client Type</label>
+                            <select class="form-select" id="client_type" name="client_type">
+                                <option value="Individual" {% if client.client_type == 'Individual' %}selected{% endif %}>Individual</option>
+                                <option value="Organization" {% if client.client_type == 'Organization' %}selected{% endif %}>Organization</option>
+                                <option value="Government" {% if client.client_type == 'Government' %}selected{% endif %}>Government</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ client.email or '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="phone" class="form-label">Phone</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" value="{{ client.phone or '' }}">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Address</label>
+                        <textarea class="form-control" id="address" name="address" rows="3">{{ client.address or '' }}</textarea>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('cases.clients') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Update Client</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center mt-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>Client's Cases</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for case in client.cases %}
+                    <a href="{{ url_for('cases.view', case_id=case.id) }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ case.title }}</h6>
+                            <small>{{ case.created_at.strftime('%d %b %Y') }}</small>
+                        </div>
+                        <p class="mb-1">{{ case.case_number }}</p>
+                        <small>
+                            {{ case.court_level }}
+                            | <span class="badge {% if case.status == 'Active' %}bg-success{% elif case.status == 'Pending' %}bg-warning{% else %}bg-secondary{% endif %}">{{ case.status }}</span>
+                        </small>
+                    </a>
+                    {% else %}
+                    <div class="list-group-item">
+                        <p class="mb-0 text-center">No cases associated with this client.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

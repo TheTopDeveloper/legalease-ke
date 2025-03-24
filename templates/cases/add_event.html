@@ -1,0 +1,170 @@
+{% extends "layout.html" %}
+
+{% block title %}Add Event - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}Add Event to Case{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4>Add Event to "{{ case.title }}"</h4>
+                <a href="{{ url_for('cases.view', case_id=case.id) }}" class="btn btn-sm btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Case
+                </a>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('cases.add_event', case_id=case.id) }}">
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label for="title" class="form-label">Event Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="event_type" class="form-label">Event Type <span class="text-danger">*</span></label>
+                            <select class="form-select" id="event_type" name="event_type" required>
+                                <option value="">Select Event Type</option>
+                                <option value="Court Appearance">Court Appearance</option>
+                                <option value="Hearing">Hearing</option>
+                                <option value="Mention">Mention</option>
+                                <option value="Meeting">Meeting</option>
+                                <option value="Client Meeting">Client Meeting</option>
+                                <option value="Filing Deadline">Filing Deadline</option>
+                                <option value="Other Deadline">Other Deadline</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="start_time" class="form-label">Start Time <span class="text-danger">*</span></label>
+                            <input type="datetime-local" class="form-control" id="start_time" name="start_time" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="end_time" class="form-label">End Time</label>
+                            <input type="datetime-local" class="form-control" id="end_time" name="end_time">
+                            <div class="form-text">Optional. Leave empty for deadline events.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="location" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="location" name="location">
+                        <div class="form-text">For court events, include courtroom number and building (e.g., "Court 3, Milimani Law Courts")</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                        <div class="form-text">Include any relevant details about the event (e.g., "Witness examination", "Submit application")</div>
+                    </div>
+                    
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" value="1" id="notify" name="notify">
+                        <label class="form-check-label" for="notify">
+                            Set reminder notification for this event
+                        </label>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('cases.view', case_id=case.id) }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Add Event</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center mt-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>Upcoming Case Events</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for event in case.events.order_by(Event.start_time.asc()).all() %}
+                    {% if event.start_time > now %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ event.title }}</h6>
+                            <small>{{ event.start_time.strftime('%d %b %Y, %H:%M') }}</small>
+                        </div>
+                        <p class="mb-1">{{ event.description }}</p>
+                        <small>
+                            <i class="fas fa-map-marker-alt"></i> {{ event.location or 'No location specified' }}
+                            {% if event.event_type %}
+                            | <span class="badge bg-info">{{ event.event_type }}</span>
+                            {% endif %}
+                        </small>
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <div class="list-group-item">
+                        <p class="mb-0 text-center">No upcoming events for this case.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set default start time to next hour
+        const startTimeInput = document.getElementById('start_time');
+        if (startTimeInput) {
+            const now = new Date();
+            now.setHours(now.getHours() + 1);
+            now.setMinutes(0);
+            now.setSeconds(0);
+            
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            
+            const defaultDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+            startTimeInput.value = defaultDateTime;
+        }
+        
+        // Auto-set end time to start time + 1 hour when start time changes
+        const endTimeInput = document.getElementById('end_time');
+        if (startTimeInput && endTimeInput) {
+            startTimeInput.addEventListener('change', function() {
+                if (startTimeInput.value) {
+                    const startDate = new Date(startTimeInput.value);
+                    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // Add 1 hour
+                    
+                    const year = endDate.getFullYear();
+                    const month = String(endDate.getMonth() + 1).padStart(2, '0');
+                    const day = String(endDate.getDate()).padStart(2, '0');
+                    const hours = String(endDate.getHours()).padStart(2, '0');
+                    const minutes = String(endDate.getMinutes()).padStart(2, '0');
+                    
+                    const endDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+                    endTimeInput.value = endDateTime;
+                }
+            });
+        }
+        
+        // Set court location based on event type
+        const eventTypeInput = document.getElementById('event_type');
+        const locationInput = document.getElementById('location');
+        if (eventTypeInput && locationInput) {
+            eventTypeInput.addEventListener('change', function() {
+                const eventType = eventTypeInput.value;
+                if (['Court Appearance', 'Hearing', 'Mention'].includes(eventType) && !locationInput.value) {
+                    locationInput.value = 'Milimani Law Courts';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

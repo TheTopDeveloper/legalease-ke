@@ -382,3 +382,22 @@ def edit_client(client_id):
             flash(f'Error updating client: {str(e)}', 'error')
     
     return render_template('cases/edit_client.html', client=client)
+
+@cases_bp.route('/clients/<int:client_id>/delete', methods=['POST'])
+@login_required
+def delete_client(client_id):
+    """Delete a client"""
+    client = Client.query.get_or_404(client_id)
+    
+    try:
+        # Note: This will not delete associated cases, just remove the association
+        db.session.delete(client)
+        db.session.commit()
+        logger.info(f"Deleted client: {client.name}")
+        flash('Client deleted successfully', 'success')
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error deleting client: {str(e)}")
+        flash(f'Error deleting client: {str(e)}', 'error')
+    
+    return redirect(url_for('cases.clients'))
