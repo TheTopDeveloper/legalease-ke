@@ -18,6 +18,13 @@ case_document_association = db.Table(
     db.Column('document_id', db.Integer, db.ForeignKey('document.id'))
 )
 
+# Association table for document sharing
+document_sharing_association = db.Table(
+    'document_sharing_association',
+    db.Column('document_id', db.Integer, db.ForeignKey('document.id')),
+    db.Column('client_portal_user_id', db.Integer, db.ForeignKey('client_portal_user.id'))
+)
+
 # Association table for role permissions
 role_permission_association = db.Table(
     'role_permission_association',
@@ -250,13 +257,87 @@ class Client(db.Model):
     address = db.Column(db.Text)
     client_type = db.Column(db.String(20))  # individual, organization, government
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    has_portal_access = db.Column(db.Boolean, default=False)  # Whether client has portal access
     
     # Relationships
     cases = db.relationship('Case', secondary=case_client_association, backref='clients')
     contracts = db.relationship('Contract', backref='client', lazy='dynamic')
+    portal_users = db.relationship('ClientPortalUser', backref='client', lazy='dynamic')
     
     def __repr__(self):
         return f'<Client {self.name}>'
+        
+    def create_portal_user(self, email, password):
+        """Create a portal user for this client"""
+        if not self.has_portal_access:
+            self.has_portal_access = True
+            
+        # Check if a portal user with this email already exists
+        existing_user = ClientPortalUser.query.filter_by(email=email, client_id=self.id).first()
+        if existing_user:
+            return existing_user
+            
+        # Create new portal user
+        portal_user = ClientPortalUser(
+            email=email,
+            client_id=self.id,
+            is_active=True
+        )
+        portal_user.set_password(password)
+        
+        db.session.add(portal_user)
+        return portal_user
+
+
+class ClientPortalUser(UserMixin, db.Model):
+    """User model for client portal access"""
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_login = db.Column(db.DateTime)
+    access_token = db.Column(db.String(100))  # For secure document links
+    token_expiry = db.Column(db.DateTime)  # When the token expires
+    
+    # Foreign keys
+    client_id = db.Column(db.Integer, db.ForeignKey('client.id'), nullable=False)
+    
+    # Relationships
+    shared_documents = db.relationship('Document', secondary=document_sharing_association, 
+                                     backref=db.backref('shared_with', lazy='dynamic'))
+    
+    def set_password(self, password):
+        """Set the user's password hash"""
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        """Verify the user's password"""
+        return check_password_hash(self.password_hash, password)
+        
+    def generate_access_token(self):
+        """Generate a secure access token for document sharing links"""
+        import secrets
+        import string
+        
+        # Generate a secure random token
+        alphabet = string.ascii_letters + string.digits
+        token = ''.join(secrets.choice(alphabet) for _ in range(64))
+        
+        # Set token expiry to 30 days from now
+        self.access_token = token
+        self.token_expiry = datetime.utcnow() + timedelta(days=30)
+        
+        return token
+        
+    def is_token_valid(self):
+        """Check if the access token is valid"""
+        if not self.access_token or not self.token_expiry:
+            return False
+        return self.token_expiry > datetime.utcnow()
+    
+    def __repr__(self):
+        return f'<ClientPortalUser {self.email}>'
 
 class Case(db.Model):
     """Case model representing legal cases in the Kenyan court system"""
