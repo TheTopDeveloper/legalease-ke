@@ -3,6 +3,7 @@ import json
 from app import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+from utils.permissions import DEFAULT_ROLE_PERMISSIONS, Permissions
 
 # Association tables for many-to-many relationships
 case_client_association = db.Table(
@@ -17,6 +18,113 @@ case_document_association = db.Table(
     db.Column('document_id', db.Integer, db.ForeignKey('document.id'))
 )
 
+# Association table for role permissions
+role_permission_association = db.Table(
+    'role_permission_association',
+    db.Column('role_id', db.Integer, db.ForeignKey('role.id')),
+    db.Column('permission_id', db.Integer, db.ForeignKey('permission.id'))
+)
+
+# Association table for user organizations
+user_organization_association = db.Table(
+    'user_organization_association',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
+    db.Column('organization_id', db.Integer, db.ForeignKey('organization.id'))
+)
+
+class Permission(db.Model):
+    """Permission model defining granular access permissions"""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+    description = db.Column(db.String(200))
+    
+    def __repr__(self):
+        return f'<Permission {self.name}>'
+
+class Role(db.Model):
+    """Role model defining user roles and their permissions"""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+    description = db.Column(db.String(200))
+    is_default = db.Column(db.Boolean, default=False)  # Whether this is a default role
+    is_custom = db.Column(db.Boolean, default=False)  # Whether this is a custom role
+    
+    # Relationships
+    permissions = db.relationship('Permission', secondary=role_permission_association, 
+                               backref=db.backref('roles', lazy='dynamic'))
+    
+    def __repr__(self):
+        return f'<Role {self.name}>'
+    
+    @staticmethod
+    def init_roles():
+        """Initialize default roles and their permissions"""
+        # Create all permissions
+        for perm in Permissions.get_all_permissions():
+            permission_name = getattr(Permissions, perm)
+            description = permission_name.replace('_', ' ').title()
+            permission = Permission.query.filter_by(name=permission_name).first()
+            if not permission:
+                permission = Permission(name=permission_name, description=description)
+                db.session.add(permission)
+        
+        # Create default roles
+        for role_name, permissions in DEFAULT_ROLE_PERMISSIONS.items():
+            role = Role.query.filter_by(name=role_name).first()
+            if not role:
+                role = Role(
+                    name=role_name,
+                    description=f"{role_name.replace('_', ' ').title()} Role",
+                    is_default=True
+                )
+                db.session.add(role)
+                
+            # Clear existing permissions for this role
+            role.permissions = []
+            
+            # Add permissions to the role
+            for permission_name in permissions:
+                permission = Permission.query.filter_by(name=permission_name).first()
+                if permission:
+                    role.permissions.append(permission)
+        
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error initializing roles: {str(e)}")
+
+class Organization(db.Model):
+    """Organization model for multi-user organizations"""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    address = db.Column(db.Text)
+    phone = db.Column(db.String(20))
+    email = db.Column(db.String(120))
+    size = db.Column(db.Integer)  # Number of users
+    account_type = db.Column(db.String(20), default='basic')  # basic, premium, enterprise
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    subscription_end = db.Column(db.DateTime)
+    
+    # Owner foreign key (the user who created the organization)
+    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    
+    # Relationships
+    owner = db.relationship('User', foreign_keys=[owner_id], backref='owned_organizations')
+    members = db.relationship('User', secondary=user_organization_association, 
+                             backref=db.backref('organizations', lazy='dynamic'))
+    
+    def __repr__(self):
+        return f'<Organization {self.name}>'
+    
+    def is_subscription_active(self):
+        """Check if organization's subscription is active"""
+        if not self.subscription_end:
+            return False
+        return self.subscription_end > datetime.utcnow()
+
 class User(UserMixin, db.Model):
     """User model representing legal professionals in the system"""
     id = db.Column(db.Integer, primary_key=True)
@@ -25,7 +133,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(256), nullable=False)
     first_name = db.Column(db.String(64))
     last_name = db.Column(db.String(64))
-    role = db.Column(db.String(20), default='individual')  # admin, organization, individual
+    role = db.Column(db.String(20), default='individual')  # admin, organization, organization_member, individual
     account_type = db.Column(db.String(20), default='free')  # free, basic, premium, enterprise
     organization_name = db.Column(db.String(100))
     organization_size = db.Column(db.Integer)  # Number of users in organization
@@ -37,10 +145,18 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login = db.Column(db.DateTime)
     
+    # Role foreign key (for custom roles)
+    custom_role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
+    
+    # Active organization (for organization_member users)
+    active_organization_id = db.Column(db.Integer, db.ForeignKey('organization.id'))
+    
     # Relationships
     cases = db.relationship('Case', backref='assigned_user', lazy='dynamic')
     documents = db.relationship('Document', backref='created_by', lazy='dynamic')
     contracts = db.relationship('Contract', backref='created_by', lazy='dynamic')
+    custom_role = db.relationship('Role', foreign_keys=[custom_role_id])
+    active_organization = db.relationship('Organization', foreign_keys=[active_organization_id])
     
     def set_password(self, password):
         """Set the user's password hash"""
@@ -73,9 +189,54 @@ class User(UserMixin, db.Model):
             return True
         if self.account_type == 'free':
             return True
+        if self.role == 'organization_member' and self.active_organization:
+            return self.active_organization.is_subscription_active()
         if not self.subscription_end:
             return False
         return self.subscription_end > datetime.utcnow()
+    
+    def has_permission(self, permission):
+        """Check if user has a specific permission"""
+        # Admins have all permissions
+        if self.role == 'admin':
+            return True
+            
+        # Check if user has a custom role with this permission
+        if self.custom_role_id:
+            for perm in self.custom_role.permissions:
+                if perm.name == permission:
+                    return True
+        
+        # Check default role permissions
+        role_permissions = DEFAULT_ROLE_PERMISSIONS.get(self.role, [])
+        return permission in role_permissions
+    
+    def get_permissions(self):
+        """Get all permissions for this user"""
+        if self.role == 'admin':
+            # Admin has all permissions
+            return Permissions.get_all_permissions()
+            
+        # Start with default role permissions
+        permissions = DEFAULT_ROLE_PERMISSIONS.get(self.role, [])
+        
+        # Add custom role permissions
+        if self.custom_role_id:
+            for perm in self.custom_role.permissions:
+                if perm.name not in permissions:
+                    permissions.append(perm.name)
+                    
+        return permissions
+    
+    def is_admin(self):
+        """Check if user is an admin"""
+        return self.role == 'admin'
+    
+    def is_organization_owner(self):
+        """Check if user is an organization owner"""
+        if not self.active_organization:
+            return False
+        return self.active_organization.owner_id == self.id
         
     def __repr__(self):
         return f'<User {self.username}>'

@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Admin Dashboard</h1>
+    
+    <div class="row">
+        <div class="col-md-3">
+            <div class="list-group mb-4">
+                <a href="{{ url_for('admin.index') }}" class="list-group-item list-group-item-action active">Dashboard</a>
+                <a href="{{ url_for('admin.users') }}" class="list-group-item list-group-item-action">User Management</a>
+                <a href="{{ url_for('admin.roles') }}" class="list-group-item list-group-item-action">Role Management</a>
+                <a href="{{ url_for('admin.organizations') }}" class="list-group-item list-group-item-action">Organization Management</a>
+                <a href="{{ url_for('admin.system_settings') }}" class="list-group-item list-group-item-action">System Settings</a>
+                <a href="{{ url_for('billing.admin_subscriptions') }}" class="list-group-item list-group-item-action">Subscription Plans</a>
+                <a href="{{ url_for('billing.admin_tokens') }}" class="list-group-item list-group-item-action">Token Packages</a>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-body text-center">
+                            <h3 class="card-title">{{ user_count }}</h3>
+                            <p class="card-text">Total Users</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-body text-center">
+                            <h3 class="card-title">{{ active_users }}</h3>
+                            <p class="card-text">Active Users</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-body text-center">
+                            <h3 class="card-title">{{ organization_count }}</h3>
+                            <p class="card-text">Organizations</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Users</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Joined</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in recent_users %}
+                                <tr>
+                                    <td>{{ user.username }}</td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'danger' if user.role == 'admin' else 'primary' if user.role == 'organization' else 'secondary' }}">
+                                            {{ user.role }}
+                                        </span>
+                                    </td>
+                                    <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="btn btn-sm btn-primary">Edit</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
