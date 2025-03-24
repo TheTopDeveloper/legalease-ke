@@ -41,6 +41,11 @@
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint.startswith('research.') %}active{% endif %}" href="{{ url_for('research.index') }}">Research</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint.startswith('gamification.') %}active{% endif %}" href="{{ url_for('gamification.dashboard') }}">
+                            <i class="fas fa-trophy"></i> Achievements
+                        </a>
+                    </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle {% if request.endpoint.startswith('billing.') %}active{% endif %}" href="#" id="billingDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-credit-card"></i> Billing
