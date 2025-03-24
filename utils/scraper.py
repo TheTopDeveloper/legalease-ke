@@ -2,7 +2,7 @@ import logging
 import trafilatura
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 import re
 import time
 from config import KENYALAW_BASE_URL
@@ -35,34 +35,88 @@ class KenyaLawScraper:
         """
         url = f"{self.base_url}/judgments/{court_code}/?page={page}"
         try:
+            logger.info(f"Fetching case law from {url}")
             response = self.session.get(url)
             response.raise_for_status()
             
             soup = BeautifulSoup(response.text, 'html.parser')
             cases = []
             
-            # Extract case listings
-            case_listings = soup.select('.cases-list .case-item')
-            for case in case_listings[:limit]:
-                title_elem = case.select_one('.case-title a')
+            # Look for case listings in the document list (table rows)
+            case_listings = soup.select('table.document-list-items tr.document-list-item')
+            
+            # If we didn't find cases in a table, try article elements
+            if not case_listings:
+                case_listings = soup.select('main#top article.document-list-item')
+            
+            # If still not found, try any div with document-list-item class
+            if not case_listings:
+                case_listings = soup.select('.document-list-item')
+            
+            # Extract case information from each listing
+            count = 0
+            for case in case_listings:
+                # Skip if we've reached the limit
+                if count >= limit:
+                    break
+                
+                # Try to find the title and link in various ways
+                title_elem = None
+                link = None
+                
+                # Try to find title in h3 or h4 elements
+                for h_tag in ['h3', 'h4']:
+                    if title_elem is None:
+                        title_elem = case.select_one(f'{h_tag} a')
+                
+                # If not found, try any link with content
+                if title_elem is None:
+                    links = case.select('a')
+                    for a in links:
+                        if a.text.strip() and not a.has_attr('aria-label'):
+                            title_elem = a
+                            break
+                
                 if title_elem:
                     title = title_elem.text.strip()
-                    link = urljoin(self.base_url, title_elem['href'])
+                    href = title_elem.get('href', '')
+                    
+                    # Normalize the URL
+                    if href.startswith('/'):
+                        link = urljoin(self.base_url, href)
+                    elif href.startswith('http'):
+                        link = href
+                    else:
+                        link = urljoin(self.base_url, '/' + href)
                     
                     # Get metadata
                     meta = {}
-                    meta_elems = case.select('.case-meta .meta-item')
-                    for elem in meta_elems:
-                        label = elem.select_one('.meta-label')
-                        value = elem.select_one('.meta-value')
-                        if label and value:
-                            meta[label.text.strip()] = value.text.strip()
                     
+                    # Look for a date field
+                    date_elem = case.select_one('.document-list-date')
+                    if date_elem:
+                        meta['Date'] = date_elem.text.strip()
+                    
+                    # Look for other metadata
+                    meta_elems = case.select('.meta')
+                    for elem in meta_elems:
+                        text = elem.text.strip()
+                        # Split by common separators to get key-value pairs
+                        for separator in [':', '-', '–']:
+                            if separator in text:
+                                parts = text.split(separator, 1)
+                                key = parts[0].strip()
+                                value = parts[1].strip()
+                                meta[key] = value
+                                break
+                    
+                    # Create case dictionary and add to results
                     cases.append({
                         'title': title,
                         'link': link,
                         'metadata': meta
                     })
+                    count += 1
             
             return cases
         
@@ -81,6 +135,8 @@ class KenyaLawScraper:
             Dict containing case details
         """
         try:
+            logger.info(f"Fetching case details from {case_url}")
+            
             # Use trafilatura to get clean text
             downloaded = trafilatura.fetch_url(case_url)
             text_content = trafilatura.extract(downloaded)
@@ -93,8 +149,8 @@ class KenyaLawScraper:
             
             # Extract case info
             case = {
-                'title': soup.select_one('h1.case-title').text.strip() if soup.select_one('h1.case-title') else '',
-                'full_text': text_content,
+                'title': '',
+                'full_text': text_content or '',
                 'citation': '',
                 'court': '',
                 'judges': [],
@@ -107,40 +163,63 @@ class KenyaLawScraper:
                 'url': case_url
             }
             
-            # Extract meta information
-            meta_section = soup.select_one('.case-details')
-            if meta_section:
-                for item in meta_section.select('.meta-item'):
-                    label = item.select_one('.meta-label')
-                    value = item.select_one('.meta-value')
-                    if label and value:
-                        label_text = label.text.strip().lower()
-                        value_text = value.text.strip()
-                        
-                        if 'citation' in label_text:
-                            case['citation'] = value_text
-                        elif 'court' in label_text:
-                            case['court'] = value_text
-                        elif 'judge' in label_text or 'coram' in label_text:
-                            case['judges'] = [j.strip() for j in value_text.split(',')]
-                        elif 'date' in label_text:
-                            case['date'] = value_text
+            # Get the title - try different selectors
+            title_elem = soup.select_one('h1')
+            if title_elem:
+                case['title'] = title_elem.text.strip()
             
-            # Extract parties
-            parties_section = soup.select_one('.case-parties')
-            if parties_section:
-                applicant = parties_section.select_one('.applicant')
-                respondent = parties_section.select_one('.respondent')
-                
-                if applicant:
-                    case['parties']['applicant'] = applicant.text.strip()
-                if respondent:
-                    case['parties']['respondent'] = respondent.text.strip()
+            # Get metadata from different possible containers
+            meta_sections = [
+                soup.select_one('.decision-details'),
+                soup.select_one('.case-meta'),
+                soup.select_one('.document-metadata'),
+                soup.select_one('header')
+            ]
             
-            # Extract ruling content (this is approximate)
-            ruling_section = soup.select_one('.judgment-text')
-            if ruling_section:
-                case['ruling'] = ruling_section.text.strip()
+            for meta_section in meta_sections:
+                if meta_section:
+                    # Extract all text data from the section
+                    section_text = meta_section.text.strip()
+                    
+                    # Look for common patterns in the text
+                    if 'Citation' in section_text:
+                        citation_match = re.search(r'Citation:?\s*([^\n]+)', section_text)
+                        if citation_match:
+                            case['citation'] = citation_match.group(1).strip()
+                    
+                    if 'Court' in section_text:
+                        court_match = re.search(r'Court:?\s*([^\n]+)', section_text)
+                        if court_match:
+                            case['court'] = court_match.group(1).strip()
+                    
+                    if 'Judge' in section_text or 'Coram' in section_text:
+                        judge_match = re.search(r'(?:Judge|Coram):?\s*([^\n]+)', section_text)
+                        if judge_match:
+                            judges_text = judge_match.group(1).strip()
+                            case['judges'] = [j.strip() for j in re.split(r',|;', judges_text)]
+                    
+                    if 'Date' in section_text:
+                        date_match = re.search(r'Date:?\s*([^\n]+)', section_text)
+                        if date_match:
+                            case['date'] = date_match.group(1).strip()
+            
+            # Try to extract parties from structured data or the title
+            if 'v' in case['title'] or 'vs' in case['title'].lower():
+                parties_match = re.search(r'([^v]+)\s+v\.?\s+([^(]+)', case['title'], re.IGNORECASE)
+                if parties_match:
+                    case['parties']['applicant'] = parties_match.group(1).strip()
+                    case['parties']['respondent'] = parties_match.group(2).strip()
+            
+            # Extract ruling content (main text of the judgment)
+            main_content = soup.select_one('main') or soup.select_one('article') or soup.select_one('.document-content')
+            if main_content:
+                ruling_text = main_content.text.strip()
+                # Remove any headers or metadata from the start
+                ruling_text = re.sub(r'^.*?(?:JUDGMENT|RULING)', 'JUDGMENT', ruling_text, flags=re.DOTALL)
+                case['ruling'] = ruling_text
+            else:
+                # If we can't find structured content, use the trafilatura extracted text
+                case['ruling'] = text_content
             
             return case
         
@@ -162,6 +241,7 @@ class KenyaLawScraper:
         url = f"{self.base_url}/search/"
         
         try:
+            logger.info(f"Searching for cases with query: {query}")
             response = self.session.get(url, params={
                 'q': query,
                 'page': page
@@ -171,18 +251,51 @@ class KenyaLawScraper:
             soup = BeautifulSoup(response.text, 'html.parser')
             results = []
             
-            # Extract search results
-            result_items = soup.select('.search-results .search-item')
+            # Try multiple potential selectors for search results
+            result_items = soup.select('.search-list-item')
+            if not result_items:
+                result_items = soup.select('.search-result-item')
+            if not result_items:
+                result_items = soup.select('.document-list-item')
+            if not result_items:
+                result_items = soup.select('article')
+            
             for item in result_items:
-                title_elem = item.select_one('.search-title a')
+                # Try to find title and link
+                title_elem = None
+                for selector in ['h3 a', 'h4 a', '.document-title a', 'a.document-title', 'a.title']:
+                    if title_elem is None:
+                        title_elem = item.select_one(selector)
+                
+                # If still not found, try any link with content
+                if title_elem is None:
+                    links = item.select('a')
+                    for a in links:
+                        if a.text.strip() and not a.get('class') and not a.has_attr('aria-label'):
+                            title_elem = a
+                            break
                 
                 if title_elem:
                     title = title_elem.text.strip()
-                    link = urljoin(self.base_url, title_elem['href'])
+                    href = title_elem.get('href', '')
+                    
+                    # Normalize the URL
+                    if href.startswith('/'):
+                        link = urljoin(self.base_url, href)
+                    elif href.startswith('http'):
+                        link = href
+                    else:
+                        link = urljoin(self.base_url, '/' + href)
                     
                     # Get snippet or excerpt
-                    snippet = item.select_one('.search-snippet')
-                    excerpt = snippet.text.strip() if snippet else ''
+                    excerpt = ''
+                    excerpt_elem = None
+                    for selector in ['.search-snippet', '.excerpt', '.summary', 'p']:
+                        if excerpt_elem is None:
+                            excerpt_elem = item.select_one(selector)
+                    
+                    if excerpt_elem:
+                        excerpt = excerpt_elem.text.strip()
                     
                     results.append({
                         'title': title,
@@ -209,25 +322,56 @@ class KenyaLawScraper:
         url = f"{self.base_url}/legislation/"
         
         try:
+            logger.info(f"Fetching legislation from {url}")
             response = self.session.get(url)
             response.raise_for_status()
             
             soup = BeautifulSoup(response.text, 'html.parser')
             legislation = []
             
-            # Extract legislation listings
-            legislation_items = soup.select('.legislation-list .legislation-item')
-            for item in legislation_items[:limit]:
-                title_elem = item.select_one('.legislation-title a')
+            # Try multiple potential selectors for legislation listings
+            legislation_items = []
+            for selector in ['.legislation-item', '.document-list-item', 'article']:
+                if not legislation_items:
+                    legislation_items = soup.select(selector)
+            
+            count = 0
+            for item in legislation_items:
+                # Skip if we've reached the limit
+                if count >= limit:
+                    break
+                
+                # Try to find title and link
+                title_elem = None
+                for selector in ['h3 a', 'h4 a', '.legislation-title a', 'a.title']:
+                    if title_elem is None:
+                        title_elem = item.select_one(selector)
+                
+                # If still not found, try any link with content
+                if title_elem is None:
+                    links = item.select('a')
+                    for a in links:
+                        if a.text.strip() and not a.has_attr('aria-label'):
+                            title_elem = a
+                            break
                 
                 if title_elem:
                     title = title_elem.text.strip()
-                    link = urljoin(self.base_url, title_elem['href'])
+                    href = title_elem.get('href', '')
+                    
+                    # Normalize the URL
+                    if href.startswith('/'):
+                        link = urljoin(self.base_url, href)
+                    elif href.startswith('http'):
+                        link = href
+                    else:
+                        link = urljoin(self.base_url, '/' + href)
                     
                     legislation.append({
                         'title': title,
                         'link': link
                     })
+                    count += 1
             
             return legislation
         
@@ -246,6 +390,8 @@ class KenyaLawScraper:
             Dict containing legislation details
         """
         try:
+            logger.info(f"Fetching legislation details from {legislation_url}")
+            
             # Use trafilatura to get clean text
             downloaded = trafilatura.fetch_url(legislation_url)
             text_content = trafilatura.extract(downloaded)
@@ -258,24 +404,67 @@ class KenyaLawScraper:
             
             # Extract legislation info
             legislation = {
-                'title': soup.select_one('h1.legislation-title').text.strip() if soup.select_one('h1.legislation-title') else '',
-                'full_text': text_content,
+                'title': '',
+                'full_text': text_content or '',
                 'chapters': [],
                 'date': '',
                 'url': legislation_url
             }
             
-            # Extract chapters or sections
-            chapter_items = soup.select('.legislation-chapters .chapter-item')
-            for chapter in chapter_items:
-                title = chapter.select_one('.chapter-title')
-                content = chapter.select_one('.chapter-content')
-                
-                if title and content:
-                    legislation['chapters'].append({
-                        'title': title.text.strip(),
-                        'content': content.text.strip()
-                    })
+            # Get the title - try different selectors
+            title_elem = soup.select_one('h1')
+            if title_elem:
+                legislation['title'] = title_elem.text.strip()
+            
+            # Try to extract date information
+            date_elem = soup.select_one('.date') or soup.select_one('.meta-date')
+            if date_elem:
+                legislation['date'] = date_elem.text.strip()
+            
+            # Try to extract chapters or sections
+            chapter_items = []
+            for selector in ['.chapter', '.section', 'article.section', '.document-section']:
+                if not chapter_items:
+                    chapter_items = soup.select(selector)
+            
+            # If no structured chapters found, try to parse the main content
+            if not chapter_items:
+                main_content = soup.select_one('main') or soup.select_one('article')
+                if main_content:
+                    # Look for headings as chapter/section markers
+                    headings = main_content.select('h2, h3')
+                    for heading in headings:
+                        title = heading.text.strip()
+                        content = ''
+                        
+                        # Get content until next heading
+                        current = heading.next_sibling
+                        while current and not (current.name in ['h2', 'h3']):
+                            if current.name and current.text.strip():
+                                content += current.text.strip() + '\n'
+                            current = current.next_sibling
+                        
+                        legislation['chapters'].append({
+                            'title': title,
+                            'content': content.strip()
+                        })
+            else:
+                # Process found chapter items
+                for chapter in chapter_items:
+                    title_elem = chapter.select_one('h2') or chapter.select_one('h3') or chapter.select_one('.title')
+                    content_elem = chapter.select_one('.content') or chapter
+                    
+                    if title_elem and content_elem:
+                        title = title_elem.text.strip()
+                        content = content_elem.text.strip()
+                        
+                        # Remove the title from the content if it's included
+                        content = content.replace(title, '').strip()
+                        
+                        legislation['chapters'].append({
+                            'title': title,
+                            'content': content
+                        })
             
             return legislation
         
@@ -294,6 +483,7 @@ class KenyaLawScraper:
             Extracted text content
         """
         try:
+            logger.info(f"Extracting text content from {url}")
             downloaded = trafilatura.fetch_url(url)
             text = trafilatura.extract(downloaded)
             return text

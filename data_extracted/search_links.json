@@ -1,0 +1,764 @@
+[
+  {
+    "text": "Skip to document content",
+    "href": "#top",
+    "classes": [
+      "bg-white"
+    ],
+    "parent_classes": [
+      "skip-links"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Go to main menu",
+    "href": "#main-nav",
+    "classes": [
+      "bg-white"
+    ],
+    "parent_classes": [
+      "skip-links"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Go to search",
+    "href": "#header-search",
+    "classes": [
+      "bg-white"
+    ],
+    "parent_classes": [
+      "skip-links"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "About Us",
+    "href": "https://kenyalaw.org/kl/index.php?id=115",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "ms-auto"
+    ]
+  },
+  {
+    "text": "Judicial Profiles",
+    "href": "https://kenyalaw.org/kl/index.php?id=157",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "ms-auto"
+    ]
+  },
+  {
+    "text": "Product Catalogue",
+    "href": "https://kenyalaw.org/kl/index.php?id=1990",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "ms-auto"
+    ]
+  },
+  {
+    "text": "Careers",
+    "href": "https://kenyalaw.org/kl/index.php?id=2003",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "ms-auto"
+    ]
+  },
+  {
+    "text": "Contact Us",
+    "href": "https://kenyalaw.org/kl/index.php?id=3158",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "ms-auto"
+    ]
+  },
+  {
+    "text": "Site Map",
+    "href": "https://kenyalaw.org/kl/index.php?id=3386",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "ms-auto"
+    ]
+  },
+  {
+    "text": "Home",
+    "href": "/",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "mb-2",
+      "mb-lg-0",
+      "justify-content-evenly",
+      "w-100"
+    ]
+  },
+  {
+    "text": "Case Law",
+    "href": "/judgments/",
+    "classes": [
+      "nav-link",
+      "dropdown-toggle"
+    ],
+    "parent_classes": [
+      "nav-item",
+      "dropdown",
+      "main-nav"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "mb-2",
+      "mb-lg-0",
+      "justify-content-evenly",
+      "w-100"
+    ]
+  },
+  {
+    "text": "Superior Courts",
+    "href": "/judgments/court-class/superior-courts/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Subordinate Courts",
+    "href": "/judgments/court-class/subordinate-courts/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Small Claims Court",
+    "href": "/judgments/court-class/small-claims-court/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Civil and Human Rights Tribunals",
+    "href": "/judgments/court-class/civil-and-human-rights-tribunals/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Commercial Tribunals",
+    "href": "/judgments/court-class/commercial-tribunals/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Environment and Land Tribunals",
+    "href": "/judgments/court-class/environment-and-land-tribunals/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Intellectual Property Tribunals",
+    "href": "/judgments/court-class/intellectual-property-tribunals/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Regional and International Courts",
+    "href": "/judgments/court-class/regional-and-international-courts/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Tribunals",
+    "href": "/judgments/court-class/tribunals/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Elections",
+    "href": "/taxonomy/elections",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Laws of Kenya",
+    "href": "/legislation/",
+    "classes": [
+      "nav-link",
+      "dropdown-toggle"
+    ],
+    "parent_classes": [
+      "nav-item",
+      "dropdown",
+      "main-nav"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "mb-2",
+      "mb-lg-0",
+      "justify-content-evenly",
+      "w-100"
+    ]
+  },
+  {
+    "text": "The Constitution of Kenya",
+    "href": "/akn/ke/act/2010/constitution ",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Laws of Kenya",
+    "href": "/legislation/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Treaties",
+    "href": "/taxonomy/collections/collections-treaties",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "EAC Legislation",
+    "href": "/taxonomy/foreign-legislation/foreign-legislation-east-african-community-eac",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Counties",
+    "href": "/legislation/counties",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "mb-2",
+      "mb-lg-0",
+      "justify-content-evenly",
+      "w-100"
+    ]
+  },
+  {
+    "text": "Cause List",
+    "href": "/causelists/",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "mb-2",
+      "mb-lg-0",
+      "justify-content-evenly",
+      "w-100"
+    ]
+  },
+  {
+    "text": "Kenya Gazette",
+    "href": "/gazettes/",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "mb-2",
+      "mb-lg-0",
+      "justify-content-evenly",
+      "w-100"
+    ]
+  },
+  {
+    "text": "Publications",
+    "href": "/taxonomy/publications",
+    "classes": [
+      "nav-link",
+      "dropdown-toggle"
+    ],
+    "parent_classes": [
+      "nav-item",
+      "dropdown",
+      "main-nav"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "mb-2",
+      "mb-lg-0",
+      "justify-content-evenly",
+      "w-100"
+    ]
+  },
+  {
+    "text": "Bench Bulletin",
+    "href": "/taxonomy/publications/publications-bench-bulletin",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Commission Reports",
+    "href": "/taxonomy/publications/publications-commission-reports",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Journals",
+    "href": "/taxonomy/publications/publications-journals",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Law Related Articles",
+    "href": "/taxonomy/publications/publications-law-related-articles",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Weekly Newsletter",
+    "href": "/taxonomy/publications/publications-weekly-newsletter",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Parliament",
+    "href": "",
+    "classes": [
+      "nav-link",
+      "dropdown-toggle"
+    ],
+    "parent_classes": [
+      "nav-item",
+      "dropdown",
+      "main-nav"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "mb-2",
+      "mb-lg-0",
+      "justify-content-evenly",
+      "w-100"
+    ]
+  },
+  {
+    "text": "Committee Reports",
+    "href": "http://www.parliament.go.ke/the-national-assembly/committees",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Blog",
+    "href": "/articles/",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "mb-2",
+      "mb-lg-0",
+      "justify-content-evenly",
+      "w-100"
+    ]
+  },
+  {
+    "text": "Log in",
+    "href": "/accounts/login/?next=/search/%3Fq%3Dconstitutional%2Brights",
+    "classes": [
+      "btn",
+      "btn-primary",
+      "text-nowrap"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav"
+    ]
+  },
+  {
+    "text": "Creative Commons",
+    "href": "http://www.creativecommons.org/",
+    "classes": [],
+    "parent_classes": [
+      "pb-0",
+      "mb-0"
+    ],
+    "grandparent_classes": [
+      "col-md-10"
+    ]
+  },
+  {
+    "text": "Home",
+    "href": "https://www.kenyalaw.org/",
+    "classes": [
+      "nav-link",
+      "ms-0"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "nav",
+      "ms-0",
+      "ps-0"
+    ]
+  },
+  {
+    "text": "About us",
+    "href": "https://kenyalaw.org/kl/index.php?id=115",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "nav",
+      "ms-0",
+      "ps-0"
+    ]
+  },
+  {
+    "text": "Our Partners",
+    "href": "https://kenyalaw.org/kl/index.php?id=2287",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "nav",
+      "ms-0",
+      "ps-0"
+    ]
+  },
+  {
+    "text": "Careers",
+    "href": "https://kenyalaw.org/kl/index.php?id=133",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "nav",
+      "ms-0",
+      "ps-0"
+    ]
+  },
+  {
+    "text": "Contact Us",
+    "href": "https://kenyalaw.org/kl/index.php?id=3158",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "nav",
+      "ms-0",
+      "ps-0"
+    ]
+  },
+  {
+    "text": "Site Map",
+    "href": "https://kenyalaw.org/kl/index.php?id=3386",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "nav",
+      "ms-0",
+      "ps-0"
+    ]
+  },
+  {
+    "text": "Creative Commons",
+    "href": "https://kenyalaw.org/kl/index.php?id=2161",
+    "classes": [],
+    "parent_classes": [
+      "font-weight-bold"
+    ],
+    "grandparent_classes": [
+      "col-md-10"
+    ]
+  },
+  {
+    "text": "Contact us",
+    "href": "https://kenyalaw.org/kl/index.php?id=3158",
+    "classes": [
+      "btn",
+      "btn-primary"
+    ],
+    "parent_classes": [
+      "col-md-2",
+      "text-end"
+    ],
+    "grandparent_classes": [
+      "row"
+    ]
+  },
+  {
+    "text": "Visit our Facebook page",
+    "href": "https://web.facebook.com/mykenyalaw",
+    "classes": [],
+    "parent_classes": [
+      "list-inline-item"
+    ],
+    "grandparent_classes": [
+      "list-inline",
+      "mt-3"
+    ]
+  },
+  {
+    "text": "Visit our Twitter/X profile",
+    "href": "https://x.com/mykenyalaw",
+    "classes": [],
+    "parent_classes": [
+      "list-inline-item"
+    ],
+    "grandparent_classes": [
+      "list-inline",
+      "mt-3"
+    ]
+  },
+  {
+    "text": "Visit our YouTube channel",
+    "href": "https://www.youtube.com/mykenyalaw",
+    "classes": [],
+    "parent_classes": [
+      "list-inline-item"
+    ],
+    "grandparent_classes": [
+      "list-inline",
+      "mt-3"
+    ]
+  }
+]

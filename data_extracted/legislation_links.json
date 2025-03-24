@@ -1,0 +1,2764 @@
+[
+  {
+    "text": "Skip to document content",
+    "href": "#top",
+    "classes": [
+      "bg-white"
+    ],
+    "parent_classes": [
+      "skip-links"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Go to main menu",
+    "href": "#main-nav",
+    "classes": [
+      "bg-white"
+    ],
+    "parent_classes": [
+      "skip-links"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Go to search",
+    "href": "#header-search",
+    "classes": [
+      "bg-white"
+    ],
+    "parent_classes": [
+      "skip-links"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "About Us",
+    "href": "https://kenyalaw.org/kl/index.php?id=115",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "ms-auto"
+    ]
+  },
+  {
+    "text": "Judicial Profiles",
+    "href": "https://kenyalaw.org/kl/index.php?id=157",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "ms-auto"
+    ]
+  },
+  {
+    "text": "Product Catalogue",
+    "href": "https://kenyalaw.org/kl/index.php?id=1990",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "ms-auto"
+    ]
+  },
+  {
+    "text": "Careers",
+    "href": "https://kenyalaw.org/kl/index.php?id=2003",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "ms-auto"
+    ]
+  },
+  {
+    "text": "Contact Us",
+    "href": "https://kenyalaw.org/kl/index.php?id=3158",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "ms-auto"
+    ]
+  },
+  {
+    "text": "Site Map",
+    "href": "https://kenyalaw.org/kl/index.php?id=3386",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "ms-auto"
+    ]
+  },
+  {
+    "text": "Home",
+    "href": "/",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "mb-2",
+      "mb-lg-0",
+      "justify-content-evenly",
+      "w-100"
+    ]
+  },
+  {
+    "text": "Case Law",
+    "href": "/judgments/",
+    "classes": [
+      "nav-link",
+      "dropdown-toggle"
+    ],
+    "parent_classes": [
+      "nav-item",
+      "dropdown",
+      "main-nav"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "mb-2",
+      "mb-lg-0",
+      "justify-content-evenly",
+      "w-100"
+    ]
+  },
+  {
+    "text": "Superior Courts",
+    "href": "/judgments/court-class/superior-courts/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Subordinate Courts",
+    "href": "/judgments/court-class/subordinate-courts/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Small Claims Court",
+    "href": "/judgments/court-class/small-claims-court/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Civil and Human Rights Tribunals",
+    "href": "/judgments/court-class/civil-and-human-rights-tribunals/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Commercial Tribunals",
+    "href": "/judgments/court-class/commercial-tribunals/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Environment and Land Tribunals",
+    "href": "/judgments/court-class/environment-and-land-tribunals/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Intellectual Property Tribunals",
+    "href": "/judgments/court-class/intellectual-property-tribunals/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Regional and International Courts",
+    "href": "/judgments/court-class/regional-and-international-courts/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Tribunals",
+    "href": "/judgments/court-class/tribunals/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Elections",
+    "href": "/taxonomy/elections",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Laws of Kenya",
+    "href": "/legislation/",
+    "classes": [
+      "nav-link",
+      "dropdown-toggle",
+      "active"
+    ],
+    "parent_classes": [
+      "nav-item",
+      "dropdown",
+      "main-nav"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "mb-2",
+      "mb-lg-0",
+      "justify-content-evenly",
+      "w-100"
+    ]
+  },
+  {
+    "text": "The Constitution of Kenya",
+    "href": "/akn/ke/act/2010/constitution ",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Laws of Kenya",
+    "href": "/legislation/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Treaties",
+    "href": "/taxonomy/collections/collections-treaties",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "EAC Legislation",
+    "href": "/taxonomy/foreign-legislation/foreign-legislation-east-african-community-eac",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Counties",
+    "href": "/legislation/counties",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "mb-2",
+      "mb-lg-0",
+      "justify-content-evenly",
+      "w-100"
+    ]
+  },
+  {
+    "text": "Cause List",
+    "href": "/causelists/",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "mb-2",
+      "mb-lg-0",
+      "justify-content-evenly",
+      "w-100"
+    ]
+  },
+  {
+    "text": "Kenya Gazette",
+    "href": "/gazettes/",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "mb-2",
+      "mb-lg-0",
+      "justify-content-evenly",
+      "w-100"
+    ]
+  },
+  {
+    "text": "Publications",
+    "href": "/taxonomy/publications",
+    "classes": [
+      "nav-link",
+      "dropdown-toggle"
+    ],
+    "parent_classes": [
+      "nav-item",
+      "dropdown",
+      "main-nav"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "mb-2",
+      "mb-lg-0",
+      "justify-content-evenly",
+      "w-100"
+    ]
+  },
+  {
+    "text": "Bench Bulletin",
+    "href": "/taxonomy/publications/publications-bench-bulletin",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Commission Reports",
+    "href": "/taxonomy/publications/publications-commission-reports",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Journals",
+    "href": "/taxonomy/publications/publications-journals",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Law Related Articles",
+    "href": "/taxonomy/publications/publications-law-related-articles",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Weekly Newsletter",
+    "href": "/taxonomy/publications/publications-weekly-newsletter",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Parliament",
+    "href": "",
+    "classes": [
+      "nav-link",
+      "dropdown-toggle"
+    ],
+    "parent_classes": [
+      "nav-item",
+      "dropdown",
+      "main-nav"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "mb-2",
+      "mb-lg-0",
+      "justify-content-evenly",
+      "w-100"
+    ]
+  },
+  {
+    "text": "Committee Reports",
+    "href": "http://www.parliament.go.ke/the-national-assembly/committees",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Blog",
+    "href": "/articles/",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "mb-2",
+      "mb-lg-0",
+      "justify-content-evenly",
+      "w-100"
+    ]
+  },
+  {
+    "text": "Log in",
+    "href": "/accounts/login/?next=/legislation/",
+    "classes": [
+      "btn",
+      "btn-primary",
+      "text-nowrap"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav"
+    ]
+  },
+  {
+    "text": "visit the old page.",
+    "href": "http://www.kenyalaw.org:8181/exist/kenyalex/index.xql",
+    "classes": [],
+    "parent_classes": [
+      "my-4",
+      "alert",
+      "alert-primary"
+    ],
+    "grandparent_classes": [
+      "container",
+      "pb-5"
+    ]
+  },
+  {
+    "text": "Constitution of Kenya \u2192",
+    "href": "/akn/ke/act/2010/constitution",
+    "classes": [
+      "stretched-link"
+    ],
+    "parent_classes": [
+      "card-body"
+    ],
+    "grandparent_classes": [
+      "card",
+      "bg-light",
+      "h-100"
+    ]
+  },
+  {
+    "text": "County Legislative Information \u2192",
+    "href": "/legislation/counties",
+    "classes": [
+      "stretched-link"
+    ],
+    "parent_classes": [
+      "card-body"
+    ],
+    "grandparent_classes": [
+      "card",
+      "bg-light",
+      "h-100"
+    ]
+  },
+  {
+    "text": "Treaties \u2192",
+    "href": "/taxonomy/collections/collections-treaties",
+    "classes": [
+      "stretched-link"
+    ],
+    "parent_classes": [
+      "card-body"
+    ],
+    "grandparent_classes": [
+      "card",
+      "bg-light",
+      "h-100"
+    ]
+  },
+  {
+    "text": "Help",
+    "href": "https://help.kenyalaw.org/legislation/",
+    "classes": [],
+    "parent_classes": [
+      "mb-3"
+    ],
+    "grandparent_classes": [
+      "col-12",
+      "col-sm-6",
+      "col-lg-8",
+      "mb-2"
+    ]
+  },
+  {
+    "text": "Advanced search",
+    "href": "/search/?show-advanced-tab=1&nature=Act",
+    "classes": [],
+    "parent_classes": [
+      "col-12",
+      "col-sm-6",
+      "col-lg-4",
+      "mb-2"
+    ],
+    "grandparent_classes": [
+      "row",
+      "mb-4"
+    ]
+  },
+  {
+    "text": "Acts in force",
+    "href": "/legislation/",
+    "classes": [
+      "nav-link",
+      "active"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "nav",
+      "nav-tabs",
+      "scroll-xs",
+      "mb-3",
+      "border-bottom"
+    ]
+  },
+  {
+    "text": "Recent legislation",
+    "href": "/legislation/recent",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "nav",
+      "nav-tabs",
+      "scroll-xs",
+      "mb-3",
+      "border-bottom"
+    ]
+  },
+  {
+    "text": "Subsidiary legislation",
+    "href": "/legislation/subsidiary",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "nav",
+      "nav-tabs",
+      "scroll-xs",
+      "mb-3",
+      "border-bottom"
+    ]
+  },
+  {
+    "text": "Uncommenced legislation",
+    "href": "/legislation/uncommenced",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "nav",
+      "nav-tabs",
+      "scroll-xs",
+      "mb-3",
+      "border-bottom"
+    ]
+  },
+  {
+    "text": "Repealed legislation",
+    "href": "/legislation/repealed",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "nav",
+      "nav-tabs",
+      "scroll-xs",
+      "mb-3",
+      "border-bottom"
+    ]
+  },
+  {
+    "text": "All legislation",
+    "href": "/legislation/all",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "nav",
+      "nav-tabs",
+      "scroll-xs",
+      "mb-3",
+      "border-bottom"
+    ]
+  },
+  {
+    "text": "Filters",
+    "href": "#document-list-filters-offcanvas",
+    "classes": [
+      "btn",
+      "btn-primary"
+    ],
+    "parent_classes": [
+      "d-block",
+      "d-lg-none",
+      "my-2"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Access to Information Act",
+    "href": "/akn/ke/act/2016/31/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Access to Information (General) Regulations",
+    "href": "/akn/ke/act/ln/2023/161/eng@2023-12-01",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Accountants Act",
+    "href": "/akn/ke/act/2008/15/eng@2023-12-11",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Accountants (Standards of Professional Practice and Ethical Conduct) Regulations",
+    "href": "/akn/ke/act/ln/2022/147/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Accountants Regulations",
+    "href": "/akn/ke/act/ln/2022/153/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Accountants (Examinations) Rules",
+    "href": "/akn/ke/act/ln/2022/152/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Accountants (Quality Assurance Review) Regulations",
+    "href": "/akn/ke/act/ln/2022/146/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Advocates Act",
+    "href": "/akn/ke/act/1989/18/eng@2024-04-26",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Advocates (Remuneration) Order",
+    "href": "/akn/ke/act/ln/1962/64/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Advocates (Deposit Interest) Rules",
+    "href": "/akn/ke/act/ln/1967/205/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Advocates (Fees for Restoration to the Roll) Regulations",
+    "href": "/akn/ke/act/ln/1962/311/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Advocates (Practice) Rules",
+    "href": "/akn/ke/act/ln/1967/19/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Advocates (Accounts) Rules",
+    "href": "/akn/ke/act/ln/1966/137/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Advocates (Senior Counsel Conferment and Privileges) Rules",
+    "href": "/akn/ke/act/ln/2011/155/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Advocates (Complaints Commission) (Structure and Procedure) Rules",
+    "href": "/akn/ke/act/ln/2003/213/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Advocates (Accountant's Certificate) Rules",
+    "href": "/akn/ke/act/ln/1968/80/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Advocates (Professional Indemnity) Regulations",
+    "href": "/akn/ke/act/ln/2004/82/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Advocates (Practising Certificate) (Fees) Rules, 2024",
+    "href": "/akn/ke/act/ln/2024/110/eng@2024-07-19",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Advocates (Marketing and Advertising) Rules",
+    "href": "/akn/ke/act/ln/2014/42/eng@2014-05-02",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Advocates (Continuing Professional Development) Rules, 2014",
+    "href": "/akn/ke/act/ln/2014/43/eng@2014-05-02",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Advocates (Degree Qualifications) (Revocation) Regulations, 1991",
+    "href": "/akn/ke/act/ln/1991/467/eng@1991-06-12",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Advocates (Disciplinary Committee) Rules",
+    "href": "/akn/ke/act/ln/1990/458/eng@2004-07-02",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Affordable Housing Act",
+    "href": "/akn/ke/act/2024/2/eng@2024-03-22",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "African Development Bank Act",
+    "href": "/akn/ke/act/1964/4/eng@1964-04-07",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "African Re-insurance Corporation (Mandatory Re-insurance Cessions) Act",
+    "href": "/akn/ke/act/1994/2/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Age of Majority Act",
+    "href": "/akn/ke/act/1974/1/eng@1974-04-05",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Agricultural Development Corporation Act",
+    "href": "/akn/ke/act/1965/7/eng@1965-04-27",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Agricultural Development Corporation (Special Farms) Rules, 2001",
+    "href": "/akn/ke/act/ln/2001/37/eng@2001-03-02",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Agricultural Finance Corporation Act",
+    "href": "/akn/ke/act/1969/1/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Determination of Limit of Total Indebtedness",
+    "href": "/akn/ke/act/ln/1992/256/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Agricultural Finance Corporation (Forms) Rules",
+    "href": "/akn/ke/act/ln/1969/209/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Agricultural Finance Corporation (Fees, Costs and Express) Regulations",
+    "href": "/akn/ke/act/ln/1970/29/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Agriculture and Food Authority Act",
+    "href": "/akn/ke/act/2013/13/eng@2024-11-21",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Air Passenger Service Charge Act",
+    "href": "/akn/ke/act/1970/21/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Air Passenger Service Charge (Apportionment) Order",
+    "href": "/akn/ke/act/ln/2018/143/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Air Passenger Service Charge (Apportionment) Order 2018",
+    "href": "/akn/ke/act/ln/2019/23/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Alcoholic Drinks Control Act",
+    "href": "/akn/ke/act/2010/4/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Alcoholic Drinks Control (Licensing) Regulations",
+    "href": "/akn/ke/act/ln/2010/206/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Anatomy Act",
+    "href": "/akn/ke/act/1967/21/eng@1967-08-25",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Animal Diseases Act",
+    "href": "/akn/ke/act/1965/4/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Animal Diseases (Control of Pig Diseases) Rules",
+    "href": "/akn/ke/act/ln/1966/71/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Animal Diseases (Compulsory Foot and Mouth Vaccination) Rules, 1966",
+    "href": "/akn/ke/act/ln/1966/91/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Animal Diseases Act\u2014Prohibition",
+    "href": "/akn/ke/act/ln/1971/21/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Notifiable Diseases Under Section 2",
+    "href": "/akn/ke/act/ln/1965/147/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Animal Diseases (Compulsory Rinderpest Vaccination) Rules",
+    "href": "/akn/ke/act/ln/1964/232/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Fees and Payments",
+    "href": "/akn/ke/act/ln/2021/266/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Animal Diseases Rules",
+    "href": "/akn/ke/act/ln/1968/244/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Animal Diseases Act 1965\u2014Vaccination Against Foot-and-Mouth Disease (Fees and Charges)",
+    "href": "/akn/ke/act/ln/1968/29/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Declaration of Animals Under Section 2",
+    "href": "/akn/ke/act/ln/2007/158/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Animal Diseases Act \u2014 (Fees and Charges)",
+    "href": "/akn/ke/act/ln/1966/329/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Animal Diseases (Hatcheries) Rules",
+    "href": "/akn/ke/act/ln/1985/47/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Animal Diseases Act \u2014 (Fees and Charges)",
+    "href": "/akn/ke/act/ln/1966/185/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Animal Technicians Act",
+    "href": "/akn/ke/act/2010/11/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Anti-Bribery Act",
+    "href": "/akn/ke/act/2016/47/eng@2023-12-11",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Bribery Regulations",
+    "href": "/akn/ke/act/ln/2022/88/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Anti-Bribery Act (Guidelines to Assist Public and Private Entities in the Preparation of Procedures for the Prevention of Bribery and Corruption, 2022",
+    "href": "/akn/ke/act/gn/2022/6022/eng@2022-05-27",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Anti-Corruption and Economic Crimes Act",
+    "href": "/akn/ke/act/2003/3/eng@2023-12-11",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Anti-Corruption and Economic Crimes Regulations",
+    "href": "/akn/ke/act/ln/2003/119/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Anti-Corruption and Economic Crimes (Amnesty and Restitution) Regulations",
+    "href": "/akn/ke/act/ln/2011/44/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Anti-Counterfeit Act",
+    "href": "/akn/ke/act/2008/13/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Anti-Counterfeit (Recordation) Regulations",
+    "href": "/akn/ke/act/ln/2021/118/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Anti-Counterfeit Regulations",
+    "href": "/akn/ke/act/ln/2010/126/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Anti-Doping Act",
+    "href": "/akn/ke/act/2016/5/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Anti-Doping Regulations",
+    "href": "/akn/ke/act/ln/2020/211/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Appellate Jurisdiction Act",
+    "href": "/akn/ke/act/1977/15/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Court of Appeal Rules",
+    "href": "/akn/ke/act/ln/2022/40/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Court of Appeal for East Africa Rules, 1972",
+    "href": "/akn/ke/act/ln/1972/199/eng@1972-10-13",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Court of Appeal (Election Petition) Rules",
+    "href": "/akn/ke/act/ln/2017/114/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Arbitration Act",
+    "href": "/akn/ke/act/1995/4/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Arbitration Rules",
+    "href": "/akn/ke/act/ln/1997/58/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Architects and Quantity Surveyors Act",
+    "href": "/akn/ke/act/1933/60/eng@2023-12-11",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Architects and Quantity Surveyors By-laws",
+    "href": "/akn/ke/act/ln/1959/420/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Architects and Quantity Surveyors (Continuing Professional Development) By-Laws",
+    "href": "/akn/ke/act/ln/2020/202/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Asian Officers\u2019 Family Pensions Act",
+    "href": "/akn/ke/act/1942/10/eng@1971-06-04",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Asian Officers' Family Pensions Act Notice",
+    "href": "/akn/ke/act/ln/1963/614/eng@1963-09-10",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Asian Widows' and Orphans' Pensions (Repeal) Act",
+    "href": "/akn/ke/act/2022/5/eng@2022-04-01",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Assumption of the Office of Governor Act",
+    "href": "/akn/ke/act/2019/4/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Assumption of the Office of President Act",
+    "href": "/akn/ke/act/2012/21/eng@2024-05-17",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Auctioneers Act",
+    "href": "/akn/ke/act/1996/5/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Auctioneers Rules",
+    "href": "/akn/ke/act/ln/1997/120/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Auctioneers (Practice) Rules",
+    "href": "/akn/ke/act/ln/2009/143/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Banking Act",
+    "href": "/akn/ke/act/1989/9/eng@2024-12-27",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Banking (Liquidation of Institutions) Regulations",
+    "href": "/akn/ke/act/ln/1992/402/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Banking (Credit Reference Bureau) Regulations",
+    "href": "/akn/ke/act/ln/2020/55/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Banking (Increase of Rate of Banking and other Charges) Regulations",
+    "href": "/akn/ke/act/ln/2006/34/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Banking (Licences) (Forms and Fees) Regulations",
+    "href": "/akn/ke/act/ln/1969/116/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Banking (Penalties) Regulations",
+    "href": "/akn/ke/act/ln/1999/77/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Banking Act - Exemption",
+    "href": "/akn/ke/act/ln/2017/154/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Banking (Fees)  Regulations",
+    "href": "/akn/ke/act/ln/1994/188/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Banking (Deposit Protection Fund) Regulations",
+    "href": "/akn/ke/act/ln/2003/10/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Banking Act - Exemption",
+    "href": "/akn/ke/act/ln/2024/52/eng@2024-04-12",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Banking Act-Exemption",
+    "href": "/akn/ke/act/ln/2024/85/eng@2024-06-07",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Bank of Baroda (Kenya) Limited Act",
+    "href": "/akn/ke/act/1992/7/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Barclays Bank of Kenya Limited Act",
+    "href": "/akn/ke/act/1978/11/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "Barclays Bank of Kenya Limited Act- Vesting Day",
+    "href": "/akn/ke/act/ln/1978/189/eng@1978-09-29",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Basic Education Act",
+    "href": "/akn/ke/act/2013/14/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Basic Education Regulations",
+    "href": "/akn/ke/act/ln/2015/39/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Basic Education (Education Standards and Quality Assurance Council) Regulations",
+    "href": "/akn/ke/act/ln/2014/11/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Betting, Lotteries and Gaming Act",
+    "href": "/akn/ke/act/1966/9/eng@2023-07-01",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Betting, Lotteries and Gaming (Remittance of Pool Betting Scheme Tax) Order",
+    "href": "/akn/ke/act/ln/1966/308/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Authorization of Executive Officers of Board",
+    "href": "/akn/ke/act/ln/1967/169/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Betting, Lotteries and Gaming Regulations",
+    "href": "/akn/ke/act/ln/1966/309/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Bills of Exchange Act",
+    "href": "/akn/ke/act/1927/7/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Bills of Exchange (Cheque Truncation) Regulations",
+    "href": "/akn/ke/act/ln/2010/123/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Biosafety Act",
+    "href": "/akn/ke/act/2009/2/eng@2023-12-11",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Biosafety (Environmental Release) Regulations",
+    "href": "/akn/ke/act/ln/2011/98/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Biosafety (Import, Export and Transit) Regulations",
+    "href": "/akn/ke/act/ln/2011/97/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Biosafety (Contained Use) Regulations",
+    "href": "/akn/ke/act/ln/2011/96/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Biosafety (Labelling) Regulations",
+    "href": "/akn/ke/act/ln/2012/40/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Births and Deaths Registration Act",
+    "href": "/akn/ke/act/1928/2/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Births and Deaths Registration Rules",
+    "href": "/akn/ke/act/ln/1966/270/eng@2024-10-01",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Births and Deaths (Late Registration) Rules",
+    "href": "/akn/ke/act/ln/1971/154/eng@2024-10-01",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Towns, Districts and Areas in Which Registration of Births and Deaths is Declared to Be Compulsory",
+    "href": "/akn/ke/act/ln/1963/172/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Births and Deaths Registration (Births and Deaths Occurring Outside Kenya) (Forms and Fees) Rules",
+    "href": "/akn/ke/act/ln/1969/170/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Births and Deaths Registration Act - Declaration",
+    "href": "/akn/ke/act/ln/2024/151/eng@2024-10-11",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Books and Newspapers Act",
+    "href": "/akn/ke/act/1960/27/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Books and Newspapers Rules",
+    "href": "/akn/ke/act/ln/1960/328/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Exclusion of Certain Printers and Publishers From the Provisions as to Bonds",
+    "href": "/akn/ke/act/ln/2009/81/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Classes of Books and Newspapers Excluded",
+    "href": "/akn/ke/act/ln/1960/329/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Classes of Persons Excluded",
+    "href": "/akn/ke/act/ln/1960/330/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Directions Under Rules 2 and 3 of the Books and Newspapers Rules",
+    "href": "/akn/ke/act/ln/1962/386/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Borstal Institutions Act",
+    "href": "/akn/ke/act/1963/23/eng@1983-12-09",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Branding of Stock Act",
+    "href": "/akn/ke/act/1907/12/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Branding of Stock Rules",
+    "href": "/akn/ke/act/gn/1950/1223/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Breast Milk Substitutes (Regulation and Control) Act",
+    "href": "/akn/ke/act/2012/34/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Breast Milk Substitutes (Regulation and Control) (General) Regulations",
+    "href": "/akn/ke/act/ln/2021/184/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Bretton Woods Agreement Act",
+    "href": "/akn/ke/act/1963/38/eng@1963-12-10",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "British Standard Portland Cement Company Limited (Bamburi Factory) Act",
+    "href": "/akn/ke/act/1951/61/eng@1966-07-12",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Brokers Act",
+    "href": "/akn/ke/act/1930/56/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Brokers (Licence Fees) Order",
+    "href": "/akn/ke/act/ln/1981/84/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Building Societies Act",
+    "href": "/akn/ke/act/1956/29/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "Appointment of Registrar of Building Societies",
+    "href": "/akn/ke/act/gn/1956/2165/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Building Societies Regulations",
+    "href": "/akn/ke/act/ln/1956/378/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Building Surveyors Act",
+    "href": "/akn/ke/act/2018/19/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Bukura Agricultural College Act",
+    "href": "/akn/ke/act/1999/5/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Business Registration Service Act",
+    "href": "/akn/ke/act/2015/15/eng@2024-12-27",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Cabinet Secretary to the Treasury (Incorporation) Act",
+    "href": "/akn/ke/act/1962/2/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Kenya Development Corporation Limited (Vesting) Order",
+    "href": "/akn/ke/act/ln/2021/113/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Kenya Ports Authority (Vesting) Order, 2023",
+    "href": "/akn/ke/act/ln/2023/39/eng@2023-04-28",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Delegation of Powers",
+    "href": "/akn/ke/act/ln/2020/175/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The National Cereals and Produce Board (Vesting) Order, 2024",
+    "href": "/akn/ke/act/ln/2024/112/eng@2024-07-19",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Cancer Prevention and Control Act",
+    "href": "/akn/ke/act/2012/15/eng@2012-08-03",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Capital Markets Act",
+    "href": "/akn/ke/act/1989/17/eng@2023-12-11",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Capital Markets (Registered Venture Capital Companies) Regulations",
+    "href": "/akn/ke/act/ln/2007/183/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Capital Markets (Derivatives Markets) (Fees) Regulations",
+    "href": "/akn/ke/act/ln/2019/127/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Capital Markets (Foreign Investors) Regulations",
+    "href": "/akn/ke/act/ln/2002/134/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Capital Markets (Whistleblower) Regulations",
+    "href": "/akn/ke/act/ln/2022/65/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Capital Markets (Demutualization of the Nairobi Securities Exchange Limited) Regulations",
+    "href": "/akn/ke/act/ln/2012/87/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Capital Markets (Derivatives Markets) Regulations",
+    "href": "/akn/ke/act/ln/2016/37/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Capital Markets Authority Rules",
+    "href": "/akn/ke/act/ln/1992/429/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Capital Markets (Securities) (Public Offers, Listing and Disclosures) Regulations",
+    "href": "/akn/ke/act/ln/2002/60/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Capital Markets (Licensing Requirements) (General) Regulations",
+    "href": "/akn/ke/act/ln/2002/125/eng@2023-10-06",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Capital Markets (Securities Lending, Borrowing and Short-selling) Regulations",
+    "href": "/akn/ke/act/ln/2017/295/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Capital Markets (Nairobi Securities Exchange Limited Shareholding) Regulations",
+    "href": "/akn/ke/act/ln/2016/74/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Capital Markets (Asset-Backed Securities) Regulations",
+    "href": "/akn/ke/act/ln/2007/184/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Guidelines on Corporate Governance Practices by Public Listed Companies in Kenya",
+    "href": "/akn/ke/act/gn/2002/3362/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Capital Markets (Conduct of Business) (Market Intermediaries) Regulations",
+    "href": "/akn/ke/act/ln/2011/145/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Capital Markets (Collective Investment Schemes) Regulations",
+    "href": "/akn/ke/act/ln/2001/181/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Capital Markets (Online Foreign Exchange Trading) Regulations",
+    "href": "/akn/ke/act/ln/2017/226/eng@2023-10-06",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Capital Markets (Real Estate Investment Trusts) (Collective Investment Schemes) Regulations",
+    "href": "/akn/ke/act/ln/2013/116/eng@2023-10-06",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Guidelines on the Approval and Registration of Credit Rating Agencies",
+    "href": "/akn/ke/act/gn/2001/8512/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Capital Markets (Corporate Governance) (Market Intermediaries) Regulations",
+    "href": "/akn/ke/act/ln/2011/144/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Capital Markets (Coffee Exchange) Regulations",
+    "href": "/akn/ke/act/ln/2020/40/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Capital Markets (Take-Overs and Mergers) Regulations",
+    "href": "/akn/ke/act/ln/2002/126/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Capital Markets (Investment-Based Crowdfunding) Regulations",
+    "href": "/akn/ke/act/ln/2022/175/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Capital Markets (Commodity Markets) Regulations",
+    "href": "/akn/ke/act/ln/2020/41/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Capital Markets Tribunal Rules",
+    "href": "/akn/ke/act/ln/2002/179/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Capital Markets  (Collective Investments Schemes) Regulations, 2023",
+    "href": "/akn/ke/act/ln/2023/173/eng@2023-12-15",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Capital Markets (Alternative Investment Funds) Regulations",
+    "href": "/akn/ke/act/ln/2023/170/eng@2023-12-15",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Capital Markets (Credit Rating Agencies) Regulations",
+    "href": "/akn/ke/act/ln/2023/171/eng@2023-12-15",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Capital Markets (Public Offers, Listings and Disclosures) Regulations, 2023",
+    "href": "/akn/ke/act/ln/2023/172/eng@2023-12-15",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Capital Markets Act (Coffee Exchange)(Fees) Regulations, 2024",
+    "href": "/akn/ke/act/ln/2025/9/eng@2025-02-07",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Carriage by Air Act",
+    "href": "/akn/ke/act/1993/2/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": [
+      "has-children"
+    ]
+  },
+  {
+    "text": "The Carriage by Air (Application of Convention) Order",
+    "href": "/akn/ke/act/ln/1993/162/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "The Carriage by Air (Currency Equivalent) Order",
+    "href": "/akn/ke/act/ln/1993/189/eng@2022-12-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "1",
+    "href": "?page=1",
+    "classes": [
+      "page-link"
+    ],
+    "parent_classes": [
+      "page-item",
+      "active"
+    ],
+    "grandparent_classes": [
+      "pagination",
+      "flex-wrap"
+    ]
+  },
+  {
+    "text": "2",
+    "href": "?page=2",
+    "classes": [
+      "page-link"
+    ],
+    "parent_classes": [
+      "page-item"
+    ],
+    "grandparent_classes": [
+      "pagination",
+      "flex-wrap"
+    ]
+  },
+  {
+    "text": "3",
+    "href": "?page=3",
+    "classes": [
+      "page-link"
+    ],
+    "parent_classes": [
+      "page-item"
+    ],
+    "grandparent_classes": [
+      "pagination",
+      "flex-wrap"
+    ]
+  },
+  {
+    "text": "4",
+    "href": "?page=4",
+    "classes": [
+      "page-link"
+    ],
+    "parent_classes": [
+      "page-item"
+    ],
+    "grandparent_classes": [
+      "pagination",
+      "flex-wrap"
+    ]
+  },
+  {
+    "text": "5",
+    "href": "?page=5",
+    "classes": [
+      "page-link"
+    ],
+    "parent_classes": [
+      "page-item"
+    ],
+    "grandparent_classes": [
+      "pagination",
+      "flex-wrap"
+    ]
+  },
+  {
+    "text": "6",
+    "href": "?page=6",
+    "classes": [
+      "page-link"
+    ],
+    "parent_classes": [
+      "page-item"
+    ],
+    "grandparent_classes": [
+      "pagination",
+      "flex-wrap"
+    ]
+  },
+  {
+    "text": "7",
+    "href": "?page=7",
+    "classes": [
+      "page-link"
+    ],
+    "parent_classes": [
+      "page-item"
+    ],
+    "grandparent_classes": [
+      "pagination",
+      "flex-wrap"
+    ]
+  },
+  {
+    "text": "8",
+    "href": "?page=8",
+    "classes": [
+      "page-link"
+    ],
+    "parent_classes": [
+      "page-item"
+    ],
+    "grandparent_classes": [
+      "pagination",
+      "flex-wrap"
+    ]
+  },
+  {
+    "text": "9",
+    "href": "?page=9",
+    "classes": [
+      "page-link"
+    ],
+    "parent_classes": [
+      "page-item"
+    ],
+    "grandparent_classes": [
+      "pagination",
+      "flex-wrap"
+    ]
+  },
+  {
+    "text": "10",
+    "href": "?page=10",
+    "classes": [
+      "page-link"
+    ],
+    "parent_classes": [
+      "page-item"
+    ],
+    "grandparent_classes": [
+      "pagination",
+      "flex-wrap"
+    ]
+  },
+  {
+    "text": "Next",
+    "href": "?page=2",
+    "classes": [
+      "page-link"
+    ],
+    "parent_classes": [
+      "page-item"
+    ],
+    "grandparent_classes": [
+      "pagination",
+      "flex-wrap"
+    ]
+  },
+  {
+    "text": "Creative Commons",
+    "href": "http://www.creativecommons.org/",
+    "classes": [],
+    "parent_classes": [
+      "pb-0",
+      "mb-0"
+    ],
+    "grandparent_classes": [
+      "col-md-10"
+    ]
+  },
+  {
+    "text": "Home",
+    "href": "https://www.kenyalaw.org/",
+    "classes": [
+      "nav-link",
+      "ms-0"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "nav",
+      "ms-0",
+      "ps-0"
+    ]
+  },
+  {
+    "text": "About us",
+    "href": "https://kenyalaw.org/kl/index.php?id=115",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "nav",
+      "ms-0",
+      "ps-0"
+    ]
+  },
+  {
+    "text": "Our Partners",
+    "href": "https://kenyalaw.org/kl/index.php?id=2287",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "nav",
+      "ms-0",
+      "ps-0"
+    ]
+  },
+  {
+    "text": "Careers",
+    "href": "https://kenyalaw.org/kl/index.php?id=133",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "nav",
+      "ms-0",
+      "ps-0"
+    ]
+  },
+  {
+    "text": "Contact Us",
+    "href": "https://kenyalaw.org/kl/index.php?id=3158",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "nav",
+      "ms-0",
+      "ps-0"
+    ]
+  },
+  {
+    "text": "Site Map",
+    "href": "https://kenyalaw.org/kl/index.php?id=3386",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "nav",
+      "ms-0",
+      "ps-0"
+    ]
+  },
+  {
+    "text": "Creative Commons",
+    "href": "https://kenyalaw.org/kl/index.php?id=2161",
+    "classes": [],
+    "parent_classes": [
+      "font-weight-bold"
+    ],
+    "grandparent_classes": [
+      "col-md-10"
+    ]
+  },
+  {
+    "text": "Contact us",
+    "href": "https://kenyalaw.org/kl/index.php?id=3158",
+    "classes": [
+      "btn",
+      "btn-primary"
+    ],
+    "parent_classes": [
+      "col-md-2",
+      "text-end"
+    ],
+    "grandparent_classes": [
+      "row"
+    ]
+  },
+  {
+    "text": "Visit our Facebook page",
+    "href": "https://web.facebook.com/mykenyalaw",
+    "classes": [],
+    "parent_classes": [
+      "list-inline-item"
+    ],
+    "grandparent_classes": [
+      "list-inline",
+      "mt-3"
+    ]
+  },
+  {
+    "text": "Visit our Twitter/X profile",
+    "href": "https://x.com/mykenyalaw",
+    "classes": [],
+    "parent_classes": [
+      "list-inline-item"
+    ],
+    "grandparent_classes": [
+      "list-inline",
+      "mt-3"
+    ]
+  },
+  {
+    "text": "Visit our YouTube channel",
+    "href": "https://www.youtube.com/mykenyalaw",
+    "classes": [],
+    "parent_classes": [
+      "list-inline-item"
+    ],
+    "grandparent_classes": [
+      "list-inline",
+      "mt-3"
+    ]
+  }
+]

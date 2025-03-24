@@ -1,0 +1,1689 @@
+[
+  {
+    "text": "Skip to document content",
+    "href": "#top",
+    "classes": [
+      "bg-white"
+    ],
+    "parent_classes": [
+      "skip-links"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Go to main menu",
+    "href": "#main-nav",
+    "classes": [
+      "bg-white"
+    ],
+    "parent_classes": [
+      "skip-links"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Go to search",
+    "href": "#header-search",
+    "classes": [
+      "bg-white"
+    ],
+    "parent_classes": [
+      "skip-links"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "About Us",
+    "href": "https://kenyalaw.org/kl/index.php?id=115",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "ms-auto"
+    ]
+  },
+  {
+    "text": "Judicial Profiles",
+    "href": "https://kenyalaw.org/kl/index.php?id=157",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "ms-auto"
+    ]
+  },
+  {
+    "text": "Product Catalogue",
+    "href": "https://kenyalaw.org/kl/index.php?id=1990",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "ms-auto"
+    ]
+  },
+  {
+    "text": "Careers",
+    "href": "https://kenyalaw.org/kl/index.php?id=2003",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "ms-auto"
+    ]
+  },
+  {
+    "text": "Contact Us",
+    "href": "https://kenyalaw.org/kl/index.php?id=3158",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "ms-auto"
+    ]
+  },
+  {
+    "text": "Site Map",
+    "href": "https://kenyalaw.org/kl/index.php?id=3386",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "ms-auto"
+    ]
+  },
+  {
+    "text": "Home",
+    "href": "/",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "mb-2",
+      "mb-lg-0",
+      "justify-content-evenly",
+      "w-100"
+    ]
+  },
+  {
+    "text": "Case Law",
+    "href": "/judgments/",
+    "classes": [
+      "nav-link",
+      "dropdown-toggle",
+      "active"
+    ],
+    "parent_classes": [
+      "nav-item",
+      "dropdown",
+      "main-nav"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "mb-2",
+      "mb-lg-0",
+      "justify-content-evenly",
+      "w-100"
+    ]
+  },
+  {
+    "text": "Superior Courts",
+    "href": "/judgments/court-class/superior-courts/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Subordinate Courts",
+    "href": "/judgments/court-class/subordinate-courts/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Small Claims Court",
+    "href": "/judgments/court-class/small-claims-court/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Civil and Human Rights Tribunals",
+    "href": "/judgments/court-class/civil-and-human-rights-tribunals/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Commercial Tribunals",
+    "href": "/judgments/court-class/commercial-tribunals/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Environment and Land Tribunals",
+    "href": "/judgments/court-class/environment-and-land-tribunals/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Intellectual Property Tribunals",
+    "href": "/judgments/court-class/intellectual-property-tribunals/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Regional and International Courts",
+    "href": "/judgments/court-class/regional-and-international-courts/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Tribunals",
+    "href": "/judgments/court-class/tribunals/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Elections",
+    "href": "/taxonomy/elections",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Laws of Kenya",
+    "href": "/legislation/",
+    "classes": [
+      "nav-link",
+      "dropdown-toggle"
+    ],
+    "parent_classes": [
+      "nav-item",
+      "dropdown",
+      "main-nav"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "mb-2",
+      "mb-lg-0",
+      "justify-content-evenly",
+      "w-100"
+    ]
+  },
+  {
+    "text": "The Constitution of Kenya",
+    "href": "/akn/ke/act/2010/constitution ",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Laws of Kenya",
+    "href": "/legislation/",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Treaties",
+    "href": "/taxonomy/collections/collections-treaties",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "EAC Legislation",
+    "href": "/taxonomy/foreign-legislation/foreign-legislation-east-african-community-eac",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Counties",
+    "href": "/legislation/counties",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "mb-2",
+      "mb-lg-0",
+      "justify-content-evenly",
+      "w-100"
+    ]
+  },
+  {
+    "text": "Cause List",
+    "href": "/causelists/",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "mb-2",
+      "mb-lg-0",
+      "justify-content-evenly",
+      "w-100"
+    ]
+  },
+  {
+    "text": "Kenya Gazette",
+    "href": "/gazettes/",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "mb-2",
+      "mb-lg-0",
+      "justify-content-evenly",
+      "w-100"
+    ]
+  },
+  {
+    "text": "Publications",
+    "href": "/taxonomy/publications",
+    "classes": [
+      "nav-link",
+      "dropdown-toggle"
+    ],
+    "parent_classes": [
+      "nav-item",
+      "dropdown",
+      "main-nav"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "mb-2",
+      "mb-lg-0",
+      "justify-content-evenly",
+      "w-100"
+    ]
+  },
+  {
+    "text": "Bench Bulletin",
+    "href": "/taxonomy/publications/publications-bench-bulletin",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Commission Reports",
+    "href": "/taxonomy/publications/publications-commission-reports",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Journals",
+    "href": "/taxonomy/publications/publications-journals",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Law Related Articles",
+    "href": "/taxonomy/publications/publications-law-related-articles",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Weekly Newsletter",
+    "href": "/taxonomy/publications/publications-weekly-newsletter",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Parliament",
+    "href": "",
+    "classes": [
+      "nav-link",
+      "dropdown-toggle"
+    ],
+    "parent_classes": [
+      "nav-item",
+      "dropdown",
+      "main-nav"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "mb-2",
+      "mb-lg-0",
+      "justify-content-evenly",
+      "w-100"
+    ]
+  },
+  {
+    "text": "Committee Reports",
+    "href": "http://www.parliament.go.ke/the-national-assembly/committees",
+    "classes": [
+      "nav-link",
+      "px-0",
+      "text-muted"
+    ],
+    "parent_classes": [
+      "dropdown-item"
+    ],
+    "grandparent_classes": [
+      "dropdown-menu"
+    ]
+  },
+  {
+    "text": "Blog",
+    "href": "/articles/",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav",
+      "mb-2",
+      "mb-lg-0",
+      "justify-content-evenly",
+      "w-100"
+    ]
+  },
+  {
+    "text": "Log in",
+    "href": "/accounts/login/?next=/judgments/KESC/",
+    "classes": [
+      "btn",
+      "btn-primary",
+      "text-nowrap"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "navbar-nav"
+    ]
+  },
+  {
+    "text": "Home",
+    "href": "/",
+    "classes": [],
+    "parent_classes": [
+      "breadcrumb-item"
+    ],
+    "grandparent_classes": [
+      "breadcrumb"
+    ]
+  },
+  {
+    "text": "Judgments",
+    "href": "/judgments/",
+    "classes": [],
+    "parent_classes": [
+      "breadcrumb-item"
+    ],
+    "grandparent_classes": [
+      "breadcrumb"
+    ]
+  },
+  {
+    "text": "Superior Courts",
+    "href": "/judgments/court-class/superior-courts/",
+    "classes": [],
+    "parent_classes": [
+      "breadcrumb-item"
+    ],
+    "grandparent_classes": [
+      "breadcrumb"
+    ]
+  },
+  {
+    "text": "Supreme Court",
+    "href": "/judgments/KESC/",
+    "classes": [],
+    "parent_classes": [
+      "breadcrumb-item"
+    ],
+    "grandparent_classes": [
+      "breadcrumb"
+    ]
+  },
+  {
+    "text": "Advanced search",
+    "href": "/search/?show-advanced-tab=1&nature=Judgment",
+    "classes": [],
+    "parent_classes": [
+      "col-12",
+      "col-sm-6",
+      "col-lg-4",
+      "mb-2"
+    ],
+    "grandparent_classes": [
+      "row",
+      "mb-4"
+    ]
+  },
+  {
+    "text": "Supreme Court of Kenya",
+    "href": "/judgments/KESC/SCK/",
+    "classes": [],
+    "parent_classes": [],
+    "grandparent_classes": [
+      "list-unstyled"
+    ]
+  },
+  {
+    "text": "All years",
+    "href": "/judgments/KESC/",
+    "classes": [
+      "text-nowrap",
+      "active"
+    ],
+    "parent_classes": [],
+    "grandparent_classes": [
+      "pl-0",
+      "mt-2",
+      "mb-3",
+      "align-items-center",
+      "d-none",
+      "d-lg-flex"
+    ]
+  },
+  {
+    "text": "2025",
+    "href": "/judgments/KESC/2025/",
+    "classes": [],
+    "parent_classes": [],
+    "grandparent_classes": [
+      "year-nav",
+      "mb-0",
+      "ms-2"
+    ]
+  },
+  {
+    "text": "2024",
+    "href": "/judgments/KESC/2024/",
+    "classes": [],
+    "parent_classes": [],
+    "grandparent_classes": [
+      "year-nav",
+      "mb-0",
+      "ms-2"
+    ]
+  },
+  {
+    "text": "2023",
+    "href": "/judgments/KESC/2023/",
+    "classes": [],
+    "parent_classes": [],
+    "grandparent_classes": [
+      "year-nav",
+      "mb-0",
+      "ms-2"
+    ]
+  },
+  {
+    "text": "2022",
+    "href": "/judgments/KESC/2022/",
+    "classes": [],
+    "parent_classes": [],
+    "grandparent_classes": [
+      "year-nav",
+      "mb-0",
+      "ms-2"
+    ]
+  },
+  {
+    "text": "2021",
+    "href": "/judgments/KESC/2021/",
+    "classes": [],
+    "parent_classes": [],
+    "grandparent_classes": [
+      "year-nav",
+      "mb-0",
+      "ms-2"
+    ]
+  },
+  {
+    "text": "2020",
+    "href": "/judgments/KESC/2020/",
+    "classes": [],
+    "parent_classes": [],
+    "grandparent_classes": [
+      "year-nav",
+      "mb-0",
+      "ms-2"
+    ]
+  },
+  {
+    "text": "2019",
+    "href": "/judgments/KESC/2019/",
+    "classes": [],
+    "parent_classes": [],
+    "grandparent_classes": [
+      "year-nav",
+      "mb-0",
+      "ms-2"
+    ]
+  },
+  {
+    "text": "2018",
+    "href": "/judgments/KESC/2018/",
+    "classes": [],
+    "parent_classes": [],
+    "grandparent_classes": [
+      "year-nav",
+      "mb-0",
+      "ms-2"
+    ]
+  },
+  {
+    "text": "2017",
+    "href": "/judgments/KESC/2017/",
+    "classes": [],
+    "parent_classes": [],
+    "grandparent_classes": [
+      "year-nav",
+      "mb-0",
+      "ms-2"
+    ]
+  },
+  {
+    "text": "2016",
+    "href": "/judgments/KESC/2016/",
+    "classes": [],
+    "parent_classes": [],
+    "grandparent_classes": [
+      "year-nav",
+      "mb-0",
+      "ms-2"
+    ]
+  },
+  {
+    "text": "2015",
+    "href": "/judgments/KESC/2015/",
+    "classes": [],
+    "parent_classes": [],
+    "grandparent_classes": [
+      "year-nav",
+      "mb-0",
+      "ms-2"
+    ]
+  },
+  {
+    "text": "2014",
+    "href": "/judgments/KESC/2014/",
+    "classes": [],
+    "parent_classes": [],
+    "grandparent_classes": [
+      "year-nav",
+      "mb-0",
+      "ms-2"
+    ]
+  },
+  {
+    "text": "2013",
+    "href": "/judgments/KESC/2013/",
+    "classes": [],
+    "parent_classes": [],
+    "grandparent_classes": [
+      "year-nav",
+      "mb-0",
+      "ms-2"
+    ]
+  },
+  {
+    "text": "2012",
+    "href": "/judgments/KESC/2012/",
+    "classes": [],
+    "parent_classes": [],
+    "grandparent_classes": [
+      "year-nav",
+      "mb-0",
+      "ms-2"
+    ]
+  },
+  {
+    "text": "2011",
+    "href": "/judgments/KESC/2011/",
+    "classes": [],
+    "parent_classes": [],
+    "grandparent_classes": [
+      "year-nav",
+      "mb-0",
+      "ms-2"
+    ]
+  },
+  {
+    "text": "1961",
+    "href": "/judgments/KESC/1961/",
+    "classes": [],
+    "parent_classes": [],
+    "grandparent_classes": [
+      "year-nav",
+      "mb-0",
+      "ms-2"
+    ]
+  },
+  {
+    "text": "1954",
+    "href": "/judgments/KESC/1954/",
+    "classes": [],
+    "parent_classes": [],
+    "grandparent_classes": [
+      "year-nav",
+      "mb-0",
+      "ms-2"
+    ]
+  },
+  {
+    "text": "1944",
+    "href": "/judgments/KESC/1944/",
+    "classes": [],
+    "parent_classes": [],
+    "grandparent_classes": [
+      "year-nav",
+      "mb-0",
+      "ms-2"
+    ]
+  },
+  {
+    "text": "1938",
+    "href": "/judgments/KESC/1938/",
+    "classes": [],
+    "parent_classes": [],
+    "grandparent_classes": [
+      "year-nav",
+      "mb-0",
+      "ms-2"
+    ]
+  },
+  {
+    "text": "1930",
+    "href": "/judgments/KESC/1930/",
+    "classes": [],
+    "parent_classes": [],
+    "grandparent_classes": [
+      "year-nav",
+      "mb-0",
+      "ms-2"
+    ]
+  },
+  {
+    "text": "Filters",
+    "href": "#document-list-filters-offcanvas",
+    "classes": [
+      "btn",
+      "btn-primary"
+    ],
+    "parent_classes": [
+      "d-block",
+      "d-lg-none",
+      "my-2"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "In re National Land Commission (Reference E001\u00a0of\u00a02024) [2025]\u00a0KESC\u00a012\u00a0(KLR) (21\u00a0March\u00a02025) (Advisory Opinion)",
+    "href": "/akn/ke/judgment/kesc/2025/12/eng@2025-03-21",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Senate & 3 others v Speaker of the National Assembly & 10 others (Petition 19 (E027)\u00a0of\u00a02021) [2025]\u00a0KESC\u00a011\u00a0(KLR) (21\u00a0March\u00a02025) (Judgment)",
+    "href": "/akn/ke/judgment/kesc/2025/11/eng@2025-03-21",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Sugawara v Kiruti (Sued in her Capacity as the Administratrix of the Estate of Mutarakwa Kiruti Lepaso alias Mutarakwa Kiroti Lepaso and on her Own) & 3 others (Petition (Application) E038\u00a0of\u00a02024) [2025]\u00a0KESC\u00a09\u00a0(KLR) (21\u00a0March\u00a02025) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2025/9/eng@2025-03-21",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Boit & another v Muyesu (Application E004\u00a0of\u00a02024) [2025]\u00a0KESC\u00a08\u00a0(KLR) (14\u00a0March\u00a02025) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2025/8/eng@2025-03-14",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Julius v Chief Registrar of the Judiciary & 14 others (Application E001\u00a0of\u00a02025) [2025]\u00a0KESC\u00a07\u00a0(KLR) (14\u00a0March\u00a02025) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2025/7/eng@2025-03-14",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Mombasa Cement Limited v Ramji & 3 others (Application E026\u00a0of\u00a02024) [2025]\u00a0KESC\u00a05\u00a0(KLR) (Civ) (14\u00a0March\u00a02025) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2025/5/eng@2025-03-14",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Sicpa SA v Public Procurement and Administrative Review Board & 2 others (Application E025\u00a0of\u00a02024) [2025]\u00a0KESC\u00a04\u00a0(KLR) (14\u00a0March\u00a02025) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2025/4/eng@2025-03-14",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Stanbic Bank Kenya Limited v Santowels Limited; Kenya Bankers Association (Intended Amicus Curiae) (Petition (Application) E005\u00a0of\u00a02023) [2025]\u00a0KESC\u00a014\u00a0(KLR) (14\u00a0March\u00a02025) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2025/14/eng@2025-03-14",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Stanbic Bank Kenya Limited v Santowels Limited (Petition (Application) E005\u00a0of\u00a02023) [2025]\u00a0KESC\u00a03\u00a0(KLR) (14\u00a0March\u00a02025) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2025/3/eng@2025-03-14",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Ngao v Kitheka (Petition E006\u00a0of\u00a02024) [2025]\u00a0KESC\u00a01\u00a0(KLR) (31\u00a0January\u00a02025) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2025/1/eng@2025-01-31",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Kenya Wildlife Service v Sea Star Malindi Limited (Petition (Application) E022\u00a0of\u00a02024) [2024]\u00a0KESC\u00a080\u00a0(KLR) (20\u00a0December\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/80/eng@2024-12-20",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Likowa v Aluochier & 2 others (Petition (Application) E008\u00a0of\u00a02024) [2024]\u00a0KESC\u00a079\u00a0(KLR) (20\u00a0December\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/79/eng@2024-12-20",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Barclays Bank of Kenya Limited (Now ABSA Kenya PLC) v Commissioner of Domestic Taxes(Large Taxpayers Office); Kenya Bankers Association & another (Interested Parties) (Petition (Application) 12 (E014)\u00a0of\u00a02022) [2024]\u00a0KESC\u00a078\u00a0(KLR) (13\u00a0December\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/78/eng@2024-12-13",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Freedom Limited v Mbarak (Petition (Application) E009\u00a0of\u00a02024) [2024]\u00a0KESC\u00a076\u00a0(KLR) (13\u00a0December\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/76/eng@2024-12-13",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Independent Electoral and Boundaries Commission v Attorney General & another (Election Petition (Reference Application) E004\u00a0of\u00a02024) [2024]\u00a0KESC\u00a077\u00a0(KLR) (13\u00a0December\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/77/eng@2024-12-13",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Export Processing Zone Authority & 10 others (Suing on their own behalf and on behalf of all residents of Owino-Uhuru Village in Mikindani, Changamwe Area, Mombasa) v National Environment Management Authority & 3 others (Petition E021\u00a0of\u00a02023) [2024]\u00a0KESC\u00a075\u00a0(KLR) (6\u00a0December\u00a02024) (Judgment)",
+    "href": "/akn/ke/judgment/kesc/2024/75/eng@2024-12-06",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Kwanza Estates Limited v Jomo Kenyatta University of Agriculture and Technology (Petition E001\u00a0of\u00a02024) [2024]\u00a0KESC\u00a074\u00a0(KLR) (6\u00a0December\u00a02024) (Judgment)",
+    "href": "/akn/ke/judgment/kesc/2024/74/eng@2024-12-06",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Nairobi Bottlers Limited v Ndungu & another (Petition (Application) E024\u00a0of\u00a02023 & Application E030, E034\u00a0&\u00a0E038\u00a0of\u00a02023 (Consolidated)) [2024]\u00a0KESC\u00a073\u00a0(KLR) (6\u00a0December\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/73/eng@2024-12-06",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Kithangari & 4 others v Mutahi (Application E024\u00a0of\u00a02024) [2024]\u00a0KESC\u00a072\u00a0(KLR) (29\u00a0November\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/72/eng@2024-11-29",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Mohamed v Diamond Trust Bank Kenya Ltd & another (Application E001\u00a0of\u00a02024) [2024]\u00a0KESC\u00a071\u00a0(KLR) (29\u00a0November\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/71/eng@2024-11-29",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "British American Tobacco Kenya PLC (Formerly British American Tobacco Kenya Limited) v Ministry of Health & 2 others; Kenya Tobacco Alliance & another (Interested Parties); Mastermind Tobacco Kenya Limited (Affected Party); Kariuki,  Ndegwa &  Kubuthu (Applying as Secretary, Chairperson & Treasurer of Kiambu County Welfare Association) & 6 others (Interveners) (Petition (Application) 5\u00a0of\u00a02017) [2024]\u00a0KESC\u00a068\u00a0(KLR) (22\u00a0November\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/68/eng@2024-11-22",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Kibutiri (Suing as the Legal Representative of the Estate of Loise Wanja Kibutiri) v Njoro, Kibutiri & Kibutiri (Sued as the Legal Representatives of the Estate of James Njoro Kibutiri) & another (Application E017\u00a0of\u00a02024) [2024]\u00a0KESC\u00a070\u00a0(KLR) (22\u00a0November\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/70/eng@2024-11-22",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Nyagol v Judicial Service Commission & another (Petition E015\u00a0of\u00a02024) [2024]\u00a0KESC\u00a069\u00a0(KLR) (22\u00a0November\u00a02024) (Judgment)",
+    "href": "/akn/ke/judgment/kesc/2024/69/eng@2024-11-22",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Dock Workers Union & another v Portside Freight Terminals Limited & 10 others (Petition (Application) E010\u00a0of\u00a02024 & Petition E011\u00a0of\u00a02024 (Consolidated)) [2024]\u00a0KESC\u00a066\u00a0(KLR) (8\u00a0November\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/66/eng@2024-11-08",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Kamau v Karanja & another (Petition E005\u00a0of\u00a02024) [2024]\u00a0KESC\u00a064\u00a0(KLR) (8\u00a0November\u00a02024) (Judgment)",
+    "href": "/akn/ke/judgment/kesc/2024/64/eng@2024-11-08",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Kenya Vision 2030 Delivery Board v Commission on Administrative Justice & 2 others (Petition (Application) 42\u00a0of\u00a02019) [2024]\u00a0KESC\u00a067\u00a0(KLR) (8\u00a0November\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/67/eng@2024-11-08",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Mwei v Attorney General & 3 others (Petition E003\u00a0of\u00a02024) [2024]\u00a0KESC\u00a065\u00a0(KLR) (8\u00a0November\u00a02024) (Judgment)",
+    "href": "/akn/ke/judgment/kesc/2024/65/eng@2024-11-08",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Cabinet Secretary for the National Treasury and Planning & 4 others v Okoiti & 52 others; Bhatia (Amicus Curiae) (Petition E031, E032\u00a0&\u00a0E033\u00a0of\u00a02024 (Consolidated)) [2024]\u00a0KESC\u00a063\u00a0(KLR) (29\u00a0October\u00a02024) (Judgment)",
+    "href": "/akn/ke/judgment/kesc/2024/63/eng@2024-10-29",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Kenya National Highways Authority v Five Star Agencies Limited & another (Petition (Application) E021\u00a0of\u00a02024) [2024]\u00a0KESC\u00a062\u00a0(KLR) (25\u00a0October\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/62/eng@2024-10-25",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "FAAF v RFM & 2 others (Application E050\u00a0of\u00a02023) [2024]\u00a0KESC\u00a061\u00a0(KLR) (18\u00a0October\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/61/eng@2024-10-18",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Heineken East Africa Import Company Limited & another v Heineken International BV & 2 others (Petition (Application) E027\u00a0&\u00a0E028\u00a0of\u00a02024 (Consolidated)) [2024]\u00a0KESC\u00a059\u00a0(KLR) (Civ) (18\u00a0October\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/59/eng@2024-10-18",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Njenga v Masto Holdings Limited & 4 others; The Co-Operative Bank Of Kenya (Interested Party) (Application E020\u00a0of\u00a02024) [2024]\u00a0KESC\u00a060\u00a0(KLR) (18\u00a0October\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/60/eng@2024-10-18",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Dari Limited & 5 others v East African Development Bank (Petition (Application) E012\u00a0of\u00a02023) [2024]\u00a0KESC\u00a058\u00a0(KLR) (Civ) (11\u00a0October\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/58/eng@2024-10-11",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Cabinet Secretary for the National Treasury and Planning & 4 others v Okoiti & 52 others (Petition E031, E032\u00a0&\u00a0E033\u00a0of\u00a02024 (Consolidated)) [2024]\u00a0KESC\u00a057\u00a0(KLR) (5\u00a0September\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/57/eng@2024-09-05",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Arale v Independent Electoral and Boundaries Commission & 4 others (Election Petition (Application) E026\u00a0of\u00a02023) [2024]\u00a0KESC\u00a051\u00a0(KLR) (30\u00a0August\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/51/eng@2024-08-30",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Cabinet Secretary for the National Treasury and Planning & 4 others v Okoiti & 52 others; Bhatia (Intended Amicus Curiae) (Petition (Application) E031\u00a0of\u00a02024 & Petition E032\u00a0&\u00a0E033\u00a0of\u00a02024 (Consolidated)) [2024]\u00a0KESC\u00a055\u00a0(KLR) (30\u00a0August\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/55/eng@2024-08-30",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Gatuma v Kenya Breweries Ltd & 3 others (Petition E023\u00a0of\u00a02023) [2024]\u00a0KESC\u00a052\u00a0(KLR) (Civ) (30\u00a0August\u00a02024) (Judgment)",
+    "href": "/akn/ke/judgment/kesc/2024/52/eng@2024-08-30",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Gitson Energy Limited v Energy and Petroleum Regulatory Authority & 5 others (Application E016\u00a0of\u00a02024) [2024]\u00a0KESC\u00a056\u00a0(KLR) (30\u00a0August\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/56/eng@2024-08-30",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Judicial Service Commission v Oduor & 5 others (Petition (Application) 18 (E025)\u00a0of\u00a02021) [2024]\u00a0KESC\u00a053\u00a0(KLR) (30\u00a0August\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/53/eng@2024-08-30",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Manchester Outfitters (Suiting Division) Limited Now Called King Woolen Mills Limited & another v Standard Chartered Financial Services Limited & another (Application E011\u00a0of\u00a02024) [2024]\u00a0KESC\u00a049\u00a0(KLR) (Civ) (30\u00a0August\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/49/eng@2024-08-30",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Standard Chartered Financial Services Ltd v Manchester Outfitters (Suiting Division) Limited now called King Woolen Mills Ltd & 2 others (Petition (Application) E012\u00a0of\u00a02024) [2024]\u00a0KESC\u00a050\u00a0(KLR) (30\u00a0August\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/50/eng@2024-08-30",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "TMG & another v AP (Application E012\u00a0of\u00a02024) [2024]\u00a0KESC\u00a048\u00a0(KLR) (30\u00a0August\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/48/eng@2024-08-30",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Trattoria Limited v Maina & 3 others (Petition (Application) 26 (E029)\u00a0of\u00a02022) [2024]\u00a0KESC\u00a054\u00a0(KLR) (30\u00a0August\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/54/eng@2024-08-30",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Cabinet Secretary for the National Treasury and Planning & 4 others v Okoiti & 52 others (Petition E031, E032\u00a0&\u00a0E033\u00a0of\u00a02024 (Consolidated)) [2024]\u00a0KESC\u00a047\u00a0(KLR) (20\u00a0August\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/47/eng@2024-08-20",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Garama v Karisa & 3 others (Petition (Application) E020\u00a0of\u00a02023) [2024]\u00a0KESC\u00a045\u00a0(KLR) (9\u00a0August\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/45/eng@2024-08-09",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Ondimu & another v Commissioner of Police & 3 others (Petition E031\u00a0of\u00a02023) [2024]\u00a0KESC\u00a046\u00a0(KLR) (9\u00a0August\u00a02024) (Judgment)",
+    "href": "/akn/ke/judgment/kesc/2024/46/eng@2024-08-09",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Freedom Limited v Mbarak; Attorney General on behalf of Cabinet Secretary, Ministry of Lands, Public Works, Housing and Urban Development & 3 others (Proposed Interested Parties) (Petition E009\u00a0of\u00a02024) [2024]\u00a0KESC\u00a037\u00a0(KLR) (2\u00a0August\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/37/eng@2024-08-02",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Janmohammed (SC) (Suing as the Executrix of the Estate of the Late H.E. Daniel Toroitich Arap Moi) & another v District Land Registrar Uasin Gishu & 4 others (Petition 17 (E021)\u00a0of\u00a02023 & 24 (E027)\u00a0of\u00a02022 (Consolidated)) [2024]\u00a0KESC\u00a039\u00a0(KLR) (2\u00a0August\u00a02024) (Judgment)",
+    "href": "/akn/ke/judgment/kesc/2024/39/eng@2024-08-02",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Kenya Airports Authority v Otieno Ragot and Company Advocates (Petition E011\u00a0of\u00a02023) [2024]\u00a0KESC\u00a044\u00a0(KLR) (2\u00a0August\u00a02024) (Judgment)",
+    "href": "/akn/ke/judgment/kesc/2024/44/eng@2024-08-02",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "Krystalline Salt Limited v Water Resources Management Authority (Petition (Application) E007\u00a0of\u00a02024) [2024]\u00a0KESC\u00a040\u00a0(KLR) (2\u00a0August\u00a02024) (Ruling)",
+    "href": "/akn/ke/judgment/kesc/2024/40/eng@2024-08-02",
+    "classes": [],
+    "parent_classes": [
+      "cell-title"
+    ],
+    "grandparent_classes": []
+  },
+  {
+    "text": "1",
+    "href": "?page=1",
+    "classes": [
+      "page-link"
+    ],
+    "parent_classes": [
+      "page-item",
+      "active"
+    ],
+    "grandparent_classes": [
+      "pagination",
+      "flex-wrap"
+    ]
+  },
+  {
+    "text": "2",
+    "href": "?page=2",
+    "classes": [
+      "page-link"
+    ],
+    "parent_classes": [
+      "page-item"
+    ],
+    "grandparent_classes": [
+      "pagination",
+      "flex-wrap"
+    ]
+  },
+  {
+    "text": "3",
+    "href": "?page=3",
+    "classes": [
+      "page-link"
+    ],
+    "parent_classes": [
+      "page-item"
+    ],
+    "grandparent_classes": [
+      "pagination",
+      "flex-wrap"
+    ]
+  },
+  {
+    "text": "4",
+    "href": "?page=4",
+    "classes": [
+      "page-link"
+    ],
+    "parent_classes": [
+      "page-item"
+    ],
+    "grandparent_classes": [
+      "pagination",
+      "flex-wrap"
+    ]
+  },
+  {
+    "text": "5",
+    "href": "?page=5",
+    "classes": [
+      "page-link"
+    ],
+    "parent_classes": [
+      "page-item"
+    ],
+    "grandparent_classes": [
+      "pagination",
+      "flex-wrap"
+    ]
+  },
+  {
+    "text": "6",
+    "href": "?page=6",
+    "classes": [
+      "page-link"
+    ],
+    "parent_classes": [
+      "page-item"
+    ],
+    "grandparent_classes": [
+      "pagination",
+      "flex-wrap"
+    ]
+  },
+  {
+    "text": "7",
+    "href": "?page=7",
+    "classes": [
+      "page-link"
+    ],
+    "parent_classes": [
+      "page-item"
+    ],
+    "grandparent_classes": [
+      "pagination",
+      "flex-wrap"
+    ]
+  },
+  {
+    "text": "8",
+    "href": "?page=8",
+    "classes": [
+      "page-link"
+    ],
+    "parent_classes": [
+      "page-item"
+    ],
+    "grandparent_classes": [
+      "pagination",
+      "flex-wrap"
+    ]
+  },
+  {
+    "text": "9",
+    "href": "?page=9",
+    "classes": [
+      "page-link"
+    ],
+    "parent_classes": [
+      "page-item"
+    ],
+    "grandparent_classes": [
+      "pagination",
+      "flex-wrap"
+    ]
+  },
+  {
+    "text": "10",
+    "href": "?page=10",
+    "classes": [
+      "page-link"
+    ],
+    "parent_classes": [
+      "page-item"
+    ],
+    "grandparent_classes": [
+      "pagination",
+      "flex-wrap"
+    ]
+  },
+  {
+    "text": "Next",
+    "href": "?page=2",
+    "classes": [
+      "page-link"
+    ],
+    "parent_classes": [
+      "page-item"
+    ],
+    "grandparent_classes": [
+      "pagination",
+      "flex-wrap"
+    ]
+  },
+  {
+    "text": "Creative Commons",
+    "href": "http://www.creativecommons.org/",
+    "classes": [],
+    "parent_classes": [
+      "pb-0",
+      "mb-0"
+    ],
+    "grandparent_classes": [
+      "col-md-10"
+    ]
+  },
+  {
+    "text": "Home",
+    "href": "https://www.kenyalaw.org/",
+    "classes": [
+      "nav-link",
+      "ms-0"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "nav",
+      "ms-0",
+      "ps-0"
+    ]
+  },
+  {
+    "text": "About us",
+    "href": "https://kenyalaw.org/kl/index.php?id=115",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "nav",
+      "ms-0",
+      "ps-0"
+    ]
+  },
+  {
+    "text": "Our Partners",
+    "href": "https://kenyalaw.org/kl/index.php?id=2287",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "nav",
+      "ms-0",
+      "ps-0"
+    ]
+  },
+  {
+    "text": "Careers",
+    "href": "https://kenyalaw.org/kl/index.php?id=133",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "nav",
+      "ms-0",
+      "ps-0"
+    ]
+  },
+  {
+    "text": "Contact Us",
+    "href": "https://kenyalaw.org/kl/index.php?id=3158",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "nav",
+      "ms-0",
+      "ps-0"
+    ]
+  },
+  {
+    "text": "Site Map",
+    "href": "https://kenyalaw.org/kl/index.php?id=3386",
+    "classes": [
+      "nav-link"
+    ],
+    "parent_classes": [
+      "nav-item"
+    ],
+    "grandparent_classes": [
+      "nav",
+      "ms-0",
+      "ps-0"
+    ]
+  },
+  {
+    "text": "Creative Commons",
+    "href": "https://kenyalaw.org/kl/index.php?id=2161",
+    "classes": [],
+    "parent_classes": [
+      "font-weight-bold"
+    ],
+    "grandparent_classes": [
+      "col-md-10"
+    ]
+  },
+  {
+    "text": "Contact us",
+    "href": "https://kenyalaw.org/kl/index.php?id=3158",
+    "classes": [
+      "btn",
+      "btn-primary"
+    ],
+    "parent_classes": [
+      "col-md-2",
+      "text-end"
+    ],
+    "grandparent_classes": [
+      "row"
+    ]
+  },
+  {
+    "text": "Visit our Facebook page",
+    "href": "https://web.facebook.com/mykenyalaw",
+    "classes": [],
+    "parent_classes": [
+      "list-inline-item"
+    ],
+    "grandparent_classes": [
+      "list-inline",
+      "mt-3"
+    ]
+  },
+  {
+    "text": "Visit our Twitter/X profile",
+    "href": "https://x.com/mykenyalaw",
+    "classes": [],
+    "parent_classes": [
+      "list-inline-item"
+    ],
+    "grandparent_classes": [
+      "list-inline",
+      "mt-3"
+    ]
+  },
+  {
+    "text": "Visit our YouTube channel",
+    "href": "https://www.youtube.com/mykenyalaw",
+    "classes": [],
+    "parent_classes": [
+      "list-inline-item"
+    ],
+    "grandparent_classes": [
+      "list-inline",
+      "mt-3"
+    ]
+  }
+]
