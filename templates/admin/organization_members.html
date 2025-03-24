@@ -1,19 +1,22 @@
-{% extends "base.html" %}
+{% extends "admin/layout.html" %}
 
-{% block header %}Manage Organization Members{% endblock %}
+{% block title %}Manage Organization Members | Admin - Kenyan Legal Assistant{% endblock %}
 
-{% block content %}
-<div class="row mb-4">
-    <div class="col">
-        <a href="{{ url_for('admin.edit_organization', org_id=organization.id) }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Back to Organization Details
-        </a>
-    </div>
-</div>
+{% block breadcrumb %}
+<li class="admin-breadcrumb-item"><a href="{{ url_for('admin.organizations') }}">Organization Management</a></li>
+<li class="admin-breadcrumb-item"><a href="{{ url_for('admin.edit_organization', org_id=organization.id) }}">Edit Organization</a></li>
+<li class="admin-breadcrumb-item active" aria-current="page">Manage Members</li>
+{% endblock %}
 
-<div class="card shadow mb-4">
+{% block admin_content %}
+<div class="card admin-card mb-4">
     <div class="card-header">
-        <h5 class="card-title mb-0">{{ organization.name }} - Manage Members</h5>
+        <h5 class="card-title"><i class="fas fa-users-gear me-2"></i> {{ organization.name }} - Manage Members</h5>
+        <div class="action-buttons">
+            <a href="{{ url_for('admin.edit_organization', org_id=organization.id) }}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left"></i><span class="d-none d-md-inline"> Back to Organization</span>
+            </a>
+        </div>
     </div>
     <div class="card-body">
         <div class="alert alert-info">
