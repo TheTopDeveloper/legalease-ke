@@ -1,0 +1,259 @@
+{% extends "layout.html" %}
+
+{% block title %}Your Legal Profile{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">Your Legal Journey</h1>
+
+    <div class="row">
+        <!-- User Profile Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="position-relative d-inline-block mb-3">
+                        <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white" style="width: 100px; height: 100px; font-size: 2.5rem; margin: 0 auto;">
+                            {{ current_user.first_name[0] if current_user.first_name else current_user.username[0] }}
+                        </div>
+                        <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-success p-2 border border-light rounded-circle">
+                            <i class="bi bi-award"></i>
+                        </span>
+                    </div>
+                    <h4 class="card-title">{{ current_user.first_name }} {{ current_user.last_name }}</h4>
+                    <h6 class="text-primary">{{ stats.profile.title }}</h6>
+                    <div class="d-flex justify-content-center gap-3 text-muted mb-3">
+                        <div>
+                            <i class="bi bi-briefcase"></i> {{ stats.profile.total_cases_managed }}
+                            <small>Cases</small>
+                        </div>
+                        <div>
+                            <i class="bi bi-file-text"></i> {{ stats.profile.total_documents_created }}
+                            <small>Docs</small>
+                        </div>
+                        <div>
+                            <i class="bi bi-search"></i> {{ stats.profile.total_research_conducted }}
+                            <small>Research</small>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <span class="badge bg-info me-1">{{ stats.profile.level }} <i class="bi bi-star-fill ms-1"></i></span>
+                        <span class="badge bg-warning me-1">{{ stats.profile.total_points }} <i class="bi bi-trophy-fill ms-1"></i></span>
+                        <span class="badge bg-danger">{{ stats.profile.streak_days }} <i class="bi bi-calendar-check-fill ms-1"></i></span>
+                    </div>
+                </div>
+                <div class="card-footer bg-light border-0 p-3">
+                    <p class="text-center mb-0"><i class="bi bi-calendar-check text-success"></i> {{ stats.profile.streak_days }} day streak! Keep it up!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Level Progress Card -->
+        <div class="col-md-8 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0">
+                    <h5>Level Progress</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <h2 class="mb-0 me-2">Level {{ stats.profile.level }}</h2>
+                        <span class="text-muted">- {{ stats.profile.title }}</span>
+                    </div>
+                    <div class="progress mb-3" style="height: 20px;">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ stats.level_progress }}%;" 
+                            aria-valuenow="{{ stats.level_progress }}" aria-valuemin="0" aria-valuemax="100">
+                            {{ stats.level_progress }}%
+                        </div>
+                    </div>
+                    <p class="text-muted">{{ stats.points_needed }} more points to reach Level {{ stats.profile.level + 1 }}</p>
+                    
+                    <h5 class="mt-4"><i class="bi bi-graph-up text-success"></i> Your Legal Growth</h5>
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-4">
+                            <div class="card bg-light border-0">
+                                <div class="card-body p-3 text-center">
+                                    <div class="h3 text-primary mb-2">{{ stats.achievement_count }}</div>
+                                    <div class="text-muted small">Achievements</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light border-0">
+                                <div class="card-body p-3 text-center">
+                                    <div class="h3 text-success mb-2">{{ stats.completed_challenges }}</div>
+                                    <div class="text-muted small">Challenges</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light border-0">
+                                <div class="card-body p-3 text-center">
+                                    <div class="h3 text-info mb-2">{{ stats.profile.total_points }}</div>
+                                    <div class="text-muted small">Points</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities and Achievements -->
+    <div class="row">
+        <!-- Recent Activities -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-activity text-primary me-2"></i>Recent Activities</h5>
+                    <a href="{{ url_for('gamification.activity') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for activity in stats.recent_activities %}
+                            <div class="list-group-item border-0 py-3">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">
+                                        {% if activity.activity_type == 'login' %}
+                                            <i class="bi bi-box-arrow-in-right text-success me-1"></i>
+                                        {% elif activity.activity_type == 'create_case' %}
+                                            <i class="bi bi-briefcase text-primary me-1"></i>
+                                        {% elif activity.activity_type == 'update_case' %}
+                                            <i class="bi bi-pencil-square text-info me-1"></i>
+                                        {% elif activity.activity_type == 'create_document' %}
+                                            <i class="bi bi-file-earmark-text text-primary me-1"></i>
+                                        {% elif activity.activity_type == 'update_document' %}
+                                            <i class="bi bi-file-earmark-text text-info me-1"></i>
+                                        {% elif activity.activity_type == 'create_contract' %}
+                                            <i class="bi bi-file-earmark-text text-primary me-1"></i>
+                                        {% elif activity.activity_type == 'update_contract' %}
+                                            <i class="bi bi-file-earmark-text text-info me-1"></i>
+                                        {% elif activity.activity_type == 'conduct_research' %}
+                                            <i class="bi bi-search text-primary me-1"></i>
+                                        {% elif activity.activity_type == 'achievement_earned' %}
+                                            <i class="bi bi-award text-warning me-1"></i>
+                                        {% elif activity.activity_type == 'challenge_completed' %}
+                                            <i class="bi bi-check-circle text-success me-1"></i>
+                                        {% elif activity.activity_type == 'streak_milestone' %}
+                                            <i class="bi bi-calendar-check text-danger me-1"></i>
+                                        {% else %}
+                                            <i class="bi bi-circle text-secondary me-1"></i>
+                                        {% endif %}
+                                        {{ activity.description if activity.description else activity.activity_type|replace('_', ' ')|title }}
+                                    </h6>
+                                    <small class="text-muted">{{ activity.created_at.strftime('%d %b, %H:%M') }}</small>
+                                </div>
+                                <div class="d-flex w-100 justify-content-between mt-1">
+                                    <small class="text-muted">{{ activity.activity_type|replace('_', ' ')|title }}</small>
+                                    <span class="badge bg-light text-primary">+{{ activity.points }}</span>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="list-group-item border-0 py-3">
+                                <p class="mb-0 text-center text-muted">No recent activities yet. Start using the platform to earn points!</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Achievements -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-award text-warning me-2"></i>Achievements</h5>
+                    <a href="{{ url_for('gamification.achievements') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% if achievements.earned %}
+                            {% for achievement in achievements.earned[:5] %}
+                                <div class="list-group-item border-0 py-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0 me-3">
+                                            <span class="badge rounded-pill bg-warning p-2">
+                                                <i class="{{ achievement.icon if achievement.icon else 'bi bi-award' }}"></i>
+                                            </span>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-0">{{ achievement.name }}</h6>
+                                            <p class="mb-0 small text-muted">{{ achievement.description }}</p>
+                                        </div>
+                                        <div class="flex-shrink-0">
+                                            <span class="badge bg-light text-primary">+{{ achievement.points }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="list-group-item border-0 py-3">
+                                <p class="mb-0 text-center text-muted">No achievements yet. Keep using the platform to earn achievements!</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if achievements.earned|length > 5 %}
+                    <div class="card-footer bg-transparent text-center py-3">
+                        <a href="{{ url_for('gamification.achievements') }}" class="text-decoration-none">See {{ achievements.earned|length - 5 }} more achievements</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Challenges -->
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-lightning-charge text-danger me-2"></i>Active Challenges</h5>
+                    <a href="{{ url_for('gamification.challenges') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% if active_challenges %}
+                            <div class="row p-3">
+                                {% for challenge_data in active_challenges %}
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card h-100 border-0 shadow-sm">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <h6 class="card-title mb-0">{{ challenge_data.challenge.title }}</h6>
+                                                    <span class="badge bg-light text-primary">+{{ challenge_data.challenge.points }}</span>
+                                                </div>
+                                                <p class="card-text small text-muted">{{ challenge_data.challenge.description }}</p>
+                                                <div class="progress mt-3" style="height: 8px;">
+                                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ challenge_data.completion }}%;" 
+                                                        aria-valuenow="{{ challenge_data.completion }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                                </div>
+                                                <p class="card-text mt-2 text-end small">
+                                                    <span class="text-success">{{ challenge_data.completion }}% complete</span>
+                                                </p>
+                                            </div>
+                                            <div class="card-footer bg-transparent border-0 px-3 py-2">
+                                                <small class="text-muted">
+                                                    {% if challenge_data.challenge.challenge_type == 'daily' %}
+                                                        Expires today
+                                                    {% elif challenge_data.challenge.challenge_type == 'weekly' %}
+                                                        Expires on {{ challenge_data.challenge.end_date.strftime('%A, %d %b') }}
+                                                    {% else %}
+                                                        Expires on {{ challenge_data.challenge.end_date.strftime('%d %b %Y') }}
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="list-group-item border-0 py-4">
+                                <p class="mb-0 text-center text-muted">No active challenges at the moment. Check back soon!</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+import json
 from app import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -282,3 +283,193 @@ class TokenUsage(db.Model):
     
     def __repr__(self):
         return f'<TokenUsage {self.id}: {self.tokens_used} tokens for {self.feature}>'
+
+# Gamification Models
+class UserProfile(db.Model):
+    """User profile with gamification stats"""
+    id = db.Column(db.Integer, primary_key=True)
+    level = db.Column(db.Integer, default=1)
+    total_points = db.Column(db.Integer, default=0)
+    title = db.Column(db.String(100), default='Legal Novice')
+    streak_days = db.Column(db.Integer, default=0)
+    last_active = db.Column(db.DateTime, default=datetime.utcnow)
+    total_cases_managed = db.Column(db.Integer, default=0)
+    total_documents_created = db.Column(db.Integer, default=0)
+    total_research_conducted = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Foreign keys
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, unique=True)
+    
+    # Relationships
+    user = db.relationship('User', backref=db.backref('profile', uselist=False))
+    
+    def add_points(self, points):
+        """Add points and update level if necessary"""
+        self.total_points += points
+        
+        # Update level (simple level calculation based on points)
+        new_level = 1 + (self.total_points // 100)  # Level up every 100 points
+        if new_level > self.level:
+            self.level = new_level
+            # Update title based on level
+            self.update_title()
+        
+        return self.level
+    
+    def update_streak(self):
+        """Update login streak if user was active in the last 36 hours"""
+        now = datetime.utcnow()
+        if self.last_active and (now - self.last_active) < timedelta(hours=36):
+            # If last active within 36 hours but on a different day
+            if self.last_active.date() < now.date():
+                self.streak_days += 1
+        else:
+            # Reset streak if more than 36 hours have passed
+            self.streak_days = 1
+        
+        self.last_active = now
+    
+    def update_title(self):
+        """Update user title based on level"""
+        titles = {
+            1: 'Legal Novice',
+            2: 'Law Apprentice',
+            3: 'Legal Assistant',
+            4: 'Junior Advocate',
+            5: 'Associate Advocate',
+            6: 'Senior Associate',
+            7: 'Legal Expert',
+            8: 'Seasoned Advocate',
+            9: 'Legal Strategist',
+            10: 'Master Advocate',
+            15: 'Legal Virtuoso',
+            20: 'Legal Luminary',
+            25: 'Legal Titan'
+        }
+        
+        # Find the highest level title the user qualifies for
+        for level in sorted(titles.keys(), reverse=True):
+            if self.level >= level:
+                self.title = titles[level]
+                break
+    
+    def __repr__(self):
+        return f'<UserProfile {self.user_id}: Level {self.level} - {self.title}>'
+
+class Achievement(db.Model):
+    """System achievements that users can earn"""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    description = db.Column(db.Text, nullable=False)
+    category = db.Column(db.String(50))  # case, document, research, general
+    points = db.Column(db.Integer, default=10)
+    icon = db.Column(db.String(100))  # Icon CSS class or filename
+    requirement = db.Column(db.Text)  # JSON string of requirements
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)
+    
+    def __repr__(self):
+        return f'<Achievement {self.name}>'
+    
+    def get_requirements(self):
+        """Get achievement requirements as dictionary"""
+        if not self.requirement:
+            return {}
+        return json.loads(self.requirement)
+
+class UserAchievement(db.Model):
+    """Achievements earned by users"""
+    id = db.Column(db.Integer, primary_key=True)
+    earned_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Foreign keys
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    achievement_id = db.Column(db.Integer, db.ForeignKey('achievement.id'), nullable=False)
+    
+    # Relationships
+    user = db.relationship('User', backref='achievements')
+    achievement = db.relationship('Achievement')
+    
+    __table_args__ = (db.UniqueConstraint('user_id', 'achievement_id'),)
+    
+    def __repr__(self):
+        return f'<UserAchievement {self.user_id} - {self.achievement_id}>'
+
+class Activity(db.Model):
+    """User activity for gamification tracking"""
+    id = db.Column(db.Integer, primary_key=True)
+    activity_type = db.Column(db.String(50), nullable=False)  # login, create_case, etc.
+    description = db.Column(db.String(200))
+    points = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Foreign keys
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    # Relationships
+    user = db.relationship('User', backref='activities')
+    
+    def __repr__(self):
+        return f'<Activity {self.id}: {self.activity_type} by User {self.user_id}>'
+
+class Challenge(db.Model):
+    """Time-limited challenges for users to complete"""
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    challenge_type = db.Column(db.String(50))  # daily, weekly, custom
+    points = db.Column(db.Integer, default=20)
+    requirements = db.Column(db.Text)  # JSON string of requirements
+    start_date = db.Column(db.DateTime, nullable=False)
+    end_date = db.Column(db.DateTime, nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<Challenge {self.id}: {self.title}>'
+    
+    def get_requirements(self):
+        """Get challenge requirements as dictionary"""
+        if not self.requirements:
+            return {}
+        return json.loads(self.requirements)
+    
+    def is_ongoing(self):
+        """Check if challenge is currently active"""
+        now = datetime.utcnow()
+        return (self.start_date <= now <= self.end_date) and self.is_active
+
+class UserChallenge(db.Model):
+    """Challenges accepted or completed by users"""
+    id = db.Column(db.Integer, primary_key=True)
+    status = db.Column(db.String(20), default='accepted')  # accepted, completed, expired
+    progress = db.Column(db.Text)  # JSON string of progress stats
+    accepted_at = db.Column(db.DateTime, default=datetime.utcnow)
+    completed_at = db.Column(db.DateTime)
+    
+    # Foreign keys
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    challenge_id = db.Column(db.Integer, db.ForeignKey('challenge.id'), nullable=False)
+    
+    # Relationships
+    user = db.relationship('User', backref='challenges')
+    challenge = db.relationship('Challenge')
+    
+    __table_args__ = (db.UniqueConstraint('user_id', 'challenge_id'),)
+    
+    def get_progress(self):
+        """Get progress as dictionary"""
+        if not self.progress:
+            return {}
+        return json.loads(self.progress)
+    
+    def update_progress(self, progress_data):
+        """Update progress with new data"""
+        current = self.get_progress()
+        current.update(progress_data)
+        self.progress = json.dumps(current)
+    
+    def __repr__(self):
+        return f'<UserChallenge {self.id}: {self.status}>'
