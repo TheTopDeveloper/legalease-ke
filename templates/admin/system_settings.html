@@ -7,9 +7,12 @@
 {% endblock %}
 
 {% block admin_content %}
-<div class="card shadow mb-4">
+<div class="card admin-card">
     <div class="card-header">
-        <h5 class="card-title mb-0">System Configuration</h5>
+        <h5 class="card-title"><i class="fas fa-cogs me-2"></i> System Configuration</h5>
+        <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Configure core platform settings that affect system behavior">
+            <i class="fas fa-question"></i>
+        </span>
     </div>
     <div class="card-body">
         <form method="post">

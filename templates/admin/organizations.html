@@ -1,33 +1,71 @@
-{% extends "base.html" %}
+{% extends 'admin/layout.html' %}
 
-{% block header %}Manage Organizations{% endblock %}
+{% block title %}Organization Management | Admin - Kenyan Legal Assistant{% endblock %}
 
-{% block content %}
-<div class="row mb-4">
-    <div class="col">
-        <a href="{{ url_for('admin.create_organization') }}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Create New Organization
-        </a>
-    </div>
-</div>
+{% block breadcrumb %}
+<li class="admin-breadcrumb-item active" aria-current="page">Organization Management</li>
+{% endblock %}
 
-<div class="card shadow">
+{% block admin_content %}
+<div class="card admin-card">
     <div class="card-header">
-        <h5 class="card-title mb-0">Organizations</h5>
+        <h5 class="card-title"><i class="fas fa-building me-2"></i> Organization Management</h5>
+        <div class="action-buttons">
+            <a href="{{ url_for('admin.create_organization') }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus"></i><span class="d-none d-md-inline"> Create New Organization</span>
+                <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Create a new law firm or company account with its own members">
+                    <i class="fas fa-question"></i>
+                </span>
+            </a>
+        </div>
     </div>
     <div class="card-body">
+        <!-- Section Help -->
+        <div class="section-help mb-4">
+            <h6><i class="fas fa-info-circle"></i> Organization Management</h6>
+            <p>Manage law firms and organizations in the system. Organizations can have multiple members and their own subscription plans. Use this page to create, edit, or delete organizations and manage their members.</p>
+        </div>
+
         {% if organizations %}
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Owner</th>
-                        <th>Members</th>
-                        <th>Account Type</th>
-                        <th>Status</th>
-                        <th>Subscription End</th>
-                        <th>Actions</th>
+                        <th>Name
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Organization name as it appears in the system">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </th>
+                        <th>Owner
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="User who created and administers this organization">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </th>
+                        <th>Members
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Number of users belonging to this organization">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </th>
+                        <th>Account Type
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Subscription level: basic, premium, or enterprise">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </th>
+                        <th>Status
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Whether the organization is currently active in the system">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </th>
+                        <th>Subscription End
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Date when the current subscription expires">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </th>
+                        <th>Actions
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Available operations for this organization">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
@@ -43,7 +81,8 @@
                         </td>
                         <td>
                             <span class="badge bg-info">{{ org.members|length }} members</span>
-                            <a href="{{ url_for('admin.organization_members', org_id=org.id) }}" class="btn btn-sm btn-outline-secondary">Manage</a>
+                            <a href="{{ url_for('admin.organization_members', org_id=org.id) }}" class="btn btn-sm btn-outline-secondary"
+                               title="Manage members of this organization">Manage</a>
                         </td>
                         <td>
                             <span class="badge bg-primary">{{ org.account_type }}</span>
@@ -63,10 +102,14 @@
                             {% endif %}
                         </td>
                         <td>
-                            <a href="{{ url_for('admin.edit_organization', org_id=org.id) }}" class="btn btn-sm btn-primary">
+                            <a href="{{ url_for('admin.edit_organization', org_id=org.id) }}" class="btn btn-sm btn-primary"
+                               title="Edit organization details and settings">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteOrgModal{{ org.id }}">
+                            <button type="button" class="btn btn-sm btn-danger" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#deleteOrgModal{{ org.id }}"
+                                    title="Permanently remove this organization and its data">
                                 <i class="fas fa-trash"></i>
                             </button>
                             
