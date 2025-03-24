@@ -39,7 +39,7 @@ login_manager.login_view = "auth.login"
 with app.app_context():
     # Import models here to avoid circular imports
     from models import (
-        User, Case, Document, Contract, Client, Event, LegalResearch,
+        User, Case, Document, DocumentTemplate, Contract, Client, Event, LegalResearch,
         LegalCitation, Subscription, TokenPackage, Payment, TokenUsage,
         UserProfile, Achievement, UserAchievement, Activity, Challenge, UserChallenge
     )
@@ -56,6 +56,7 @@ from routes.dashboard import dashboard_bp
 from routes.billing import billing_bp
 from routes.gamification import gamification_bp
 from routes.notifications import notifications_bp
+from routes.templates import templates_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(cases_bp)
@@ -66,6 +67,7 @@ app.register_blueprint(dashboard_bp)
 app.register_blueprint(billing_bp)
 app.register_blueprint(gamification_bp)
 app.register_blueprint(notifications_bp)
+app.register_blueprint(templates_bp)
 
 # Load user loader callback
 from models import User

@@ -2,8 +2,9 @@ import logging
 import json
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify
 from flask_login import login_required, current_user
-from models import DocumentTemplate, Document, db
+from models import DocumentTemplate, Document, Case, db
 import config
+import jinja2
 
 logger = logging.getLogger(__name__)
 
@@ -175,7 +176,6 @@ def use_template(template_id):
             context[var] = request.form.get(var, '')
         
         # Apply the context to the template to create document content
-        import jinja2
         jinja_env = jinja2.Environment(autoescape=True)
         try:
             template_obj = jinja_env.from_string(template.content)
@@ -216,7 +216,6 @@ def use_template(template_id):
             flash(f'Error creating document: {str(e)}', 'error')
     
     # Get cases for selection
-    from models import Case
     cases = Case.query.filter_by(user_id=current_user.id).all()
     
     return render_template('templates/use.html', 

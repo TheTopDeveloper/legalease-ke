@@ -1,0 +1,87 @@
+{% extends "layout.html" %}
+
+{% block title %}Edit Template - {{ template.title }} - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}Edit Document Template{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header">
+                <h4>Edit Template: {{ template.title }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('templates.edit', template_id=template.id) }}">
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label for="title" class="form-label">Template Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="title" name="title" value="{{ template.title }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="template_type" class="form-label">Document Type <span class="text-danger">*</span></label>
+                            <select class="form-select" id="template_type" name="template_type" required>
+                                <option value="">Select Document Type</option>
+                                {% for doc_type in document_types %}
+                                <option value="{{ doc_type }}" {% if template.template_type == doc_type %}selected{% endif %}>{{ doc_type }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="2">{{ template.description }}</textarea>
+                        <div class="form-text">Briefly describe what this template is for and how it should be used.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="content" class="form-label">Template Content <span class="text-danger">*</span></label>
+                        <textarea class="form-control rich-editor" id="content" name="content" rows="15" required>{{ template.content }}</textarea>
+                        <div class="form-text">
+                            <p>Use variables in double curly braces, for example: <code>{{client_name}}</code>, <code>{{court_name}}</code>, etc.</p>
+                            <p>These variables will be replaced with actual content when the template is used.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="is_public" name="is_public" {% if template.is_public %}checked{% endif %}>
+                        <label class="form-check-label" for="is_public">Make this template available to all users</label>
+                        <div class="form-text">Public templates can be used by any user of the system.</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('templates.view', template_id=template.id) }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer">
+                <div class="alert alert-info mb-0">
+                    <h5><i class="fas fa-info-circle"></i> Current Template Variables</h5>
+                    {% set variables = template.get_variables() %}
+                    {% if variables %}
+                    <p>The following variables are currently defined in your template:</p>
+                    <ul class="mb-0">
+                        {% for var in variables %}
+                        <li><code>{{{{ {var} }}}}</code></li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="mb-0">This template does not currently contain any variables. Consider adding some to make it more reusable.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize rich text editor
+        initRichTextEditors();
+    });
+</script>
+{% endblock %}

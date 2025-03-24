@@ -1,0 +1,90 @@
+{% extends "layout.html" %}
+
+{% block title %}Create Document Template - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}Create Document Template{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header">
+                <h4>New Document Template</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('templates.create') }}">
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label for="title" class="form-label">Template Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="template_type" class="form-label">Document Type <span class="text-danger">*</span></label>
+                            <select class="form-select" id="template_type" name="template_type" required>
+                                <option value="">Select Document Type</option>
+                                {% for doc_type in document_types %}
+                                <option value="{{ doc_type }}">{{ doc_type }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="2"></textarea>
+                        <div class="form-text">Briefly describe what this template is for and how it should be used.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="content" class="form-label">Template Content <span class="text-danger">*</span></label>
+                        <textarea class="form-control rich-editor" id="content" name="content" rows="15" required></textarea>
+                        <div class="form-text">
+                            <p>Use variables in double curly braces, for example: <code>{{client_name}}</code>, <code>{{court_name}}</code>, etc.</p>
+                            <p>These variables will be replaced with actual content when the template is used.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="is_public" name="is_public">
+                        <label class="form-check-label" for="is_public">Make this template available to all users</label>
+                        <div class="form-text">Public templates can be used by any user of the system.</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('templates.index') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Create Template</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer">
+                <div class="alert alert-info mb-0">
+                    <h5><i class="fas fa-info-circle"></i> Tips for creating effective templates:</h5>
+                    <ul>
+                        <li>Use descriptive variable names that reflect their purpose (e.g., {{client_name}}, {{case_number}})</li>
+                        <li>Include placeholders for all variable content that might change between documents</li>
+                        <li>Provide appropriate formatting for Kenyan legal documents</li>
+                        <li>For dates, you can use variables like {{day}}, {{month}}, {{year}}, and {{date}} which are automatically provided</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize rich text editor
+        initRichTextEditors();
+        
+        // Display placeholder variables as they are added
+        const contentEditor = document.getElementById('content');
+        if (contentEditor) {
+            contentEditor.addEventListener('input', function() {
+                // This would be enhanced with JavaScript to show a live preview of detected variables
+            });
+        }
+    });
+</script>
+{% endblock %}

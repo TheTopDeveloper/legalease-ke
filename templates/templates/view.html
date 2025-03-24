@@ -1,0 +1,171 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ template.title }} - Document Template - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}Document Template{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2>{{ template.title }}</h2>
+        <p>
+            <span class="badge bg-secondary">{{ template.template_type }}</span>
+            {% if template.is_public %}
+            <span class="badge bg-success">Public Template</span>
+            {% else %}
+            <span class="badge bg-secondary">Private Template</span>
+            {% endif %}
+            <span class="badge bg-info">{{ variables|length }} variable(s)</span>
+        </p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <div class="btn-group">
+            <a href="{{ url_for('templates.use_template', template_id=template.id) }}" class="btn btn-success">
+                <i class="fas fa-file-alt"></i> Create Document from Template
+            </a>
+            {% if template.user_id == current_user.id %}
+            <button type="button" class="btn btn-success dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                <span class="visually-hidden">Toggle Dropdown</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                    <a class="dropdown-item" href="{{ url_for('templates.edit', template_id=template.id) }}">
+                        <i class="fas fa-edit"></i> Edit Template
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#deleteTemplateModal">
+                        <i class="fas fa-trash"></i> Delete Template
+                    </a>
+                </li>
+            </ul>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Template Details -->
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Template Content -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Template Content</h5>
+            </div>
+            <div class="card-body">
+                {% if template.description %}
+                <div class="alert alert-info">
+                    {{ template.description }}
+                </div>
+                {% endif %}
+                
+                <div class="template-preview">
+                    {{ template.content|safe }}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Template Info -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Template Information</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Created By:</span>
+                        <span class="text-muted">{{ template.user.username }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Created On:</span>
+                        <span class="text-muted">{{ template.created_at.strftime('%d %B %Y') }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Last Updated:</span>
+                        <span class="text-muted">{{ template.updated_at.strftime('%d %B %Y') }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Document Type:</span>
+                        <span class="text-muted">{{ template.template_type }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Visibility:</span>
+                        <span class="text-muted">{{ 'Public' if template.is_public else 'Private' }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Variables -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Template Variables</h5>
+            </div>
+            <div class="card-body">
+                {% if variables %}
+                <p class="mb-3">The following variables will be replaced when creating a document:</p>
+                <div class="list-group">
+                    {% for var in variables %}
+                    <div class="list-group-item">
+                        <code>{{{{ {var} }}}}</code>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="mb-0">This template does not contain any variables.</p>
+                {% endif %}
+                
+                <div class="mt-3">
+                    <a href="{{ url_for('templates.use_template', template_id=template.id) }}" class="btn btn-primary w-100">
+                        <i class="fas fa-file-alt"></i> Create Document from Template
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+{% if template.user_id == current_user.id %}
+<div class="modal fade" id="deleteTemplateModal" tabindex="-1" aria-labelledby="deleteTemplateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteTemplateModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete the template <strong>{{ template.title }}</strong>?
+                <p class="text-danger mt-2">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('templates.delete', template_id=template.id) }}" method="POST">
+                    <button type="submit" class="btn btn-danger">Delete Template</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block styles %}
+<style>
+    .template-preview {
+        font-family: 'Times New Roman', Times, serif;
+        padding: 1.5rem;
+        border: 1px solid #ddd;
+        border-radius: 0.25rem;
+        background-color: #f8f9fa;
+        white-space: pre-wrap;
+    }
+    
+    .template-preview p {
+        margin-bottom: 0.8rem;
+    }
+</style>
+{% endblock %}
