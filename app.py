@@ -41,7 +41,9 @@ with app.app_context():
     from models import (
         User, Case, Document, DocumentTemplate, Contract, Client, Event, LegalResearch,
         LegalCitation, Subscription, TokenPackage, Payment, TokenUsage,
-        UserProfile, Achievement, UserAchievement, Activity, Challenge, UserChallenge
+        UserProfile, Achievement, UserAchievement, Activity, Challenge, UserChallenge,
+        # Ruling database models
+        Ruling, Judge, Tag, RulingReference, RulingAnnotation, RulingAnalysis
     )
     db.create_all()
     logger.info("Database tables created")
@@ -60,6 +62,7 @@ from routes.templates import templates_bp
 from routes.events import events_bp
 from routes.writing_assistant import writing_bp
 from routes.admin import admin_bp
+from routes.rulings import rulings_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(cases_bp)
@@ -74,6 +77,7 @@ app.register_blueprint(templates_bp)
 app.register_blueprint(events_bp)
 app.register_blueprint(writing_bp)
 app.register_blueprint(admin_bp)
+app.register_blueprint(rulings_bp, url_prefix='/rulings')
 
 # Load user loader callback
 from models import User
