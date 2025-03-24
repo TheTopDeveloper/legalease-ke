@@ -1,0 +1,226 @@
+{% extends "layout.html" %}
+
+{% block title %}Import Rulings{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+<style>
+  .import-option {
+    transition: transform 0.2s;
+    cursor: pointer;
+  }
+  .import-option:hover {
+    transform: translateY(-5px);
+  }
+  .import-option.active {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+  }
+  .court-icon {
+    font-size: 2rem;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin-bottom: 1rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="row mb-4">
+    <div class="col">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{{ url_for('rulings.index') }}">Rulings</a></li>
+          <li class="breadcrumb-item active">Import Rulings</li>
+        </ol>
+      </nav>
+      <h1 class="mb-0">Import Rulings</h1>
+      <p class="text-muted">Add judicial rulings from Kenya Law</p>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <p>
+        This tool allows you to import rulings from the Kenya Law website. You can import:
+      </p>
+      <ul>
+        <li>A specific ruling by URL</li>
+        <li>Multiple rulings from a specific court</li>
+      </ul>
+      <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> Imported rulings will be added to your account and will be available for analysis, annotation, and reference.
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <div class="card import-option" id="urlImportOption">
+        <div class="card-body text-center py-4">
+          <div class="court-icon bg-primary mx-auto">
+            <i class="fas fa-link text-white"></i>
+          </div>
+          <h4>Import Single Ruling</h4>
+          <p>Import a specific ruling from Kenya Law by URL</p>
+          <button class="btn btn-primary" data-option="url">Select</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card import-option" id="courtImportOption">
+        <div class="card-body text-center py-4">
+          <div class="court-icon bg-success mx-auto">
+            <i class="fas fa-gavel text-white"></i>
+          </div>
+          <h4>Import Court Rulings</h4>
+          <p>Import multiple rulings from a specific court</p>
+          <button class="btn btn-success" data-option="court">Select</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- URL Import Form -->
+  <div class="card mb-4" id="urlImportForm" style="display: none;">
+    <div class="card-header">
+      <h5 class="card-title mb-0">Import Single Ruling by URL</h5>
+    </div>
+    <div class="card-body">
+      <form action="{{ url_for('rulings.import_rulings') }}" method="post">
+        <input type="hidden" name="import_type" value="case_url">
+        <div class="mb-3">
+          <label for="case_url" class="form-label">Kenya Law Case URL</label>
+          <input type="url" class="form-control" id="case_url" name="case_url" required 
+                placeholder="e.g., http://kenyalaw.org/caselaw/cases/view/XXXXX/">
+          <div class="form-text">
+            Enter the full URL of a Kenya Law case, e.g., http://kenyalaw.org/caselaw/cases/view/123456/
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Import Ruling</button>
+        <button type="button" class="btn btn-outline-secondary" onclick="resetImportForms()">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Court Import Form -->
+  <div class="card mb-4" id="courtImportForm" style="display: none;">
+    <div class="card-header">
+      <h5 class="card-title mb-0">Import Rulings by Court</h5>
+    </div>
+    <div class="card-body">
+      <form action="{{ url_for('rulings.import_rulings') }}" method="post">
+        <input type="hidden" name="import_type" value="court_batch">
+        <div class="mb-3">
+          <label for="court" class="form-label">Select Court</label>
+          <select class="form-select" id="court" name="court" required>
+            <option value="">Select a court...</option>
+            {% for court in COURTS %}
+              <option value="{{ court }}">{{ court }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="limit" class="form-label">Number of Rulings to Import</label>
+          <select class="form-select" id="limit" name="limit">
+            <option value="5">5 rulings</option>
+            <option value="10" selected>10 rulings</option>
+            <option value="20">20 rulings</option>
+            <option value="50">50 rulings</option>
+          </select>
+          <div class="form-text">
+            Larger imports may take longer to process.
+          </div>
+        </div>
+        <div class="alert alert-warning">
+          <i class="fas fa-exclamation-triangle"></i> Importing multiple rulings may take some time. Be patient while the system processes your request.
+        </div>
+        <button type="submit" class="btn btn-success">Import Rulings</button>
+        <button type="button" class="btn btn-outline-secondary" onclick="resetImportForms()">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tips and info -->
+  <div class="card">
+    <div class="card-header">
+      <h5 class="card-title mb-0">Tips for Importing</h5>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <h6><i class="fas fa-lightbulb text-warning"></i> Finding Case URLs</h6>
+          <ol>
+            <li>Visit the <a href="http://kenyalaw.org/caselaw/" target="_blank">Kenya Law website</a></li>
+            <li>Search for a case or browse by court</li>
+            <li>Click on a case to view it</li>
+            <li>Copy the URL from your browser's address bar</li>
+          </ol>
+        </div>
+        <div class="col-md-6">
+          <h6><i class="fas fa-info-circle text-info"></i> What Gets Imported</h6>
+          <p>When you import a ruling, the system will extract:</p>
+          <ul>
+            <li>Case number and title</li>
+            <li>Court and date</li>
+            <li>Judges involved</li>
+            <li>Full text of the ruling</li>
+            <li>Case citation</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Add event listeners to import option buttons
+    document.querySelectorAll('.import-option button').forEach(button => {
+      button.addEventListener('click', function() {
+        const option = this.getAttribute('data-option');
+        resetImportForms();
+        
+        // Show the selected form
+        if (option === 'url') {
+          document.getElementById('urlImportForm').style.display = 'block';
+          document.getElementById('urlImportOption').classList.add('active');
+          document.getElementById('case_url').focus();
+        } else if (option === 'court') {
+          document.getElementById('courtImportForm').style.display = 'block';
+          document.getElementById('courtImportOption').classList.add('active');
+          document.getElementById('court').focus();
+        }
+      });
+    });
+
+    // Initialize the form based on URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const option = urlParams.get('option');
+    
+    if (option === 'url') {
+      document.querySelector('[data-option="url"]').click();
+    } else if (option === 'court') {
+      document.querySelector('[data-option="court"]').click();
+    }
+  });
+
+  function resetImportForms() {
+    // Hide all forms
+    document.getElementById('urlImportForm').style.display = 'none';
+    document.getElementById('courtImportForm').style.display = 'none';
+    
+    // Remove active class from options
+    document.getElementById('urlImportOption').classList.remove('active');
+    document.getElementById('courtImportOption').classList.remove('active');
+  }
+</script>
+{% endblock %}

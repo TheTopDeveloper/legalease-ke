@@ -1,0 +1,273 @@
+{% extends "layout.html" %}
+
+{% block title %}Search Rulings{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+<style>
+  .ruling-card {
+    transition: transform 0.2s;
+  }
+  .ruling-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  }
+  .tag-badge {
+    margin-right: 5px;
+    margin-bottom: 5px;
+  }
+  .filter-card {
+    position: sticky;
+    top: 1rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="row mb-4">
+    <div class="col">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{{ url_for('rulings.index') }}">Rulings</a></li>
+          <li class="breadcrumb-item active">Search</li>
+        </ol>
+      </nav>
+      <h1 class="mb-0">Search Results</h1>
+      <p class="text-muted">
+        {% if rulings.total %}
+          Showing {{ rulings.items|length }} of {{ rulings.total }} results
+          {% if query or court or category or outcome or date_from or date_to or selected_tags or judge_id or is_landmark %}
+            (with filters)
+          {% endif %}
+        {% else %}
+          No rulings found
+        {% endif %}
+      </p>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Filters sidebar -->
+    <div class="col-md-3 mb-4">
+      <div class="card filter-card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Filters</h5>
+        </div>
+        <div class="card-body">
+          <form action="{{ url_for('rulings.search') }}" method="get" id="searchForm">
+            <div class="mb-3">
+              <label for="query" class="form-label">Keyword Search</label>
+              <input type="text" class="form-control" id="query" name="query" value="{{ query or '' }}" placeholder="Search rulings...">
+            </div>
+
+            <div class="mb-3">
+              <label for="court" class="form-label">Court</label>
+              <select class="form-select" id="court" name="court">
+                <option value="">All Courts</option>
+                {% for court_option in COURTS %}
+                  <option value="{{ court_option }}" {% if court == court_option %}selected{% endif %}>{{ court_option }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="category" class="form-label">Category</label>
+              <select class="form-select" id="category" name="category">
+                <option value="">All Categories</option>
+                {% for category_option in CATEGORIES %}
+                  <option value="{{ category_option }}" {% if category == category_option %}selected{% endif %}>{{ category_option }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="outcome" class="form-label">Outcome</label>
+              <select class="form-select" id="outcome" name="outcome">
+                <option value="">All Outcomes</option>
+                {% for outcome_option in OUTCOMES %}
+                  <option value="{{ outcome_option }}" {% if outcome == outcome_option %}selected{% endif %}>{{ outcome_option }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="date_from" class="form-label">Date From</label>
+              <input type="date" class="form-control" id="date_from" name="date_from" value="{{ date_from or '' }}">
+            </div>
+
+            <div class="mb-3">
+              <label for="date_to" class="form-label">Date To</label>
+              <input type="date" class="form-control" id="date_to" name="date_to" value="{{ date_to or '' }}">
+            </div>
+
+            {% if all_judges %}
+              <div class="mb-3">
+                <label for="judge_id" class="form-label">Judge</label>
+                <select class="form-select" id="judge_id" name="judge_id">
+                  <option value="">All Judges</option>
+                  {% for judge in all_judges %}
+                    <option value="{{ judge.id }}" {% if judge_id|string == judge.id|string %}selected{% endif %}>{{ judge.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            {% endif %}
+
+            {% if all_tags %}
+              <div class="mb-3">
+                <label class="form-label">Legal Concepts</label>
+                <div class="border rounded p-2" style="max-height: 200px; overflow-y: auto;">
+                  {% for tag in all_tags %}
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" value="{{ tag.id }}" id="tag{{ tag.id }}" name="tags" {% if tag.id|string in selected_tags %}checked{% endif %}>
+                      <label class="form-check-label" for="tag{{ tag.id }}">
+                        {{ tag.name }}
+                      </label>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+
+            <div class="mb-3">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" name="is_landmark" value="true" id="landmarkSwitch" {% if is_landmark == 'true' %}checked{% endif %}>
+                <label class="form-check-label" for="landmarkSwitch">
+                  Landmark Cases Only
+                </label>
+              </div>
+            </div>
+
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-primary">Apply Filters</button>
+              <a href="{{ url_for('rulings.search') }}" class="btn btn-outline-secondary">Clear Filters</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="col-md-9">
+      {% if rulings.items %}
+        <div class="row">
+          {% for ruling in rulings.items %}
+            <div class="col-md-6 mb-4">
+              <div class="card ruling-card h-100">
+                <div class="card-body">
+                  <h5 class="card-title">{{ ruling.title }}</h5>
+                  <h6 class="card-subtitle mb-2 text-muted">{{ ruling.case_number }}</h6>
+                  <p class="card-text">
+                    <span class="badge bg-primary">{{ ruling.court }}</span>
+                    <span class="badge bg-secondary">{{ ruling.date_of_ruling.strftime('%d %b %Y') }}</span>
+                    {% if ruling.outcome %}
+                      <span class="badge bg-info">{{ ruling.outcome }}</span>
+                    {% endif %}
+                    {% if ruling.category %}
+                      <span class="badge bg-success">{{ ruling.category }}</span>
+                    {% endif %}
+                    {% if ruling.is_landmark %}
+                      <span class="badge bg-warning">Landmark</span>
+                    {% endif %}
+                  </p>
+                  {% if ruling.summary %}
+                    <p class="card-text">{{ ruling.summary|truncate(100) }}</p>
+                  {% endif %}
+
+                  {% if ruling.tags %}
+                    <div class="mb-2">
+                      {% for tag in ruling.tags %}
+                        <span class="badge bg-secondary tag-badge">{{ tag.name }}</span>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+                <div class="card-footer bg-transparent">
+                  <a href="{{ url_for('rulings.view_ruling', ruling_id=ruling.id) }}" class="btn btn-sm btn-outline-primary">View Details</a>
+                  {% if current_user.has_permission('ADVANCED_RESEARCH') %}
+                    <a href="{{ url_for('rulings.analyze_ruling', ruling_id=ruling.id) }}" class="btn btn-sm btn-outline-secondary">Analyze</a>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if rulings.pages > 1 %}
+          <nav aria-label="Rulings pagination">
+            <ul class="pagination justify-content-center">
+              {% if rulings.has_prev %}
+                <li class="page-item">
+                  <a class="page-link" href="{{ url_for('rulings.search', page=rulings.prev_num, query=query, court=court, category=category, outcome=outcome, date_from=date_from, date_to=date_to, tags=selected_tags, judge_id=judge_id, is_landmark=is_landmark) }}">Previous</a>
+                </li>
+              {% else %}
+                <li class="page-item disabled">
+                  <span class="page-link">Previous</span>
+                </li>
+              {% endif %}
+
+              {% for page_num in rulings.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                {% if page_num %}
+                  {% if page_num == rulings.page %}
+                    <li class="page-item active">
+                      <span class="page-link">{{ page_num }} <span class="sr-only">(current)</span></span>
+                    </li>
+                  {% else %}
+                    <li class="page-item">
+                      <a class="page-link" href="{{ url_for('rulings.search', page=page_num, query=query, court=court, category=category, outcome=outcome, date_from=date_from, date_to=date_to, tags=selected_tags, judge_id=judge_id, is_landmark=is_landmark) }}">{{ page_num }}</a>
+                    </li>
+                  {% endif %}
+                {% else %}
+                  <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                  </li>
+                {% endif %}
+              {% endfor %}
+
+              {% if rulings.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="{{ url_for('rulings.search', page=rulings.next_num, query=query, court=court, category=category, outcome=outcome, date_from=date_from, date_to=date_to, tags=selected_tags, judge_id=judge_id, is_landmark=is_landmark) }}">Next</a>
+                </li>
+              {% else %}
+                <li class="page-item disabled">
+                  <span class="page-link">Next</span>
+                </li>
+              {% endif %}
+            </ul>
+          </nav>
+        {% endif %}
+      {% else %}
+        <div class="alert alert-info">
+          <h4 class="alert-heading">No rulings found</h4>
+          <p>No rulings match your search criteria. Try adjusting your filters or <a href="{{ url_for('rulings.search') }}">clear all filters</a>.</p>
+          <hr>
+          <p class="mb-0">
+            <a href="{{ url_for('rulings.import_rulings') }}" class="btn btn-primary">Import Rulings</a>
+            {% if current_user.has_permission('CREATE_CASE') %}
+              <a href="{{ url_for('rulings.create_ruling') }}" class="btn btn-success">Add Ruling Manually</a>
+            {% endif %}
+          </p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Enable automatic form submission when filters change
+    const filterForm = document.getElementById('searchForm');
+    const filterInputs = filterForm.querySelectorAll('select, input[type="date"], input[type="checkbox"]');
+    
+    filterInputs.forEach(input => {
+      input.addEventListener('change', function() {
+        // Submit the form when a filter is changed
+        filterForm.submit();
+      });
+    });
+  });
+</script>
+{% endblock %}

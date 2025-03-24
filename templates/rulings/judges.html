@@ -1,0 +1,184 @@
+{% extends "layout.html" %}
+
+{% block title %}Judges Database{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+<style>
+  .judge-card {
+    transition: transform 0.2s;
+  }
+  .judge-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  }
+  .judge-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: rgba(var(--bs-primary-rgb), 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: var(--bs-primary);
+  }
+  .judge-initials {
+    text-transform: uppercase;
+  }
+  .ruling-count-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 0.5rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="row mb-4">
+    <div class="col">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{{ url_for('rulings.index') }}">Rulings</a></li>
+          <li class="breadcrumb-item active">Judges</li>
+        </ol>
+      </nav>
+      <h1 class="mb-0">Judges Database</h1>
+      <p class="text-muted">Explore judges and their ruling patterns</p>
+    </div>
+  </div>
+
+  <!-- Filter and search -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <form action="{{ url_for('rulings.judges') }}" method="get" class="row g-3">
+        <div class="col-md-4">
+          <div class="input-group">
+            <span class="input-group-text"><i class="fas fa-search"></i></span>
+            <input type="text" class="form-control" name="query" placeholder="Search judges..." value="{{ request.args.get('query', '') }}">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <select name="court" class="form-select">
+            <option value="">All Courts</option>
+            {% for court in COURTS %}
+              <option value="{{ court }}" {% if request.args.get('court') == court %}selected{% endif %}>{{ court }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <select name="sort" class="form-select">
+            <option value="name" {% if request.args.get('sort') == 'name' %}selected{% endif %}>Sort by Name</option>
+            <option value="rulings" {% if request.args.get('sort', 'rulings') == 'rulings' %}selected{% endif %}>Sort by Ruling Count</option>
+            <option value="court" {% if request.args.get('sort') == 'court' %}selected{% endif %}>Sort by Court</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-primary w-100">Apply</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Judges list -->
+  <div class="row">
+    {% if judges %}
+      {% for judge, ruling_count in judges %}
+        <div class="col-md-4 mb-4">
+          <div class="card judge-card h-100 position-relative">
+            <div class="ruling-count-badge">
+              <span class="badge bg-{{ 'success' if ruling_count > 10 else 'primary' }}">{{ ruling_count }} rulings</span>
+            </div>
+            <div class="card-body d-flex">
+              <div class="judge-avatar me-3">
+                {% if judge.photo_url %}
+                  <img src="{{ judge.photo_url }}" alt="{{ judge.name }}" class="w-100 h-100">
+                {% else %}
+                  <span class="judge-initials">{{ judge.name.split()|map('first')|join }}</span>
+                {% endif %}
+              </div>
+              <div>
+                <h5 class="card-title mb-1">{{ judge.name }}</h5>
+                {% if judge.title %}
+                  <h6 class="card-subtitle mb-2 text-muted">{{ judge.title }}</h6>
+                {% endif %}
+                <p class="card-text mb-1">
+                  {% if judge.court %}
+                    <span class="badge bg-primary">{{ judge.court }}</span>
+                  {% endif %}
+                  {% if judge.is_active %}
+                    <span class="badge bg-success">Active</span>
+                  {% else %}
+                    <span class="badge bg-secondary">Inactive</span>
+                  {% endif %}
+                </p>
+                {% if judge.start_date %}
+                  <small class="text-muted">Since {{ judge.start_date.strftime('%Y') }}</small>
+                {% endif %}
+              </div>
+            </div>
+            <div class="card-footer bg-transparent">
+              <a href="{{ url_for('rulings.view_judge', judge_id=judge.id) }}" class="btn btn-sm btn-outline-primary">View Profile</a>
+              <a href="{{ url_for('rulings.search', judge_id=judge.id) }}" class="btn btn-sm btn-outline-secondary">View Rulings</a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="col">
+        <div class="alert alert-info">
+          No judges found. Import rulings to populate the judges database.
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Pagination -->
+  {% if pagination %}
+    <nav aria-label="Judge pagination" class="mt-4">
+      <ul class="pagination justify-content-center">
+        {% if pagination.has_prev %}
+          <li class="page-item">
+            <a class="page-link" href="{{ url_for('rulings.judges', page=pagination.prev_num, query=request.args.get('query', ''), court=request.args.get('court', ''), sort=request.args.get('sort', '')) }}">Previous</a>
+          </li>
+        {% else %}
+          <li class="page-item disabled">
+            <span class="page-link">Previous</span>
+          </li>
+        {% endif %}
+
+        {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+          {% if page_num %}
+            {% if page_num == pagination.page %}
+              <li class="page-item active">
+                <span class="page-link">{{ page_num }} <span class="sr-only">(current)</span></span>
+              </li>
+            {% else %}
+              <li class="page-item">
+                <a class="page-link" href="{{ url_for('rulings.judges', page=page_num, query=request.args.get('query', ''), court=request.args.get('court', ''), sort=request.args.get('sort', '')) }}">{{ page_num }}</a>
+              </li>
+            {% endif %}
+          {% else %}
+            <li class="page-item disabled">
+              <span class="page-link">...</span>
+            </li>
+          {% endif %}
+        {% endfor %}
+
+        {% if pagination.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="{{ url_for('rulings.judges', page=pagination.next_num, query=request.args.get('query', ''), court=request.args.get('court', ''), sort=request.args.get('sort', '')) }}">Next</a>
+          </li>
+        {% else %}
+          <li class="page-item disabled">
+            <span class="page-link">Next</span>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
+</div>
+{% endblock %}

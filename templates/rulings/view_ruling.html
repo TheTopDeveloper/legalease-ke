@@ -1,0 +1,521 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ ruling.title }} - Ruling Details{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+<style>
+  .tag-badge {
+    margin-right: 5px;
+    margin-bottom: 5px;
+  }
+  .metadata-list dt {
+    font-weight: bold;
+  }
+  .metadata-list dd {
+    margin-bottom: 0.5rem;
+  }
+  .ruling-content {
+    font-family: 'Noto Serif', serif;
+    line-height: 1.8;
+    text-align: justify;
+  }
+  .citation-card {
+    margin-bottom: 1rem;
+    border-left: 3px solid var(--bs-primary);
+  }
+  .analysis-highlight {
+    background-color: rgba(var(--bs-info-rgb), 0.1);
+    border-left: 3px solid var(--bs-info);
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  .annotation-card {
+    margin-bottom: 1rem;
+  }
+  .similar-ruling {
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s;
+  }
+  .similar-ruling:hover {
+    background-color: rgba(var(--bs-light-rgb), 0.1);
+  }
+  .annotation-form {
+    margin-top: 1rem;
+  }
+  .score-badge {
+    width: 2.5rem;
+    height: 2.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-radius: 50%;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="row mb-3">
+    <div class="col-md-7">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{{ url_for('rulings.index') }}">Rulings</a></li>
+          <li class="breadcrumb-item"><a href="{{ url_for('rulings.search', court=ruling.court) }}">{{ ruling.court }}</a></li>
+          <li class="breadcrumb-item active" aria-current="page">{{ ruling.case_number }}</li>
+        </ol>
+      </nav>
+      <h1 class="mb-2">{{ ruling.title }}</h1>
+      <div class="mb-3">
+        <span class="badge bg-primary">{{ ruling.court }}</span>
+        <span class="badge bg-secondary">{{ ruling.date_of_ruling.strftime('%d %b %Y') }}</span>
+        {% if ruling.outcome %}
+          <span class="badge bg-info">{{ ruling.outcome }}</span>
+        {% endif %}
+        {% if ruling.category %}
+          <span class="badge bg-success">{{ ruling.category }}</span>
+        {% endif %}
+        {% if ruling.is_landmark %}
+          <span class="badge bg-warning">Landmark Case</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="col-md-5 text-md-end">
+      <div class="btn-group mb-2">
+        {% if current_user.has_permission('EDIT_CASE') and (current_user.id == ruling.user_id or current_user.has_permission('ADMIN_ACCESS')) %}
+          <a href="{{ url_for('rulings.edit_ruling', ruling_id=ruling.id) }}" class="btn btn-outline-primary">
+            <i class="fas fa-edit"></i> Edit
+          </a>
+        {% endif %}
+        {% if current_user.has_permission('ADVANCED_RESEARCH') %}
+          <a href="{{ url_for('rulings.analyze_ruling', ruling_id=ruling.id) }}" class="btn btn-outline-success">
+            <i class="fas fa-chart-pie"></i> Analyze
+          </a>
+        {% endif %}
+        {% if current_user.has_permission('DELETE_CASE') and (current_user.id == ruling.user_id or current_user.has_permission('ADMIN_ACCESS')) %}
+          <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteRulingModal">
+            <i class="fas fa-trash"></i> Delete
+          </button>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Main content -->
+    <div class="col-lg-8">
+      <!-- Summary -->
+      {% if ruling.summary %}
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Summary</h5>
+          </div>
+          <div class="card-body">
+            <p class="card-text">{{ ruling.summary }}</p>
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Full text -->
+      <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0">Full Text</h5>
+          {% if ruling.url %}
+            <a href="{{ ruling.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+              <i class="fas fa-external-link-alt"></i> View Original
+            </a>
+          {% endif %}
+        </div>
+        <div class="card-body ruling-content">
+          {% if ruling.full_text %}
+            {{ ruling.full_text|safe }}
+          {% else %}
+            <p class="text-muted">Full text not available. {% if ruling.url %}<a href="{{ ruling.url }}" target="_blank">View original source</a>{% endif %}</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Analysis results -->
+      {% if analysis %}
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Analysis</h5>
+          </div>
+          <div class="card-body">
+            {% if analysis.legal_principles %}
+              <div class="analysis-highlight mb-3">
+                <h6 class="mb-2">Key Legal Principles</h6>
+                <ul class="mb-0">
+                  {% for principle in analysis.legal_principles %}
+                    <li>{{ principle }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+
+            {% if analysis.legal_reasoning %}
+              <div class="mb-3">
+                <h6 class="mb-2">Legal Reasoning</h6>
+                <p>{{ analysis.legal_reasoning }}</p>
+              </div>
+            {% endif %}
+
+            {% if analysis.precedential_value %}
+              <div class="mb-3">
+                <h6 class="mb-2">Precedential Value</h6>
+                <p>{{ analysis.precedential_value }}</p>
+              </div>
+            {% endif %}
+
+            {% if analysis.impact %}
+              <div class="mb-3">
+                <h6 class="mb-2">Impact on Kenyan Jurisprudence</h6>
+                <p>{{ analysis.impact }}</p>
+              </div>
+            {% endif %}
+
+            {% if analysis.notable_opinions %}
+              <div class="mb-3">
+                <h6 class="mb-2">Notable Opinions</h6>
+                <p>{{ analysis.notable_opinions }}</p>
+              </div>
+            {% endif %}
+
+            {% if analysis.suggested_tags %}
+              <div class="mb-3">
+                <h6 class="mb-2">Suggested Tags</h6>
+                {% for tag in analysis.suggested_tags %}
+                  <span class="badge bg-info tag-badge">{{ tag }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            {% if analysis.analyzed_at %}
+              <small class="text-muted">Analysis performed: {{ analysis.analyzed_at }}</small>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- References -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <ul class="nav nav-tabs card-header-tabs" id="referencesTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="outgoing-tab" data-bs-toggle="tab" data-bs-target="#outgoing" type="button" role="tab" aria-controls="outgoing" aria-selected="true">References Made ({{ outgoing_refs|length }})</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="incoming-tab" data-bs-toggle="tab" data-bs-target="#incoming" type="button" role="tab" aria-controls="incoming" aria-selected="false">Referenced By ({{ incoming_refs|length }})</button>
+            </li>
+          </ul>
+        </div>
+        <div class="card-body">
+          <div class="tab-content" id="referencesTabsContent">
+            <!-- Outgoing references -->
+            <div class="tab-pane fade show active" id="outgoing" role="tabpanel" aria-labelledby="outgoing-tab">
+              {% if outgoing_refs %}
+                {% for ref in outgoing_refs %}
+                  <div class="citation-card p-3">
+                    <h6 class="mb-1"><a href="{{ url_for('rulings.view_ruling', ruling_id=ref.target_ruling_id) }}">{{ ref.target_ruling.title }}</a></h6>
+                    <p class="mb-1 text-muted">{{ ref.target_ruling.case_number }} - {{ ref.target_ruling.court }} ({{ ref.target_ruling.date_of_ruling.strftime('%d %b %Y') }})</p>
+                    {% if ref.reference_type %}
+                      <span class="badge bg-secondary">{{ ref.reference_type }}</span>
+                    {% endif %}
+                    {% if ref.context %}
+                      <p class="mt-2 mb-0 small">{{ ref.context }}</p>
+                    {% endif %}
+                    <div class="mt-2">
+                      <form action="{{ url_for('rulings.delete_reference', ruling_id=ruling.id, reference_id=ref.id) }}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this reference?')">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <p class="text-muted">This ruling does not reference any other rulings.</p>
+              {% endif %}
+
+              <!-- Add reference form -->
+              {% if current_user.has_permission('EDIT_CASE') %}
+                <div class="mt-3">
+                  <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#addReferenceForm" aria-expanded="false" aria-controls="addReferenceForm">
+                    <i class="fas fa-plus"></i> Add Reference
+                  </button>
+                  <div class="collapse mt-3" id="addReferenceForm">
+                    <div class="card card-body">
+                      <form action="{{ url_for('rulings.add_reference', ruling_id=ruling.id) }}" method="post">
+                        <div class="mb-3">
+                          <label for="target_ruling_id" class="form-label">Referenced Ruling</label>
+                          <input type="text" class="form-control" id="target_ruling_id" name="target_ruling_id" placeholder="Enter ruling ID" required>
+                          <div class="form-text">Enter the ID of the ruling being referenced</div>
+                        </div>
+                        <div class="mb-3">
+                          <label for="reference_type" class="form-label">Reference Type</label>
+                          <select class="form-select" id="reference_type" name="reference_type">
+                            <option value="">Select Type</option>
+                            <option value="cites">Cites</option>
+                            <option value="follows">Follows</option>
+                            <option value="distinguishes">Distinguishes</option>
+                            <option value="overrules">Overrules</option>
+                            <option value="applies">Applies</option>
+                            <option value="considers">Considers</option>
+                          </select>
+                        </div>
+                        <div class="mb-3">
+                          <label for="context" class="form-label">Context</label>
+                          <textarea class="form-control" id="context" name="context" rows="2" placeholder="Optional context or notes"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Reference</button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- Incoming references -->
+            <div class="tab-pane fade" id="incoming" role="tabpanel" aria-labelledby="incoming-tab">
+              {% if incoming_refs %}
+                {% for ref in incoming_refs %}
+                  <div class="citation-card p-3">
+                    <h6 class="mb-1"><a href="{{ url_for('rulings.view_ruling', ruling_id=ref.source_ruling_id) }}">{{ ref.source_ruling.title }}</a></h6>
+                    <p class="mb-1 text-muted">{{ ref.source_ruling.case_number }} - {{ ref.source_ruling.court }} ({{ ref.source_ruling.date_of_ruling.strftime('%d %b %Y') }})</p>
+                    {% if ref.reference_type %}
+                      <span class="badge bg-secondary">{{ ref.reference_type }}</span>
+                    {% endif %}
+                    {% if ref.context %}
+                      <p class="mt-2 mb-0 small">{{ ref.context }}</p>
+                    {% endif %}
+                  </div>
+                {% endfor %}
+              {% else %}
+                <p class="text-muted">This ruling is not referenced by any other rulings.</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Annotations -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Your Annotations ({{ annotations|length }})</h5>
+        </div>
+        <div class="card-body">
+          {% if annotations %}
+            {% for annotation in annotations %}
+              <div class="annotation-card p-3 border-bottom">
+                <p class="mb-2">{{ annotation.text }}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                  <small class="text-muted">{{ annotation.created_at.strftime('%d %b %Y, %H:%M') }}</small>
+                  <form action="{{ url_for('rulings.delete_annotation', ruling_id=ruling.id, annotation_id=annotation.id) }}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-link text-danger" onclick="return confirm('Are you sure you want to delete this annotation?')">
+                      <i class="fas fa-trash"></i> Delete
+                    </button>
+                  </form>
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p class="text-muted">You haven't added any annotations to this ruling yet.</p>
+          {% endif %}
+
+          <!-- Add annotation form -->
+          <div class="annotation-form">
+            <form action="{{ url_for('rulings.add_annotation', ruling_id=ruling.id) }}" method="post">
+              <div class="mb-3">
+                <label for="annotation_text" class="form-label">Add Annotation</label>
+                <textarea class="form-control" id="annotation_text" name="annotation_text" rows="3" placeholder="Add your notes, insights, or commentary on this ruling" required></textarea>
+              </div>
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="is_private" name="is_private" value="true" checked>
+                <label class="form-check-label" for="is_private">
+                  Keep this annotation private
+                </label>
+              </div>
+              <button type="submit" class="btn btn-primary">Save Annotation</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+      <!-- Metadata -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Case Details</h5>
+        </div>
+        <div class="card-body">
+          <dl class="row metadata-list">
+            <dt class="col-sm-4">Case Number</dt>
+            <dd class="col-sm-8">{{ ruling.case_number }}</dd>
+
+            <dt class="col-sm-4">Court</dt>
+            <dd class="col-sm-8">{{ ruling.court }}</dd>
+
+            <dt class="col-sm-4">Date</dt>
+            <dd class="col-sm-8">{{ ruling.date_of_ruling.strftime('%d %B %Y') }}</dd>
+
+            {% if ruling.citation %}
+              <dt class="col-sm-4">Citation</dt>
+              <dd class="col-sm-8">{{ ruling.citation }}</dd>
+            {% endif %}
+
+            {% if ruling.category %}
+              <dt class="col-sm-4">Category</dt>
+              <dd class="col-sm-8">{{ ruling.category }}</dd>
+            {% endif %}
+
+            {% if ruling.outcome %}
+              <dt class="col-sm-4">Outcome</dt>
+              <dd class="col-sm-8">{{ ruling.outcome }}</dd>
+            {% endif %}
+
+            <dt class="col-sm-4">Importance</dt>
+            <dd class="col-sm-8">
+              <div class="score-badge bg-{{ 'success' if ruling.importance_score >= 8 else 'warning' if ruling.importance_score >= 5 else 'danger' }}">
+                {{ ruling.importance_score }}
+              </div>
+              <small class="text-muted ms-2">{{ 'High' if ruling.importance_score >= 8 else 'Medium' if ruling.importance_score >= 5 else 'Low' }}</small>
+            </dd>
+
+            {% if ruling.is_landmark %}
+              <dt class="col-sm-4">Status</dt>
+              <dd class="col-sm-8">
+                <span class="badge bg-warning">Landmark Case</span>
+              </dd>
+            {% endif %}
+          </dl>
+        </div>
+      </div>
+
+      <!-- Judges -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Judges</h5>
+        </div>
+        <div class="card-body">
+          {% if ruling.judges %}
+            <ul class="list-group list-group-flush">
+              {% for judge in ruling.judges %}
+                <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">
+                  {{ judge.name }}
+                  <a href="{{ url_for('rulings.view_judge', judge_id=judge.id) }}" class="btn btn-sm btn-outline-primary">View Profile</a>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted">No judges associated with this ruling.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Legal concepts/tags -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Legal Concepts</h5>
+        </div>
+        <div class="card-body">
+          {% if ruling.tags %}
+            {% for tag in ruling.tags %}
+              <a href="{{ url_for('rulings.view_tag', tag_id=tag.id) }}" class="badge bg-secondary tag-badge p-2">
+                {{ tag.name }}
+              </a>
+            {% endfor %}
+          {% else %}
+            <p class="text-muted">No legal concepts/tags associated with this ruling.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Similar rulings -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Similar Rulings</h5>
+        </div>
+        <div class="card-body">
+          {% if similar_rulings %}
+            {% for similar in similar_rulings %}
+              <div class="similar-ruling">
+                <div class="d-flex justify-content-between">
+                  <h6 class="mb-1">
+                    <a href="{{ url_for('rulings.view_ruling', ruling_id=similar.id) }}">{{ similar.title }}</a>
+                  </h6>
+                  <span class="badge bg-{{ 'success' if similar.similarity_score >= 80 else 'warning' if similar.similarity_score >= 50 else 'secondary' }}">
+                    {{ similar.similarity_score }}%
+                  </span>
+                </div>
+                <p class="mb-1 small text-muted">{{ similar.court }} | {{ similar.date }}</p>
+                <div class="small">
+                  <span class="badge bg-info">{{ similar.matching_tags }} matching tags</span>
+                  {% if similar.outcome %}
+                    <span class="badge bg-secondary">{{ similar.outcome }}</span>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p class="text-muted">No similar rulings found.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete ruling modal -->
+<div class="modal fade" id="deleteRulingModal" tabindex="-1" aria-labelledby="deleteRulingModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteRulingModalLabel">Confirm Deletion</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete this ruling?</p>
+        <p class="text-danger"><strong>This action cannot be undone.</strong></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <form action="{{ url_for('rulings.delete_ruling', ruling_id=ruling.id) }}" method="post">
+          <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Script for handling the tabs
+    var referencesTabs = document.querySelectorAll('#referencesTabs button');
+    referencesTabs.forEach(function(tab) {
+      tab.addEventListener('click', function(event) {
+        event.preventDefault();
+        referencesTabs.forEach(function(t) {
+          t.classList.remove('active');
+          t.setAttribute('aria-selected', 'false');
+        });
+        this.classList.add('active');
+        this.setAttribute('aria-selected', 'true');
+        
+        // Show the corresponding tab content
+        var tabContent = document.querySelector(this.getAttribute('data-bs-target'));
+        document.querySelectorAll('.tab-pane').forEach(function(pane) {
+          pane.classList.remove('show', 'active');
+        });
+        tabContent.classList.add('show', 'active');
+      });
+    });
+  });
+</script>
+{% endblock %}
