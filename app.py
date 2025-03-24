@@ -57,6 +57,7 @@ from routes.billing import billing_bp
 from routes.gamification import gamification_bp
 from routes.notifications import notifications_bp
 from routes.templates import templates_bp
+from routes.events import events_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(cases_bp)
@@ -68,6 +69,7 @@ app.register_blueprint(billing_bp)
 app.register_blueprint(gamification_bp)
 app.register_blueprint(notifications_bp)
 app.register_blueprint(templates_bp)
+app.register_blueprint(events_bp)
 
 # Load user loader callback
 from models import User

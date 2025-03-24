@@ -213,10 +213,10 @@
                             </thead>
                             <tbody>
                                 {% set day_counter = 0 %}
-                                {% for week in range((days_in_month + first_day_weekday - 1) // 7 + 1) %}
+                                {% for week in range((end_date.day + start_date.weekday() - 1) // 7 + 1) %}
                                 <tr>
                                     {% for weekday in range(7) %}
-                                        {% set day_date = start_date + day_counter|int|timedelta %}
+                                        {% set day_date = start_date + timedelta(days=day_counter|int) %}
                                         {% set day_counter = day_counter + 1 %}
                                         <td class="calendar-day {% if day_date.month != start_date.month %}other-month{% endif %} {% if day_date == current_date %}today{% endif %}" 
                                             data-date="{{ day_date.strftime('%Y-%m-%d') }}">
