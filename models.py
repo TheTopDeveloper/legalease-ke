@@ -24,8 +24,16 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(256), nullable=False)
     first_name = db.Column(db.String(64))
     last_name = db.Column(db.String(64))
-    role = db.Column(db.String(20), default='user')  # admin, legal_professional, paralegal
+    role = db.Column(db.String(20), default='individual')  # admin, organization, individual
+    account_type = db.Column(db.String(20), default='free')  # free, basic, premium, enterprise
+    organization_name = db.Column(db.String(100))
+    organization_size = db.Column(db.Integer)  # Number of users in organization
+    tokens_available = db.Column(db.Integer, default=0)  # Available tokens for AI features
+    max_cases = db.Column(db.Integer, default=5)  # Maximum number of cases allowed
+    is_active = db.Column(db.Boolean, default=True)  # Account active status
+    subscription_end = db.Column(db.DateTime)  # When subscription expires
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_login = db.Column(db.DateTime)
     
     # Relationships
     cases = db.relationship('Case', backref='assigned_user', lazy='dynamic')
@@ -40,6 +48,33 @@ class User(UserMixin, db.Model):
         """Verify the user's password"""
         return check_password_hash(self.password_hash, password)
     
+    def use_tokens(self, amount):
+        """Use tokens for AI features and return True if successful"""
+        if self.tokens_available >= amount:
+            self.tokens_available -= amount
+            return True
+        return False
+    
+    def add_tokens(self, amount):
+        """Add tokens to user account"""
+        self.tokens_available += amount
+        
+    def can_create_case(self):
+        """Check if user can create more cases"""
+        if self.role == 'admin':
+            return True
+        return self.cases.count() < self.max_cases
+    
+    def is_subscription_active(self):
+        """Check if user's subscription is active"""
+        if self.role == 'admin':
+            return True
+        if self.account_type == 'free':
+            return True
+        if not self.subscription_end:
+            return False
+        return self.subscription_end > datetime.utcnow()
+        
     def __repr__(self):
         return f'<User {self.username}>'
 
@@ -177,3 +212,73 @@ class LegalCitation(db.Model):
     
     def __repr__(self):
         return f'<LegalCitation {self.id}: {self.source}>'
+        
+class Subscription(db.Model):
+    """Subscription plans available in the system"""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False, unique=True)  # free, basic, premium, enterprise
+    price = db.Column(db.Float, nullable=False)  # Price in Kenyan Shillings
+    duration_days = db.Column(db.Integer, default=30)  # Subscription duration in days
+    max_cases = db.Column(db.Integer, default=5)  # Maximum number of cases
+    tokens_included = db.Column(db.Integer, default=0)  # Tokens included in subscription
+    is_organization = db.Column(db.Boolean, default=False)  # Whether this is for organizations
+    max_users = db.Column(db.Integer, default=1)  # For organization plans
+    is_active = db.Column(db.Boolean, default=True)  # Whether this plan is available
+    features = db.Column(db.Text)  # JSON string of features
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<Subscription {self.name}>'
+        
+class TokenPackage(db.Model):
+    """Available token packages for purchase"""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)  # Small, Medium, Large
+    token_count = db.Column(db.Integer, nullable=False)  # Number of tokens
+    price = db.Column(db.Float, nullable=False)  # Price in Kenyan Shillings
+    is_active = db.Column(db.Boolean, default=True)  # Whether this package is available
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<TokenPackage {self.name}: {self.token_count} tokens>'
+        
+class Payment(db.Model):
+    """Payment records for subscriptions and token purchases"""
+    id = db.Column(db.Integer, primary_key=True)
+    amount = db.Column(db.Float, nullable=False)  # Amount in Kenyan Shillings
+    payment_type = db.Column(db.String(20), nullable=False)  # subscription, tokens
+    payment_method = db.Column(db.String(20))  # pesapal, manual, etc.
+    transaction_id = db.Column(db.String(100), unique=True)  # External transaction ID
+    status = db.Column(db.String(20), default='pending')  # pending, completed, failed
+    payment_data = db.Column(db.Text)  # JSON string with payment details
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    completed_at = db.Column(db.DateTime)
+    
+    # Foreign keys
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    subscription_id = db.Column(db.Integer, db.ForeignKey('subscription.id'))
+    token_package_id = db.Column(db.Integer, db.ForeignKey('token_package.id'))
+    
+    # Relationships
+    user = db.relationship('User', backref='payments')
+    subscription = db.relationship('Subscription', backref='payments')
+    token_package = db.relationship('TokenPackage', backref='payments')
+    
+    def __repr__(self):
+        return f'<Payment {self.id}: {self.amount} KES ({self.status})>'
+        
+class TokenUsage(db.Model):
+    """Records of token usage for tracking and analytics"""
+    id = db.Column(db.Integer, primary_key=True)
+    tokens_used = db.Column(db.Integer, nullable=False)
+    feature = db.Column(db.String(50), nullable=False)  # research, document_generation, etc.
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Foreign keys
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    # Relationships
+    user = db.relationship('User', backref='token_usage')
+    
+    def __repr__(self):
+        return f'<TokenUsage {self.id}: {self.tokens_used} tokens for {self.feature}>'

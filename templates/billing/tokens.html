@@ -1,0 +1,90 @@
+{% extends "layout.html" %}
+
+{% block title %}Token Packages{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h1 class="mb-4">Token Packages</h1>
+  
+  <div class="alert alert-info mb-4">
+    <h4>Your Current Token Balance: {{ tokens_available }}</h4>
+    <p>Tokens are used for AI features such as legal research, document generation, and analysis.</p>
+  </div>
+  
+  <!-- Token Packages -->
+  <div class="mb-5">
+    <h2 class="mb-3">Available Token Packages</h2>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+      {% for package in token_packages %}
+      <div class="col">
+        <div class="card h-100">
+          <div class="card-header bg-success text-white">
+            <h5 class="card-title mb-0">{{ package.name }}</h5>
+          </div>
+          <div class="card-body text-center">
+            <h3 class="mb-3">{{ package.token_count }} Tokens</h3>
+            <h4>KSh {{ package.price|int }}</h4>
+            <p class="card-text mt-3">{{ (package.price / package.token_count)|round(2) }} KSh per token</p>
+          </div>
+          <div class="card-footer bg-transparent border-top-0 text-center">
+            <form action="{{ url_for('billing.buy_tokens', package_id=package.id) }}" method="post">
+              <button type="submit" class="btn btn-success">Purchase Now</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  
+  <!-- Token Usage History -->
+  <div class="card mt-5">
+    <div class="card-header bg-light">
+      <h2 class="h5 mb-0">Recent Token Usage</h2>
+    </div>
+    <div class="card-body">
+      {% if token_usage %}
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Feature</th>
+              <th>Tokens Used</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for usage in token_usage %}
+            <tr>
+              <td>{{ usage.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+              <td>{{ usage.feature|capitalize }}</td>
+              <td>{{ usage.tokens_used }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="text-muted">No token usage history yet.</p>
+      {% endif %}
+    </div>
+  </div>
+  
+  <!-- Token Usage Guide -->
+  <div class="card mt-4">
+    <div class="card-header bg-light">
+      <h2 class="h5 mb-0">Token Usage Guide</h2>
+    </div>
+    <div class="card-body">
+      <p>Tokens are consumed when using AI-powered features:</p>
+      <ul>
+        <li><strong>Legal Research:</strong> ~10-50 tokens per query, depending on complexity</li>
+        <li><strong>Document Generation:</strong> ~20-100 tokens per document, based on length and complexity</li>
+        <li><strong>Document Analysis:</strong> ~15-60 tokens per analysis</li>
+        <li><strong>Contract Generation:</strong> ~30-120 tokens per contract</li>
+      </ul>
+      <p class="text-muted"><small>Note: Actual token usage may vary based on specific requests and features used.</small></p>
+    </div>
+  </div>
+</div>
+{% endblock %}

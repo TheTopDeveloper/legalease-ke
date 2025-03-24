@@ -1,0 +1,173 @@
+{% extends "layout.html" %}
+
+{% block title %}Payment History{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h1 class="mb-4">Payment History</h1>
+  
+  {% if payments %}
+    <div class="card">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Type</th>
+                <th>Method</th>
+                <th>Status</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for payment in payments %}
+              <tr>
+                <td>{{ payment.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>KSh {{ payment.amount|int }}</td>
+                <td>
+                  {% if payment.payment_type == 'subscription' %}
+                    {% if payment.subscription %}
+                      {{ payment.subscription.name|capitalize }} subscription
+                    {% else %}
+                      Subscription
+                    {% endif %}
+                  {% elif payment.payment_type == 'tokens' %}
+                    {% if payment.token_package %}
+                      {{ payment.token_package.token_count }} tokens
+                    {% else %}
+                      Token purchase
+                    {% endif %}
+                  {% else %}
+                    {{ payment.payment_type|capitalize }}
+                  {% endif %}
+                </td>
+                <td>
+                  {% if payment.payment_method == 'pesapal' %}
+                    PesaPal
+                  {% elif payment.payment_method == 'manual' %}
+                    Manual (Admin)
+                  {% else %}
+                    {{ payment.payment_method|capitalize }}
+                  {% endif %}
+                </td>
+                <td>
+                  {% if payment.status == 'completed' %}
+                    <span class="badge bg-success">Completed</span>
+                  {% elif payment.status == 'pending' %}
+                    <span class="badge bg-warning text-dark">Pending</span>
+                  {% else %}
+                    <span class="badge bg-danger">Failed</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if payment.status == 'pending' %}
+                    <a href="{{ url_for('billing.payment_status') }}" class="btn btn-sm btn-primary">Check Status</a>
+                  {% else %}
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#paymentModal{{ payment.id }}">
+                      View Details
+                    </button>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Payment Detail Modals -->
+    {% for payment in payments %}
+    <div class="modal fade" id="paymentModal{{ payment.id }}" tabindex="-1" aria-labelledby="paymentModalLabel{{ payment.id }}" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="paymentModalLabel{{ payment.id }}">Payment Details</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <table class="table">
+              <tbody>
+                <tr>
+                  <th>Transaction ID:</th>
+                  <td>{{ payment.transaction_id }}</td>
+                </tr>
+                <tr>
+                  <th>Date:</th>
+                  <td>{{ payment.created_at.strftime('%d %B %Y, %H:%M') }}</td>
+                </tr>
+                {% if payment.completed_at %}
+                <tr>
+                  <th>Completed At:</th>
+                  <td>{{ payment.completed_at.strftime('%d %B %Y, %H:%M') }}</td>
+                </tr>
+                {% endif %}
+                <tr>
+                  <th>Amount:</th>
+                  <td>KSh {{ payment.amount|int }}</td>
+                </tr>
+                <tr>
+                  <th>Payment Type:</th>
+                  <td>{{ payment.payment_type|capitalize }}</td>
+                </tr>
+                <tr>
+                  <th>Payment Method:</th>
+                  <td>
+                    {% if payment.payment_method == 'pesapal' %}
+                      PesaPal
+                    {% elif payment.payment_method == 'manual' %}
+                      Manual (Admin)
+                    {% else %}
+                      {{ payment.payment_method|capitalize }}
+                    {% endif %}
+                  </td>
+                </tr>
+                <tr>
+                  <th>Status:</th>
+                  <td>
+                    {% if payment.status == 'completed' %}
+                      <span class="badge bg-success">Completed</span>
+                    {% elif payment.status == 'pending' %}
+                      <span class="badge bg-warning text-dark">Pending</span>
+                    {% else %}
+                      <span class="badge bg-danger">Failed</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% if payment.payment_type == 'subscription' and payment.subscription %}
+                <tr>
+                  <th>Subscription:</th>
+                  <td>{{ payment.subscription.name|capitalize }}</td>
+                </tr>
+                {% endif %}
+                {% if payment.payment_type == 'tokens' and payment.token_package %}
+                <tr>
+                  <th>Token Package:</th>
+                  <td>{{ payment.token_package.name }} ({{ payment.token_package.token_count }} tokens)</td>
+                </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+    
+  {% else %}
+    <div class="alert alert-info">
+      <p>You don't have any payment history yet.</p>
+    </div>
+  {% endif %}
+  
+  <div class="mt-4">
+    <a href="{{ url_for('billing.subscriptions') }}" class="btn btn-primary me-2">View Subscriptions</a>
+    <a href="{{ url_for('billing.tokens') }}" class="btn btn-success">Buy Tokens</a>
+  </div>
+</div>
+{% endblock %}
