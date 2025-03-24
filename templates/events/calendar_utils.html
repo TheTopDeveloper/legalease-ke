@@ -1,0 +1,3 @@
+{% macro add_days(date, days) %}
+    {{ date.replace(day=date.day + days) }}
+{% endmacro %}

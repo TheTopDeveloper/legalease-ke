@@ -192,6 +192,9 @@ def calendar():
     # Get cases for the filter sidebar
     cases = Case.query.filter_by(user_id=current_user.id).order_by(Case.title).all()
     
+    # Calculate days in month for calendar grid
+    days_in_month = (end_date - start_date).days + 1
+    
     return render_template(
         'events/calendar.html',
         view_type=view_type,
@@ -202,7 +205,10 @@ def calendar():
         conflicts=conflicts,
         prev_date=prev_date,
         next_date=next_date,
-        cases=cases
+        cases=cases,
+        days_in_month=days_in_month,
+        first_day_weekday=start_date.weekday(),
+        timedelta=timedelta
     )
 
 @events_bp.route('/create', methods=['GET', 'POST'])
