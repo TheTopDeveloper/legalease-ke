@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block header %}Create New Role{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <a href="{{ url_for('admin.roles') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Roles
+        </a>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Create New Role</h5>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            <div class="mb-3">
+                <label for="name" class="form-label">Role Name</label>
+                <input type="text" class="form-control" id="name" name="name" required>
+                <div class="form-text">A unique name for this role</div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                <div class="form-text">Brief description of this role and its purpose</div>
+            </div>
+            
+            <h5 class="mt-4 mb-3">Role Permissions</h5>
+            <div class="alert alert-info">
+                Select the permissions that users with this role will have
+            </div>
+            
+            <div class="row">
+                {% for permission in permissions %}
+                <div class="col-md-4 mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="permission_{{ permission.id }}" id="permission_{{ permission.id }}">
+                        <label class="form-check-label" for="permission_{{ permission.id }}">
+                            <strong>{{ permission.name }}</strong>
+                            <p class="text-muted small mb-0">{{ permission.description }}</p>
+                        </label>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">Create Role</button>
+                <a href="{{ url_for('admin.roles') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

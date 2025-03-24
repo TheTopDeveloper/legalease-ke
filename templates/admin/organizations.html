@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block header %}Manage Organizations{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <a href="{{ url_for('admin.create_organization') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Create New Organization
+        </a>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Organizations</h5>
+    </div>
+    <div class="card-body">
+        {% if organizations %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Owner</th>
+                        <th>Members</th>
+                        <th>Account Type</th>
+                        <th>Status</th>
+                        <th>Subscription End</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for org in organizations %}
+                    <tr>
+                        <td>{{ org.name }}</td>
+                        <td>
+                            {% if org.owner %}
+                            {{ org.owner.username }}
+                            {% else %}
+                            <span class="text-muted">No owner</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-info">{{ org.members|length }} members</span>
+                            <a href="{{ url_for('admin.organization_members', org_id=org.id) }}" class="btn btn-sm btn-outline-secondary">Manage</a>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary">{{ org.account_type }}</span>
+                        </td>
+                        <td>
+                            {% if org.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-danger">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if org.subscription_end %}
+                            {{ org.subscription_end.strftime('%Y-%m-%d') }}
+                            {% else %}
+                            <span class="text-muted">No subscription</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('admin.edit_organization', org_id=org.id) }}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteOrgModal{{ org.id }}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            
+                            <!-- Delete Organization Modal -->
+                            <div class="modal fade" id="deleteOrgModal{{ org.id }}" tabindex="-1" aria-labelledby="deleteOrgModalLabel{{ org.id }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="deleteOrgModalLabel{{ org.id }}">Delete Organization</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Are you sure you want to delete the organization <strong>{{ org.name }}</strong>? This action cannot be undone.
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <form action="{{ url_for('admin.delete_organization', org_id=org.id) }}" method="post">
+                                                <button type="submit" class="btn btn-danger">Delete</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            No organizations found. Click the button above to create your first organization.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
