@@ -42,6 +42,11 @@
                         <a class="nav-link {% if request.endpoint.startswith('research.') %}active{% endif %}" href="{{ url_for('research.index') }}">Research</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint.startswith('rulings.') %}active{% endif %}" href="{{ url_for('rulings.index') }}">
+                            <i class="fas fa-gavel"></i> Rulings
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link {% if request.endpoint.startswith('gamification.') %}active{% endif %}" href="{{ url_for('gamification.dashboard') }}">
                             <i class="fas fa-trophy"></i> Achievements
                         </a>
@@ -194,6 +199,7 @@
                         <li><a href="{{ url_for('documents.index') }}" class="text-light">Documents</a></li>
                         <li><a href="{{ url_for('contracts.index') }}" class="text-light">Contracts</a></li>
                         <li><a href="{{ url_for('research.index') }}" class="text-light">Research</a></li>
+                        <li><a href="{{ url_for('rulings.index') }}" class="text-light">Rulings</a></li>
                         <li><a href="{{ url_for('notifications.index') }}" class="text-light">Notifications</a></li>
                         <li><a href="{{ url_for('billing.subscriptions') }}" class="text-light">Subscriptions</a></li>
                         <li><a href="{{ url_for('billing.tokens') }}" class="text-light">Tokens</a></li>
