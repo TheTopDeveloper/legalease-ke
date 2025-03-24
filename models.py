@@ -867,3 +867,118 @@ class UserChallenge(db.Model):
     
     def __repr__(self):
         return f'<UserChallenge {self.id}: {self.status}>'
+
+# Ruling-related association tables
+ruling_tag_association = db.Table('ruling_tag',
+    db.Column('ruling_id', db.Integer, db.ForeignKey('ruling.id'), primary_key=True),
+    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True)
+)
+
+ruling_judge_association = db.Table('ruling_judge',
+    db.Column('ruling_id', db.Integer, db.ForeignKey('ruling.id'), primary_key=True),
+    db.Column('judge_id', db.Integer, db.ForeignKey('judge.id'), primary_key=True)
+)
+
+class Ruling(db.Model):
+    """Ruling model representing judicial decisions from Kenyan courts"""
+    id = db.Column(db.Integer, primary_key=True)
+    case_number = db.Column(db.String(50), nullable=False)
+    title = db.Column(db.String(255), nullable=False)
+    court = db.Column(db.String(100), nullable=False)  # Supreme Court, Court of Appeal, etc.
+    date_of_ruling = db.Column(db.Date, nullable=False)
+    citation = db.Column(db.String(200))  # Official citation
+    url = db.Column(db.String(500))  # URL to the original ruling
+    summary = db.Column(db.Text)  # Brief summary of the ruling
+    full_text = db.Column(db.Text)  # Full text of the ruling
+    outcome = db.Column(db.String(50))  # Allowed, Dismissed, etc.
+    category = db.Column(db.String(100))  # Constitutional, Criminal, Civil, etc.
+    importance_score = db.Column(db.Integer)  # 1-10 importance score
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    is_landmark = db.Column(db.Boolean, default=False)  # Whether this is a landmark case
+    
+    # Relationships
+    tags = db.relationship('Tag', secondary=ruling_tag_association, backref=db.backref('rulings', lazy='dynamic'))
+    judges = db.relationship('Judge', secondary=ruling_judge_association, backref=db.backref('rulings', lazy='dynamic'))
+    references = db.relationship('RulingReference', backref='source_ruling', lazy='dynamic', 
+                                 foreign_keys='RulingReference.source_ruling_id')
+    annotations = db.relationship('RulingAnnotation', backref='ruling', lazy='dynamic')
+    analyses = db.relationship('RulingAnalysis', backref='ruling', lazy='dynamic')
+    
+    # User who added or imported this ruling
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user = db.relationship('User', backref=db.backref('rulings', lazy='dynamic'))
+
+    def __repr__(self):
+        return f'<Ruling {self.case_number} - {self.title[:30]}>'
+
+class Judge(db.Model):
+    """Judge model representing judges who have delivered rulings"""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    title = db.Column(db.String(50))  # Chief Justice, Justice, etc.
+    court = db.Column(db.String(100))  # Supreme Court, Court of Appeal, etc.
+    bio = db.Column(db.Text)
+    photo_url = db.Column(db.String(500))
+    start_date = db.Column(db.Date)  # When they started as a judge
+    end_date = db.Column(db.Date)  # When they retired/ended (if applicable)
+    is_active = db.Column(db.Boolean, default=True)
+    
+    def __repr__(self):
+        return f'<Judge {self.name}>'
+        
+class Tag(db.Model):
+    """Tag model for categorizing rulings by legal concepts"""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    description = db.Column(db.Text)
+    parent_id = db.Column(db.Integer, db.ForeignKey('tag.id'))  # For hierarchical tags
+    
+    # Self-referential relationship for hierarchical tags
+    children = db.relationship('Tag', 
+                              backref=db.backref('parent', remote_side=[id]),
+                              lazy='dynamic')
+    
+    def __repr__(self):
+        return f'<Tag {self.name}>'
+
+class RulingReference(db.Model):
+    """Model for tracking references between rulings (citations)"""
+    id = db.Column(db.Integer, primary_key=True)
+    source_ruling_id = db.Column(db.Integer, db.ForeignKey('ruling.id'), nullable=False)
+    target_ruling_id = db.Column(db.Integer, db.ForeignKey('ruling.id'), nullable=False)
+    reference_type = db.Column(db.String(50))  # followed, distinguished, overruled, etc.
+    context = db.Column(db.Text)  # Context of the reference
+    
+    # Reference to the target ruling
+    target_ruling = db.relationship('Ruling', foreign_keys=[target_ruling_id])
+    
+    def __repr__(self):
+        return f'<RulingReference {self.source_ruling_id} -> {self.target_ruling_id}>'
+
+class RulingAnnotation(db.Model):
+    """User annotations on rulings for private notes"""
+    id = db.Column(db.Integer, primary_key=True)
+    ruling_id = db.Column(db.Integer, db.ForeignKey('ruling.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    text = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    is_private = db.Column(db.Boolean, default=True)  # Whether the annotation is private to the user
+    
+    user = db.relationship('User', backref=db.backref('ruling_annotations', lazy='dynamic'))
+    
+    def __repr__(self):
+        return f'<RulingAnnotation by {self.user_id} on {self.ruling_id}>'
+
+class RulingAnalysis(db.Model):
+    """AI analysis of rulings for trend analysis"""
+    id = db.Column(db.Integer, primary_key=True)
+    ruling_id = db.Column(db.Integer, db.ForeignKey('ruling.id'), nullable=False)
+    analysis_type = db.Column(db.String(50))  # sentiment, precedent, impact, etc.
+    result = db.Column(db.Text)  # JSON or text result of the analysis
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<RulingAnalysis {self.analysis_type} for {self.ruling_id}>'
