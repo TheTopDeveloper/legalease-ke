@@ -87,7 +87,45 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // Initialize Bootstrap tooltips for help elements
+    initializeHelpTooltips();
 });
+
+// Initialize Bootstrap tooltips
+function initializeHelpTooltips() {
+    // Initialize all help tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+        new bootstrap.Tooltip(tooltipTriggerEl, {
+            html: true,
+            trigger: 'hover focus',
+            placement: 'auto',
+            boundary: 'window'
+        });
+    });
+    
+    // Helper function to create tooltips
+    window.createHelpTooltip = function(selector, title, content) {
+        const element = document.querySelector(selector);
+        if (element) {
+            const tooltipEl = document.createElement('span');
+            tooltipEl.className = 'help-tooltip';
+            tooltipEl.setAttribute('data-bs-toggle', 'tooltip');
+            tooltipEl.setAttribute('data-bs-title', content);
+            tooltipEl.innerHTML = '<i class="fas fa-question"></i>';
+            element.appendChild(tooltipEl);
+            
+            // Initialize the new tooltip
+            new bootstrap.Tooltip(tooltipEl, {
+                html: true,
+                trigger: 'hover focus',
+                placement: 'auto',
+                boundary: 'window'
+            });
+        }
+    };
+}
 </script>
 {% block admin_scripts %}{% endblock %}
 {% endblock %}

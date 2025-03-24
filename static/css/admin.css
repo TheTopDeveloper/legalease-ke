@@ -1,6 +1,6 @@
 /* 
  * Kenyan Legal Assistant System
- * Admin Interface Mobile-Responsive Styles
+ * Admin Interface Mobile-Responsive Styles with Contextual Help
  */
 
 /* Admin Sidebar */
@@ -233,6 +233,72 @@
 
 .admin-filters .form-control {
     height: 36px;
+}
+
+/* Help Tooltips */
+.help-tooltip {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background-color: rgba(13, 110, 253, 0.2);
+    color: #0d6efd;
+    font-size: 12px;
+    cursor: help;
+    margin-left: 5px;
+    transition: all 0.2s ease;
+}
+
+.help-tooltip:hover {
+    background-color: rgba(13, 110, 253, 0.4);
+}
+
+.help-tooltip i {
+    font-size: 10px;
+}
+
+/* Custom BS Tooltips with larger width */
+.tooltip {
+    --bs-tooltip-max-width: 300px;
+    --bs-tooltip-opacity: 0.95;
+}
+
+.tooltip-inner {
+    padding: 10px 12px;
+    text-align: left;
+    line-height: 1.5;
+}
+
+.tooltip-inner p:last-child {
+    margin-bottom: 0;
+}
+
+/* Section tooltips for larger help areas */
+.section-help {
+    margin-bottom: 15px;
+    padding: 12px 15px;
+    background-color: rgba(13, 110, 253, 0.1);
+    border-left: 3px solid #0d6efd;
+    border-radius: 4px;
+}
+
+.section-help h6 {
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+}
+
+.section-help h6 i {
+    margin-right: 8px;
+    font-size: 14px;
+    color: #0d6efd;
+}
+
+.section-help p {
+    margin-bottom: 0;
+    font-size: 0.9rem;
 }
 
 /* Responsive Breakpoints */

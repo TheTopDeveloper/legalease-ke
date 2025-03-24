@@ -1,25 +1,43 @@
-{% extends "base.html" %}
+{% extends 'admin/layout.html' %}
 
-{% block header %}System Settings{% endblock %}
+{% block title %}System Settings | Admin - Kenyan Legal Assistant{% endblock %}
 
-{% block content %}
+{% block breadcrumb %}
+<li class="admin-breadcrumb-item active" aria-current="page">System Settings</li>
+{% endblock %}
+
+{% block admin_content %}
 <div class="card shadow mb-4">
     <div class="card-header">
         <h5 class="card-title mb-0">System Configuration</h5>
     </div>
     <div class="card-body">
         <form method="post">
+            <!-- Section Help -->
+            <div class="section-help mb-4">
+                <h6><i class="fas fa-info-circle"></i> About System Settings</h6>
+                <p>These settings control core platform functionality. Changes will take effect immediately for all users. Be cautious when modifying these settings in a production environment.</p>
+            </div>
+
             <div class="row">
                 <div class="col-md-6">
                     <h6 class="mb-3">General Settings</h6>
                     
                     <div class="mb-3">
-                        <label for="system_name" class="form-label">System Name</label>
+                        <label for="system_name" class="form-label">System Name
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="The name displayed throughout the application. This affects branding elements site-wide.">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </label>
                         <input type="text" class="form-control" id="system_name" name="system_name" value="Kenyan Legal Assistant">
                     </div>
                     
                     <div class="mb-3">
-                        <label for="maintenance_mode" class="form-label">Maintenance Mode</label>
+                        <label for="maintenance_mode" class="form-label">Maintenance Mode
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="When enabled, only administrators can access the system. Use this when performing major updates or maintenance to prevent data corruption. Regular users will see a maintenance message.">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </label>
                         <select class="form-select" id="maintenance_mode" name="maintenance_mode">
                             <option value="off" selected>Off</option>
                             <option value="on">On</option>
@@ -28,7 +46,11 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="default_role" class="form-label">Default User Role</label>
+                        <label for="default_role" class="form-label">Default User Role
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="The default role assigned to new users upon registration. <br><b>Individual</b>: For single users managing their own cases and documents.<br><b>Organization Member</b>: For users who will primarily be part of a law firm or organization.">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </label>
                         <select class="form-select" id="default_role" name="default_role">
                             <option value="individual" selected>Individual</option>
                             <option value="organization_member">Organization Member</option>
@@ -37,22 +59,38 @@
                 </div>
                 
                 <div class="col-md-6">
-                    <h6 class="mb-3">Token Configuration</h6>
+                    <h6 class="mb-3">Token Configuration
+                        <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Tokens are used for AI-powered features like research assistance, document analysis, and legal writing assistance. Users can purchase additional tokens when they run out.">
+                            <i class="fas fa-question"></i>
+                        </span>
+                    </h6>
                     
                     <div class="mb-3">
-                        <label for="free_tokens" class="form-label">Free Token Allocation</label>
+                        <label for="free_tokens" class="form-label">Free Token Allocation
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="The number of complimentary tokens given to new users when they first register. These allow users to try premium features before purchasing more tokens.">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </label>
                         <input type="number" class="form-control" id="free_tokens" name="free_tokens" value="50">
                         <div class="form-text">Number of tokens given to new users on signup</div>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="token_expiry_days" class="form-label">Token Expiry (days)</label>
+                        <label for="token_expiry_days" class="form-label">Token Expiry (days)
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="The number of days before purchased tokens expire. Set to 0 for no expiration. Token expiration encourages regular platform usage.">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </label>
                         <input type="number" class="form-control" id="token_expiry_days" name="token_expiry_days" value="365">
                         <div class="form-text">Number of days before purchased tokens expire</div>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="daily_reward_tokens" class="form-label">Daily Reward Tokens</label>
+                        <label for="daily_reward_tokens" class="form-label">Daily Reward Tokens
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Number of tokens awarded for daily login streaks. Part of the gamification system to encourage regular usage.">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </label>
                         <input type="number" class="form-control" id="daily_reward_tokens" name="daily_reward_tokens" value="5">
                         <div class="form-text">Tokens given for daily login streaks</div>
                     </div>
@@ -61,10 +99,18 @@
             
             <div class="row mt-3">
                 <div class="col-md-6">
-                    <h6 class="mb-3">Integration Settings</h6>
+                    <h6 class="mb-3">Integration Settings
+                        <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Configure third-party service integrations that extend system functionality.">
+                            <i class="fas fa-question"></i>
+                        </span>
+                    </h6>
                     
                     <div class="mb-3">
-                        <label for="kenyalaw_api_enabled" class="form-label">Kenya Law API</label>
+                        <label for="kenyalaw_api_enabled" class="form-label">Kenya Law API
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Enable or disable integration with the Kenya Law website API for case retrieval and legal research. Disabling this will limit legal research capabilities.">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </label>
                         <select class="form-select" id="kenyalaw_api_enabled" name="kenyalaw_api_enabled">
                             <option value="1" selected>Enabled</option>
                             <option value="0">Disabled</option>
@@ -72,7 +118,11 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="sms_provider" class="form-label">SMS Provider</label>
+                        <label for="sms_provider" class="form-label">SMS Provider
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Select the provider for SMS notifications. <br><b>Mock</b>: For testing only - doesn't send real SMS messages.<br><b>Twilio</b>: For production use. Requires valid Twilio API credentials to be configured.">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </label>
                         <select class="form-select" id="sms_provider" name="sms_provider">
                             <option value="mock" selected>Mock (Testing)</option>
                             <option value="twilio">Twilio</option>
@@ -81,10 +131,18 @@
                 </div>
                 
                 <div class="col-md-6">
-                    <h6 class="mb-3">Payment Configuration</h6>
+                    <h6 class="mb-3">Payment Configuration
+                        <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Configure payment processing options for subscription plans and token packages.">
+                            <i class="fas fa-question"></i>
+                        </span>
+                    </h6>
                     
                     <div class="mb-3">
-                        <label for="payment_provider" class="form-label">Payment Provider</label>
+                        <label for="payment_provider" class="form-label">Payment Provider
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Select the payment gateway provider:<br><b>Mock</b>: For testing only - simulates payments without processing real transactions.<br><b>PesaPal</b>: Popular payment gateway in Kenya.<br><b>DPO</b>: Direct Pay Online, another popular option.">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </label>
                         <select class="form-select" id="payment_provider" name="payment_provider">
                             <option value="mock" selected>Mock (Testing)</option>
                             <option value="pesapal">PesaPal</option>
@@ -93,7 +151,11 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="currency" class="form-label">Currency</label>
+                        <label for="currency" class="form-label">Currency
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Default currency for all transactions. This affects how prices are displayed and processed through the payment gateway.">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </label>
                         <select class="form-select" id="currency" name="currency">
                             <option value="KES" selected>Kenyan Shilling (KES)</option>
                             <option value="USD">US Dollar (USD)</option>
@@ -110,29 +172,54 @@
     </div>
 </div>
 
-<div class="card shadow">
+<div class="card admin-card">
     <div class="card-header">
-        <h5 class="card-title mb-0">System Information</h5>
+        <h5 class="card-title"><i class="fas fa-info-circle me-2"></i> System Information</h5>
+        <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="System information provides an overview of the platform's status and statistics.">
+            <i class="fas fa-question"></i>
+        </span>
     </div>
     <div class="card-body">
+        <!-- Section Help -->
+        <div class="section-help mb-4">
+            <h6><i class="fas fa-wrench"></i> System Maintenance Tools</h6>
+            <p>These tools help maintain optimal system performance. Use with caution as they can affect system operations.</p>
+        </div>
+        
         <div class="row">
             <div class="col-md-6">
                 <table class="table table-sm">
                     <tbody>
                         <tr>
-                            <th>System Version</th>
+                            <th>System Version
+                                <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Current version of the Kenyan Legal Assistant platform.">
+                                    <i class="fas fa-question"></i>
+                                </span>
+                            </th>
                             <td>1.0.0</td>
                         </tr>
                         <tr>
-                            <th>Database Status</th>
+                            <th>Database Status
+                                <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Current connection status to the PostgreSQL database.">
+                                    <i class="fas fa-question"></i>
+                                </span>
+                            </th>
                             <td><span class="badge bg-success">Connected</span></td>
                         </tr>
                         <tr>
-                            <th>User Count</th>
+                            <th>User Count
+                                <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Total number of registered users in the system.">
+                                    <i class="fas fa-question"></i>
+                                </span>
+                            </th>
                             <td>{{ user_count }}</td>
                         </tr>
                         <tr>
-                            <th>Organization Count</th>
+                            <th>Organization Count
+                                <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Total number of registered organizations in the system.">
+                                    <i class="fas fa-question"></i>
+                                </span>
+                            </th>
                             <td>{{ organization_count }}</td>
                         </tr>
                     </tbody>
@@ -140,14 +227,24 @@
             </div>
             <div class="col-md-6">
                 <div class="alert alert-info">
-                    <h6>System Maintenance</h6>
+                    <h6>System Maintenance
+                        <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Administrative tools for system maintenance.">
+                            <i class="fas fa-question"></i>
+                        </span>
+                    </h6>
                     <p>Use these tools with caution.</p>
                     <div class="d-grid gap-2">
                         <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#cacheModal">
                             <i class="fas fa-broom"></i> Clear System Cache
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Clears cached data to free up memory and resolve potential caching issues. May temporarily affect performance.">
+                                <i class="fas fa-question"></i>
+                            </span>
                         </button>
                         <button class="btn btn-sm btn-outline-warning" type="button" data-bs-toggle="modal" data-bs-target="#backupModal">
                             <i class="fas fa-download"></i> Backup Database
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Creates a backup of the current database state that can be restored in case of data loss or corruption.">
+                                <i class="fas fa-question"></i>
+                            </span>
                         </button>
                     </div>
                 </div>
