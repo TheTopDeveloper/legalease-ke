@@ -179,14 +179,21 @@
                                         <tr>
                                             {% for day in range(7) %}
                                                 {% set current_day = day_counter %}
-                                                {% set day_date = start_range + timedelta(days=current_day) %}
-                                                <td class="{% if day_date.month != start_date.month %}text-muted{% endif %} {% if day_date == current_date %}bg-light{% endif %}" style="height: 120px; width: 14.28%; vertical-align: top;">
-                                                    <div class="d-flex justify-content-between">
-                                                        <span>{{ day_date.day }}</span>
-                                                        <a href="{{ url_for('events.create') }}?date={{ day_date.strftime('%Y-%m-%d') }}" class="text-primary small">
-                                                            <i class="fas fa-plus-circle"></i>
-                                                        </a>
-                                                    </div>
+                                                {% if start_range %}
+                                                    {% set day_date = start_range + timedelta(days=current_day) %}
+                                                    <td class="{% if day_date.month != start_date.month %}text-muted{% endif %} {% if day_date == current_date %}bg-light{% endif %}" style="height: 120px; width: 14.28%; vertical-align: top;">
+                                                        <div class="d-flex justify-content-between">
+                                                            <span>{{ day_date.day }}</span>
+                                                            <a href="{{ url_for('events.create') }}?date={{ day_date.strftime('%Y-%m-%d') }}" class="text-primary small">
+                                                                <i class="fas fa-plus-circle"></i>
+                                                            </a>
+                                                        </div>
+                                                {% else %}
+                                                    <td class="text-muted" style="height: 120px; width: 14.28%; vertical-align: top;">
+                                                        <div class="d-flex justify-content-between">
+                                                            <span>-</span>
+                                                        </div>
+                                                {% endif %}
                                                     <div class="mt-1">
                                                         {% if day_date in events_by_date %}
                                                             {% for event in events_by_date[day_date][:3] %}
