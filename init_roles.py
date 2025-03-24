@@ -3,8 +3,9 @@ Initialize default roles and permissions for the system.
 Run this script after setting up the database to add initial roles and permissions.
 """
 import logging
+import inspect
 from app import app, db
-from models import Role, Permission, Permissions
+from models import Role, Permission
 from utils.permissions import Permissions
 
 logging.basicConfig(level=logging.INFO)
@@ -16,7 +17,12 @@ def init_roles_and_permissions():
     with app.app_context():
         # First, create all permissions
         logger.info("Creating permissions...")
-        permissions_list = Permissions.get_all_permissions()
+        
+        # Get all permission constants from the Permissions class
+        permissions_list = []
+        for name, value in inspect.getmembers(Permissions):
+            if not name.startswith('_') and isinstance(value, str) and name.isupper():
+                permissions_list.append(value)
         
         for permission_name in permissions_list:
             # Check if permission already exists
