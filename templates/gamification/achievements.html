@@ -2,88 +2,241 @@
 
 {% block title %}Achievements{% endblock %}
 
+{% block header %}Achievements{% endblock %}
+
 {% block content %}
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>My Achievements</h1>
-        <a href="{{ url_for('gamification.dashboard') }}" class="btn btn-outline-primary">
-            <i class="bi bi-arrow-left"></i> Back to Dashboard
-        </a>
-    </div>
-    
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body">
-            <div class="progress mb-3" style="height: 25px;">
-                <div class="progress-bar bg-success" role="progressbar" 
-                     style="width: {{ (earned_count / total_count * 100) if total_count else 0 }}%;" 
-                     aria-valuenow="{{ earned_count }}" aria-valuemin="0" aria-valuemax="{{ total_count }}">
-                    {{ earned_count }}/{{ total_count }} Achievements ({{ ((earned_count / total_count) * 100)|round|int if total_count else 0 }}%)
+<div class="row mb-4">
+    <div class="col">
+        <div class="card">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-trophy me-2"></i> Your Achievements</h5>
+                <div>
+                    <span class="badge bg-light text-dark fs-6">
+                        {{ user_achievements|length }}/{{ all_achievements|length }} Earned
+                    </span>
                 </div>
             </div>
-        </div>
-    </div>
-    
-    <!-- Achievement Categories -->
-    <div class="row">
-        <div class="col-md-3 mb-4">
-            <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-                <button class="nav-link active" id="v-pills-case-tab" data-bs-toggle="pill" data-bs-target="#v-pills-case" type="button" role="tab" aria-controls="v-pills-case" aria-selected="true">
-                    Case Management
-                </button>
-                <button class="nav-link" id="v-pills-document-tab" data-bs-toggle="pill" data-bs-target="#v-pills-document" type="button" role="tab" aria-controls="v-pills-document" aria-selected="false">
-                    Documents
-                </button>
-                <button class="nav-link" id="v-pills-research-tab" data-bs-toggle="pill" data-bs-target="#v-pills-research" type="button" role="tab" aria-controls="v-pills-research" aria-selected="false">
-                    Legal Research
-                </button>
-                <button class="nav-link" id="v-pills-general-tab" data-bs-toggle="pill" data-bs-target="#v-pills-general" type="button" role="tab" aria-controls="v-pills-general" aria-selected="false">
-                    General
-                </button>
-            </div>
-        </div>
-        <div class="col-md-9">
-            <div class="tab-content" id="v-pills-tabContent">
-                {% for category, achievements in achievement_categories.items() %}
-                    <div class="tab-pane fade {{ 'show active' if category == 'case' else '' }}" id="v-pills-{{ category }}" role="tabpanel" aria-labelledby="v-pills-{{ category }}-tab">
-                        <div class="row">
-                            {% for achievement in achievements %}
-                                <div class="col-md-6 mb-4">
-                                    <div class="card h-100 {{ 'border-success' if achievement.earned else 'border-light opacity-75' }}">
-                                        <div class="card-body">
-                                            <div class="d-flex">
-                                                <div class="achievement-icon me-3">
-                                                    <i class="{{ achievement.icon if achievement.icon else 'bi bi-trophy' }} fs-1 {{ 'text-success' if achievement.earned else 'text-muted' }}"></i>
-                                                </div>
-                                                <div>
-                                                    <h5 class="card-title">{{ achievement.name }}</h5>
-                                                    <p class="card-text">{{ achievement.description }}</p>
-                                                    <div class="d-flex justify-content-between">
-                                                        <span class="badge bg-primary">+{{ achievement.points }} Points</span>
-                                                        {% if achievement.earned %}
-                                                            <span class="badge bg-success">Earned</span>
-                                                        {% else %}
-                                                            <span class="badge bg-secondary">Locked</span>
-                                                        {% endif %}
+            <div class="card-body">
+                <div class="row">
+                    <!-- Achievement Categories -->
+                    <div class="col-md-3 mb-4 mb-md-0">
+                        <div class="list-group" id="achievement-categories" role="tablist">
+                            <a class="list-group-item list-group-item-action active" data-bs-toggle="list" href="#all" role="tab">
+                                <i class="fas fa-th-list me-2"></i> All <span class="badge bg-success float-end">{{ user_achievements|length }}</span>
+                            </a>
+                            <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#case" role="tab">
+                                <i class="fas fa-gavel me-2"></i> Case Management <span class="badge bg-success float-end">{{ user_achievements|selectattr('category', 'equalto', 'case')|list|length }}</span>
+                            </a>
+                            <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#document" role="tab">
+                                <i class="fas fa-file-alt me-2"></i> Documents <span class="badge bg-success float-end">{{ user_achievements|selectattr('category', 'equalto', 'document')|list|length }}</span>
+                            </a>
+                            <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#research" role="tab">
+                                <i class="fas fa-search me-2"></i> Research <span class="badge bg-success float-end">{{ user_achievements|selectattr('category', 'equalto', 'research')|list|length }}</span>
+                            </a>
+                            <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#general" role="tab">
+                                <i class="fas fa-star me-2"></i> General <span class="badge bg-success float-end">{{ user_achievements|selectattr('category', 'equalto', 'general')|list|length }}</span>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Achievements Lists -->
+                    <div class="col-md-9">
+                        <div class="tab-content">
+                            <!-- All Achievements -->
+                            <div class="tab-pane fade show active" id="all" role="tabpanel">
+                                <div class="row">
+                                    {% for achievement in all_achievements %}
+                                    <div class="col-md-6 col-lg-4 mb-3">
+                                        {% set is_earned = achievement.id in user_achievements|map(attribute='id')|list %}
+                                        <div class="card h-100 {% if is_earned %}border-success{% else %}border-secondary{% endif %}">
+                                            <div class="card-header d-flex align-items-center justify-content-between {% if is_earned %}bg-success text-white{% else %}bg-secondary text-white{% endif %}">
+                                                <h6 class="mb-0">{{ achievement.name }}</h6>
+                                                <span class="badge bg-light text-dark">{{ achievement.points }} pts</span>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="d-flex mb-2">
+                                                    <div class="me-3">
+                                                        <i class="{{ achievement.icon if achievement.icon else 'fas fa-trophy' }} fa-2x {% if is_earned %}text-success{% else %}text-secondary{% endif %}"></i>
                                                     </div>
+                                                    <div>
+                                                        <p class="card-text">{{ achievement.description }}</p>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                                    <span class="badge bg-{{ achievement.category_color }}">{{ achievement.category|capitalize }}</span>
+                                                    {% if is_earned %}
+                                                        {% set earned = user_achievements|selectattr('id', 'equalto', achievement.id)|first %}
+                                                        <small class="text-success"><i class="fas fa-check-circle me-1"></i> Earned {{ earned.earned_at.strftime('%Y-%m-%d') }}</small>
+                                                    {% else %}
+                                                        <small class="text-muted"><i class="fas fa-lock me-1"></i> Locked</small>
+                                                    {% endif %}
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+                                    {% endfor %}
                                 </div>
-                            {% endfor %}
+                            </div>
                             
-                            {% if not achievements %}
-                                <div class="col-12">
-                                    <div class="alert alert-info">
-                                        No achievements in this category yet.
+                            <!-- Case Achievements -->
+                            <div class="tab-pane fade" id="case" role="tabpanel">
+                                <div class="row">
+                                    {% for achievement in all_achievements if achievement.category == 'case' %}
+                                    <div class="col-md-6 col-lg-4 mb-3">
+                                        {% set is_earned = achievement.id in user_achievements|map(attribute='id')|list %}
+                                        <div class="card h-100 {% if is_earned %}border-success{% else %}border-secondary{% endif %}">
+                                            <div class="card-header d-flex align-items-center justify-content-between {% if is_earned %}bg-success text-white{% else %}bg-secondary text-white{% endif %}">
+                                                <h6 class="mb-0">{{ achievement.name }}</h6>
+                                                <span class="badge bg-light text-dark">{{ achievement.points }} pts</span>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="d-flex mb-2">
+                                                    <div class="me-3">
+                                                        <i class="{{ achievement.icon if achievement.icon else 'fas fa-gavel' }} fa-2x {% if is_earned %}text-success{% else %}text-secondary{% endif %}"></i>
+                                                    </div>
+                                                    <div>
+                                                        <p class="card-text">{{ achievement.description }}</p>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                                    <span class="badge bg-primary">Case</span>
+                                                    {% if is_earned %}
+                                                        {% set earned = user_achievements|selectattr('id', 'equalto', achievement.id)|first %}
+                                                        <small class="text-success"><i class="fas fa-check-circle me-1"></i> Earned {{ earned.earned_at.strftime('%Y-%m-%d') }}</small>
+                                                    {% else %}
+                                                        <small class="text-muted"><i class="fas fa-lock me-1"></i> Locked</small>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
+                                    {% endfor %}
                                 </div>
-                            {% endif %}
+                            </div>
+                            
+                            <!-- Document Achievements -->
+                            <div class="tab-pane fade" id="document" role="tabpanel">
+                                <div class="row">
+                                    {% for achievement in all_achievements if achievement.category == 'document' %}
+                                    <div class="col-md-6 col-lg-4 mb-3">
+                                        {% set is_earned = achievement.id in user_achievements|map(attribute='id')|list %}
+                                        <div class="card h-100 {% if is_earned %}border-success{% else %}border-secondary{% endif %}">
+                                            <div class="card-header d-flex align-items-center justify-content-between {% if is_earned %}bg-success text-white{% else %}bg-secondary text-white{% endif %}">
+                                                <h6 class="mb-0">{{ achievement.name }}</h6>
+                                                <span class="badge bg-light text-dark">{{ achievement.points }} pts</span>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="d-flex mb-2">
+                                                    <div class="me-3">
+                                                        <i class="{{ achievement.icon if achievement.icon else 'fas fa-file-alt' }} fa-2x {% if is_earned %}text-success{% else %}text-secondary{% endif %}"></i>
+                                                    </div>
+                                                    <div>
+                                                        <p class="card-text">{{ achievement.description }}</p>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                                    <span class="badge bg-info">Document</span>
+                                                    {% if is_earned %}
+                                                        {% set earned = user_achievements|selectattr('id', 'equalto', achievement.id)|first %}
+                                                        <small class="text-success"><i class="fas fa-check-circle me-1"></i> Earned {{ earned.earned_at.strftime('%Y-%m-%d') }}</small>
+                                                    {% else %}
+                                                        <small class="text-muted"><i class="fas fa-lock me-1"></i> Locked</small>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            
+                            <!-- Research Achievements -->
+                            <div class="tab-pane fade" id="research" role="tabpanel">
+                                <div class="row">
+                                    {% for achievement in all_achievements if achievement.category == 'research' %}
+                                    <div class="col-md-6 col-lg-4 mb-3">
+                                        {% set is_earned = achievement.id in user_achievements|map(attribute='id')|list %}
+                                        <div class="card h-100 {% if is_earned %}border-success{% else %}border-secondary{% endif %}">
+                                            <div class="card-header d-flex align-items-center justify-content-between {% if is_earned %}bg-success text-white{% else %}bg-secondary text-white{% endif %}">
+                                                <h6 class="mb-0">{{ achievement.name }}</h6>
+                                                <span class="badge bg-light text-dark">{{ achievement.points }} pts</span>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="d-flex mb-2">
+                                                    <div class="me-3">
+                                                        <i class="{{ achievement.icon if achievement.icon else 'fas fa-search' }} fa-2x {% if is_earned %}text-success{% else %}text-secondary{% endif %}"></i>
+                                                    </div>
+                                                    <div>
+                                                        <p class="card-text">{{ achievement.description }}</p>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                                    <span class="badge bg-warning text-dark">Research</span>
+                                                    {% if is_earned %}
+                                                        {% set earned = user_achievements|selectattr('id', 'equalto', achievement.id)|first %}
+                                                        <small class="text-success"><i class="fas fa-check-circle me-1"></i> Earned {{ earned.earned_at.strftime('%Y-%m-%d') }}</small>
+                                                    {% else %}
+                                                        <small class="text-muted"><i class="fas fa-lock me-1"></i> Locked</small>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            
+                            <!-- General Achievements -->
+                            <div class="tab-pane fade" id="general" role="tabpanel">
+                                <div class="row">
+                                    {% for achievement in all_achievements if achievement.category == 'general' %}
+                                    <div class="col-md-6 col-lg-4 mb-3">
+                                        {% set is_earned = achievement.id in user_achievements|map(attribute='id')|list %}
+                                        <div class="card h-100 {% if is_earned %}border-success{% else %}border-secondary{% endif %}">
+                                            <div class="card-header d-flex align-items-center justify-content-between {% if is_earned %}bg-success text-white{% else %}bg-secondary text-white{% endif %}">
+                                                <h6 class="mb-0">{{ achievement.name }}</h6>
+                                                <span class="badge bg-light text-dark">{{ achievement.points }} pts</span>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="d-flex mb-2">
+                                                    <div class="me-3">
+                                                        <i class="{{ achievement.icon if achievement.icon else 'fas fa-star' }} fa-2x {% if is_earned %}text-success{% else %}text-secondary{% endif %}"></i>
+                                                    </div>
+                                                    <div>
+                                                        <p class="card-text">{{ achievement.description }}</p>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                                    <span class="badge bg-secondary">General</span>
+                                                    {% if is_earned %}
+                                                        {% set earned = user_achievements|selectattr('id', 'equalto', achievement.id)|first %}
+                                                        <small class="text-success"><i class="fas fa-check-circle me-1"></i> Earned {{ earned.earned_at.strftime('%Y-%m-%d') }}</small>
+                                                    {% else %}
+                                                        <small class="text-muted"><i class="fas fa-lock me-1"></i> Locked</small>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
                         </div>
                     </div>
-                {% endfor %}
+                </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Record achievements view activity
+        if (window.gamification) {
+            window.gamification.recordActivity('view_achievements', 'Viewed achievements page');
+        }
+    });
+</script>
 {% endblock %}

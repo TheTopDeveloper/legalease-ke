@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/fab.css') }}">
     {% block styles %}{% endblock %}
 </head>
-<body>
+<body data-authenticated="{{ 'true' if current_user.is_authenticated else 'false' }}">
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
@@ -200,6 +200,13 @@
     <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script src="{{ url_for('static', filename='js/fab.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/gamification.js') }}"></script>
+    
+    <!-- Achievement sound -->
+    <audio id="achievement-sound">
+        <source src="{{ url_for('static', filename='sounds/achievement.mp3') }}" type="audio/mpeg">
+    </audio>
+    
     {% block scripts %}{% endblock %}
 </body>
 </html>
