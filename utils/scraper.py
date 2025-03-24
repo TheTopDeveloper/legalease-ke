@@ -42,85 +42,119 @@ class KenyaLawScraper:
             soup = BeautifulSoup(response.text, 'html.parser')
             cases = []
             
-            # Find the document table - based on the HTML structure from the Kenya Law website
-            doc_table = soup.select_one('table.doc-table')
-            
-            if doc_table:
-                # Find all table rows that are not the header row
-                case_listings = doc_table.select('tbody tr')
-                
-                # Extract case information from each listing
+            # Direct approach: Extract all links in cells with cell-title class
+            case_links = soup.select('td.cell-title a')
+            if case_links:
+                logger.info(f"Found {len(case_links)} case links using td.cell-title a selector")
                 count = 0
-                for case in case_listings:
+                for link_elem in case_links:
                     # Skip if we've reached the limit
                     if count >= limit:
                         break
                     
-                    # Skip date grouping rows (these have an id attribute)
-                    if case.select_one('td[id]'):
+                    # Get title and URL
+                    title = link_elem.text.strip()
+                    href = link_elem.get('href', '')
+                    
+                    # Skip empty links or navigation
+                    if not title or not href:
                         continue
                     
-                    # Find the title cell and link
-                    title_cell = case.select_one('td.cell-title')
-                    if title_cell:
-                        title_elem = title_cell.select_one('a')
-                        
-                        if title_elem:
-                            title = title_elem.text.strip()
-                            href = title_elem.get('href', '')
-                            
-                            # Normalize the URL
-                            if href.startswith('/'):
-                                link = urljoin(self.base_url, href)
-                            elif href.startswith('http'):
-                                link = href
-                            else:
-                                link = urljoin(self.base_url, '/' + href)
-                            
-                            # Get metadata - looking for date/court information in the title
-                            meta = {}
-                            
-                            # Extract date from title if present
-                            date_match = re.search(r'\((\d+\s+\w+\s+\d{4})\)', title)
-                            if date_match:
-                                meta['Date'] = date_match.group(1)
-                            
-                            # Extract case type if present
-                            type_match = re.search(r'\((Judgment|Ruling|Advisory Opinion|Order)\)', title)
-                            if type_match:
-                                meta['Type'] = type_match.group(1)
-                            
-                            # Extract case number if present
-                            case_num_match = re.search(r'\((Petition|Reference|Application|Civil Appeal|Criminal Appeal)\s+[^)]+\)', title)
-                            if case_num_match:
-                                meta['Case Number'] = case_num_match.group(0).strip('()')
-                            
-                            # Create case dictionary and add to results
-                            cases.append({
-                                'title': title,
-                                'link': link,
-                                'metadata': meta
-                            })
-                            count += 1
+                    # Normalize the URL
+                    if href.startswith('/'):
+                        link = urljoin(self.base_url, href)
+                    elif href.startswith('http'):
+                        link = href
+                    else:
+                        link = urljoin(self.base_url, '/' + href)
+                    
+                    # Get metadata - looking for date/court information in the title
+                    meta = {}
+                    
+                    # Extract date from title if present
+                    date_match = re.search(r'\((\d+\s+\w+\s+\d{4})\)', title)
+                    if date_match:
+                        meta['Date'] = date_match.group(1)
+                    
+                    # Extract case type if present
+                    type_match = re.search(r'\((Judgment|Ruling|Advisory Opinion|Order)\)', title)
+                    if type_match:
+                        meta['Type'] = type_match.group(1)
+                    
+                    # Extract case number if present
+                    case_num_match = re.search(r'\((Petition|Reference|Application|Civil Appeal|Criminal Appeal)\s+[^)]+\)', title)
+                    if case_num_match:
+                        meta['Case Number'] = case_num_match.group(0).strip('()')
+                    
+                    # Create case dictionary and add to results
+                    cases.append({
+                        'title': title,
+                        'link': link,
+                        'metadata': meta
+                    })
+                    count += 1
             
-            # If no cases found in the table, try alternative selectors
+            # If no cases found, look for all links that point to judgment URLs
             if not cases:
-                # Look for case links in articles
-                article_links = soup.select('main#top article a')
+                # Get all links on the page
+                all_links = soup.find_all('a')
+                judgment_links = [link for link in all_links if link.get('href') and 
+                                  ('/judgment/' in link.get('href') or 
+                                   '/akn/ke/judgment/' in link.get('href'))]
                 
+                logger.info(f"Found {len(judgment_links)} judgment links by URL pattern")
                 count = 0
-                for link_elem in article_links:
+                for link_elem in judgment_links:
                     # Skip if we've reached the limit
                     if count >= limit:
                         break
                     
-                    # Skip links without text
-                    if not link_elem.text.strip():
+                    # Skip links without text or with very short text
+                    title = link_elem.text.strip()
+                    if len(title) < 15:  # Skip very short titles, likely navigation
                         continue
                     
-                    # Skip navigation links
-                    if link_elem.has_attr('aria-label') or 'nav-link' in link_elem.get('class', []):
-                        continue
+                    href = link_elem.get('href', '')
+                    
+                    # Normalize the URL
+                    if href.startswith('/'):
+                        link = urljoin(self.base_url, href)
+                    elif href.startswith('http'):
+                        link = href
+                    else:
+                        link = urljoin(self.base_url, '/' + href)
+                    
+                    # Get metadata from title if available
+                    meta = {}
+                    
+                    # Extract date from title if present
+                    date_match = re.search(r'\b(\d{1,2}\s+\w+\s+\d{4})\b', title)
+                    if date_match:
+                        meta['Date'] = date_match.group(1)
+                    
+                    # Extract case number if present
+                    case_num_match = re.search(r'\b(Petition|Reference|Application|Civil Appeal|Criminal Appeal)\s+No\.\s+\d+\s+of\s+\d{4}\b', title)
+                    if case_num_match:
+                        meta['Case Number'] = case_num_match.group(0)
+                    
+                    # Create case dictionary and add to results
+                    cases.append({
+                        'title': title,
+                        'link': link,
+                        'metadata': meta
+                    })
+                    count += 1
+            
+            # Last resort: find any links with "KLR" in the text, which indicates Kenya Law Reports
+            if not cases:
+                klr_links = [link for link in soup.find_all('a') if 'KLR' in link.text]
+                
+                logger.info(f"Found {len(klr_links)} KLR links as last resort")
+                count = 0
+                for link_elem in klr_links:
+                    # Skip if we've reached the limit
+                    if count >= limit:
+                        break
                     
                     title = link_elem.text.strip()
                     href = link_elem.get('href', '')
@@ -133,7 +167,7 @@ class KenyaLawScraper:
                     else:
                         link = urljoin(self.base_url, '/' + href)
                     
-                    # Create case dictionary and add to results
+                    # Create case dictionary and add to results (minimal metadata)
                     cases.append({
                         'title': title,
                         'link': link,
@@ -141,10 +175,23 @@ class KenyaLawScraper:
                     })
                     count += 1
             
+            # Print debug information
+            if cases:
+                logger.info(f"Successfully extracted {len(cases)} cases")
+            else:
+                logger.warning("No cases found on the page")
+                # Save HTML for debugging
+                with open('debug_output.html', 'w', encoding='utf-8') as f:
+                    f.write(soup.prettify())
+                logger.info("Saved HTML to debug_output.html for inspection")
+            
             return cases
         
         except Exception as e:
             logger.error(f"Error retrieving case law for court {court_code}: {str(e)}")
+            # Log the traceback for debugging
+            import traceback
+            logger.error(traceback.format_exc())
             return []
     
     def get_case_details(self, case_url):
@@ -274,14 +321,13 @@ class KenyaLawScraper:
             soup = BeautifulSoup(response.text, 'html.parser')
             results = []
             
-            # Try multiple potential selectors for search results
-            result_items = soup.select('.search-list-item')
-            if not result_items:
-                result_items = soup.select('.search-result-item')
-            if not result_items:
-                result_items = soup.select('.document-list-item')
-            if not result_items:
-                result_items = soup.select('article')
+            # First approach: Look for links in search result containers
+            result_items = []
+            for selector in ['.search-list-item', '.search-result-item', '.document-list-item', 'article']:
+                if not result_items:
+                    result_items = soup.select(selector)
+            
+            logger.info(f"Found {len(result_items)} search result items with container selectors")
             
             for item in result_items:
                 # Try to find title and link
@@ -294,13 +340,17 @@ class KenyaLawScraper:
                 if title_elem is None:
                     links = item.select('a')
                     for a in links:
-                        if a.text.strip() and not a.get('class') and not a.has_attr('aria-label'):
+                        if a.text.strip() and not a.has_attr('aria-label'):
                             title_elem = a
                             break
                 
                 if title_elem:
                     title = title_elem.text.strip()
                     href = title_elem.get('href', '')
+                    
+                    # Skip irrelevant links
+                    if not href or href == '#' or 'javascript:' in href:
+                        continue
                     
                     # Normalize the URL
                     if href.startswith('/'):
@@ -326,10 +376,126 @@ class KenyaLawScraper:
                         'excerpt': excerpt
                     })
             
+            # Alternative approach: look for all links that point to judgment URLs
+            if not results:
+                logger.info("No results found with container selectors, trying URL pattern approach")
+                all_links = soup.find_all('a')
+                judgment_links = [link for link in all_links if link.get('href') and 
+                                ('/judgment/' in link.get('href') or 
+                                '/akn/ke/judgment/' in link.get('href'))]
+                
+                logger.info(f"Found {len(judgment_links)} judgment links by URL pattern")
+                for link_elem in judgment_links[:10]:  # Limit to first 10 results
+                    title = link_elem.text.strip()
+                    if len(title) < 15:  # Skip very short titles, likely navigation
+                        continue
+                        
+                    href = link_elem.get('href', '')
+                    
+                    # Normalize the URL
+                    if href.startswith('/'):
+                        link = urljoin(self.base_url, href)
+                    elif href.startswith('http'):
+                        link = href
+                    else:
+                        link = urljoin(self.base_url, '/' + href)
+                    
+                    # Get parent element to look for excerpt
+                    parent = link_elem.parent
+                    excerpt = ''
+                    
+                    # Try to find paragraph text near the link
+                    if parent:
+                        sibling = parent.find_next_sibling('p')
+                        if sibling:
+                            excerpt = sibling.text.strip()
+                    
+                    results.append({
+                        'title': title,
+                        'link': link,
+                        'excerpt': excerpt
+                    })
+            
+            # If still no results, look for any content with the search term
+            if not results:
+                logger.info("No results found with URL patterns, searching for content with query term")
+                paragraphs = soup.find_all('p')
+                
+                potential_results = []
+                for p in paragraphs:
+                    if query.lower() in p.text.lower():
+                        # Find nearby links
+                        nearby_links = []
+                        
+                        # Check siblings
+                        prev_sibling = p.find_previous_sibling()
+                        if prev_sibling:
+                            nearby_links.extend(prev_sibling.find_all('a'))
+                            
+                        next_sibling = p.find_next_sibling()
+                        if next_sibling:
+                            nearby_links.extend(next_sibling.find_all('a'))
+                            
+                        # Check parent's siblings
+                        if p.parent:
+                            prev_parent_sibling = p.parent.find_previous_sibling()
+                            if prev_parent_sibling:
+                                nearby_links.extend(prev_parent_sibling.find_all('a'))
+                                
+                            next_parent_sibling = p.parent.find_next_sibling()
+                            if next_parent_sibling:
+                                nearby_links.extend(next_parent_sibling.find_all('a'))
+                        
+                        # Also check links inside the paragraph
+                        nearby_links.extend(p.find_all('a'))
+                        
+                        for link in nearby_links:
+                            title = link.text.strip()
+                            href = link.get('href', '')
+                            
+                            if not title or not href or href == '#' or 'javascript:' in href:
+                                continue
+                                
+                            # Normalize the URL
+                            if href.startswith('/'):
+                                result_link = urljoin(self.base_url, href)
+                            elif href.startswith('http'):
+                                result_link = href
+                            else:
+                                result_link = urljoin(self.base_url, '/' + href)
+                                
+                            potential_results.append({
+                                'title': title,
+                                'link': result_link,
+                                'excerpt': p.text.strip(),
+                                'relevance': len(p.text)  # Sort by length of text
+                            })
+                
+                # Sort by relevance (length of excerpt)
+                potential_results.sort(key=lambda x: x['relevance'], reverse=True)
+                
+                # Take top 5 results
+                for result in potential_results[:5]:
+                    del result['relevance']
+                    results.append(result)
+            
+            # Final debug information
+            if results:
+                logger.info(f"Successfully extracted {len(results)} search results")
+            else:
+                logger.warning(f"No search results found for query: {query}")
+                # Save HTML for debugging
+                with open('search_debug.html', 'w', encoding='utf-8') as f:
+                    f.write(soup.prettify())
+                logger.info("Saved HTML to search_debug.html for inspection")
+            
             return results
         
         except Exception as e:
             logger.error(f"Error searching cases with query '{query}': {str(e)}")
+            # Log the traceback for debugging
+            import traceback
+            logger.error(traceback.format_exc())
             return []
     
     def get_legislation(self, limit=10):
@@ -352,35 +518,23 @@ class KenyaLawScraper:
             soup = BeautifulSoup(response.text, 'html.parser')
             legislation = []
             
-            # Try multiple potential selectors for legislation listings
-            legislation_items = []
-            for selector in ['.legislation-item', '.document-list-item', 'article']:
-                if not legislation_items:
-                    legislation_items = soup.select(selector)
-            
-            count = 0
-            for item in legislation_items:
-                # Skip if we've reached the limit
-                if count >= limit:
-                    break
-                
-                # Try to find title and link
-                title_elem = None
-                for selector in ['h3 a', 'h4 a', '.legislation-title a', 'a.title']:
-                    if title_elem is None:
-                        title_elem = item.select_one(selector)
-                
-                # If still not found, try any link with content
-                if title_elem is None:
-                    links = item.select('a')
-                    for a in links:
-                        if a.text.strip() and not a.has_attr('aria-label'):
-                            title_elem = a
-                            break
-                
-                if title_elem:
-                    title = title_elem.text.strip()
-                    href = title_elem.get('href', '')
+            # Direct approach: Look for links in table cells with cell-title class (similar to cases)
+            legislation_links = soup.select('td.cell-title a')
+            if legislation_links:
+                logger.info(f"Found {len(legislation_links)} legislation links using td.cell-title a selector")
+                count = 0
+                for link_elem in legislation_links:
+                    # Skip if we've reached the limit
+                    if count >= limit:
+                        break
+                    
+                    # Get title and URL
+                    title = link_elem.text.strip()
+                    href = link_elem.get('href', '')
+                    
+                    # Skip empty links or navigation
+                    if not title or not href:
+                        continue
                     
                     # Normalize the URL
                     if href.startswith('/'):
@@ -396,10 +550,113 @@ class KenyaLawScraper:
                     })
                     count += 1
             
+            # If no links found with that approach, try traditional container selectors
+            if not legislation:
+                # Try multiple potential selectors for legislation listings
+                legislation_items = []
+                for selector in ['.legislation-item', '.document-list-item', 'article']:
+                    if not legislation_items:
+                        legislation_items = soup.select(selector)
+                
+                logger.info(f"Found {len(legislation_items)} legislation items with container selectors")
+                count = 0
+                for item in legislation_items:
+                    # Skip if we've reached the limit
+                    if count >= limit:
+                        break
+                    
+                    # Try to find title and link
+                    title_elem = None
+                    for selector in ['h3 a', 'h4 a', '.legislation-title a', 'a.title']:
+                        if title_elem is None:
+                            title_elem = item.select_one(selector)
+                    
+                    # If still not found, try any link with content
+                    if title_elem is None:
+                        links = item.select('a')
+                        for a in links:
+                            if a.text.strip() and not a.has_attr('aria-label'):
+                                title_elem = a
+                                break
+                    
+                    if title_elem:
+                        title = title_elem.text.strip()
+                        href = title_elem.get('href', '')
+                        
+                        # Skip irrelevant links
+                        if not href or href == '#' or 'javascript:' in href:
+                            continue
+                        
+                        # Normalize the URL
+                        if href.startswith('/'):
+                            link = urljoin(self.base_url, href)
+                        elif href.startswith('http'):
+                            link = href
+                        else:
+                            link = urljoin(self.base_url, '/' + href)
+                        
+                        legislation.append({
+                            'title': title,
+                            'link': link
+                        })
+                        count += 1
+            
+            # If still no results, look for all links that might be legislation
+            if not legislation:
+                # Get all links on the page
+                all_links = soup.find_all('a')
+                # Look for links with legislation-related path or text
+                legislation_links = [link for link in all_links if link.get('href') and 
+                                    ('/akn/ke/act/' in link.get('href') or 
+                                     '/legislation/' in link.get('href') or
+                                     'Act' in link.text or 
+                                     'Constitution' in link.text)]
+                
+                logger.info(f"Found {len(legislation_links)} legislation links by URL pattern or keyword")
+                count = 0
+                for link_elem in legislation_links:
+                    # Skip if we've reached the limit
+                    if count >= limit:
+                        break
+                    
+                    # Skip links without text or with very short text
+                    title = link_elem.text.strip()
+                    if len(title) < 5:  # Skip very short titles, likely navigation
+                        continue
+                        
+                    href = link_elem.get('href', '')
+                    
+                    # Normalize the URL
+                    if href.startswith('/'):
+                        link = urljoin(self.base_url, href)
+                    elif href.startswith('http'):
+                        link = href
+                    else:
+                        link = urljoin(self.base_url, '/' + href)
+                    
+                    legislation.append({
+                        'title': title,
+                        'link': link
+                    })
+                    count += 1
+            
+            # Print debug information
+            if legislation:
+                logger.info(f"Successfully extracted {len(legislation)} legislation items")
+            else:
+                logger.warning("No legislation found on the page")
+                # Save HTML for debugging
+                with open('legislation_debug.html', 'w', encoding='utf-8') as f:
+                    f.write(soup.prettify())
+                logger.info("Saved HTML to legislation_debug.html for inspection")
+            
             return legislation
         
         except Exception as e:
             logger.error(f"Error retrieving legislation: {str(e)}")
+            # Log the traceback for debugging
+            import traceback
+            logger.error(traceback.format_exc())
             return []
     
     def get_legislation_details(self, legislation_url):

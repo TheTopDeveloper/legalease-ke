@@ -183,8 +183,10 @@ class LegalResearch(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     query = db.Column(db.Text, nullable=False)
-    results = db.Column(db.Text)
+    results = db.Column(db.Text)  # JSON string of results
     source = db.Column(db.String(100))  # kenyalaw.org, vector_db, llm, etc.
+    court_filter = db.Column(db.String(50))  # Court code filter (e.g. KESC, KECA)
+    result_count = db.Column(db.Integer, default=0)  # Number of results found
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Foreign keys
@@ -194,6 +196,15 @@ class LegalResearch(db.Model):
     # Relationships
     user = db.relationship('User', backref='research')
     case = db.relationship('Case', backref='research')
+    
+    def get_results_list(self):
+        """Get results as a list of dictionaries"""
+        if not self.results:
+            return []
+        try:
+            return json.loads(self.results)
+        except:
+            return []
     
     def __repr__(self):
         return f'<LegalResearch {self.id}: {self.title}>'
