@@ -1,0 +1,196 @@
+{% extends 'layout.html' %}
+
+{% block title %}Notification Preferences{% endblock %}
+
+{% block header %}Notification Preferences{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Notification Preferences -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-bell me-2"></i> Notification Settings</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('notifications.update_preferences') }}" method="post">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Phone Number for SMS Notifications</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                            <input type="tel" class="form-control" name="phone" value="{{ current_user.phone }}" 
+                                   placeholder="+254700000000" pattern="\+?\d{10,15}">
+                        </div>
+                        <div class="form-text">Enter your phone number with country code (e.g., +254700000000).</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Notification Methods</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="receive_sms" id="receive_sms" checked>
+                            <label class="form-check-label" for="receive_sms">
+                                Receive SMS notifications
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="receive_email" id="receive_email" checked>
+                            <label class="form-check-label" for="receive_email">
+                                Receive Email notifications
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Notification Types</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="court_reminders" id="court_reminders" checked>
+                            <label class="form-check-label" for="court_reminders">
+                                Court appearance reminders (24 hours before)
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="document_deadlines" id="document_deadlines" checked>
+                            <label class="form-check-label" for="document_deadlines">
+                                Document submission deadline reminders (3 days before)
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="status_updates" id="status_updates" checked>
+                            <label class="form-check-label" for="status_updates">
+                                Case status updates
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="payment_confirmations" id="payment_confirmations" checked>
+                            <label class="form-check-label" for="payment_confirmations">
+                                Payment confirmations
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i> Save Preferences
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Test Notifications & Sent Messages -->
+    <div class="col-md-6">
+        <!-- Test Notification Card -->
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-paper-plane me-2"></i> Test Notifications</h5>
+            </div>
+            <div class="card-body">
+                {% if not current_user.phone %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i> Please add a phone number to test SMS notifications.
+                </div>
+                {% elif not cases %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> You need at least one case to test notifications.
+                </div>
+                {% else %}
+                <form action="{{ url_for('notifications.test_notification') }}" method="post">
+                    <div class="mb-3">
+                        <label class="form-label">Select Case</label>
+                        <select class="form-select" name="case_id" required>
+                            <option value="">-- Select a case --</option>
+                            {% for case in cases %}
+                            <option value="{{ case.id }}">{{ case.case_number }} - {{ case.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Notification Type</label>
+                        <select class="form-select" name="notification_type" required>
+                            <option value="">-- Select notification type --</option>
+                            <option value="court_reminder">Court Appearance Reminder</option>
+                            <option value="document_deadline">Document Deadline Reminder</option>
+                            <option value="status_update">Case Status Update</option>
+                        </select>
+                    </div>
+                    
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-paper-plane me-2"></i> Send Test Notification
+                        </button>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Sent Messages -->
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i> Recent Notifications</h5>
+            </div>
+            <div class="card-body">
+                {% if sent_messages %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Message</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for message in sent_messages %}
+                            <tr>
+                                <td>{{ message.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>{{ message.message }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center p-4">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <p>No notifications sent yet</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Admin Section: Manual Trigger for Reminders -->
+        {% if current_user.role == 'admin' %}
+        <div class="card mt-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="fas fa-cog me-2"></i> Admin Controls</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('notifications.send_reminders') }}" method="post">
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-secondary">
+                            <i class="fas fa-bell me-2"></i> Manually Send Scheduled Reminders
+                        </button>
+                    </div>
+                    <div class="form-text mt-2">
+                        This will send reminders for all events scheduled in the next 24-48 hours. This would normally be handled by an automated task.
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Record page visit for gamification
+        if (window.gamification) {
+            window.gamification.recordActivity('view_notifications', 'Viewed notification preferences');
+        }
+    });
+</script>
+{% endblock %}
