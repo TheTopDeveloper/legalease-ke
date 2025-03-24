@@ -1,0 +1,368 @@
+{% extends 'base.html' %}
+
+{% block title %}Legal Writing Assistant{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1>AI Legal Writing Assistant</h1>
+                <div>
+                    <span class="badge bg-primary">Tokens: {{ user.tokens_available }}</span>
+                </div>
+            </div>
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> This AI-powered legal writing assistant helps improve your legal documents with suggestions on tone, complexity, and clarity.
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" id="analysisTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="full-tab" data-bs-toggle="tab" data-bs-target="#full" type="button" role="tab" aria-controls="full" aria-selected="true">
+                                <i class="fas fa-check-square"></i> Full Analysis
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tone-tab" data-bs-toggle="tab" data-bs-target="#tone" type="button" role="tab" aria-controls="tone" aria-selected="false">
+                                <i class="fas fa-volume-up"></i> Tone
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="complexity-tab" data-bs-toggle="tab" data-bs-target="#complexity" type="button" role="tab" aria-controls="complexity" aria-selected="false">
+                                <i class="fas fa-chart-line"></i> Complexity
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="clarity-tab" data-bs-toggle="tab" data-bs-target="#clarity" type="button" role="tab" aria-controls="clarity" aria-selected="false">
+                                <i class="fas fa-glasses"></i> Clarity
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="analysisTabContent">
+                        <div class="tab-pane fade show active" id="full" role="tabpanel" aria-labelledby="full-tab">
+                            <div class="mb-3">
+                                <p>Comprehensive analysis of your legal text, including tone, complexity, clarity, and legal formality.</p>
+                                <div class="d-grid">
+                                    <button class="btn btn-primary" onclick="setAnalysisType('full')" data-bs-toggle="modal" data-bs-target="#textEntryModal">
+                                        <i class="fas fa-pencil-alt"></i> Start Full Analysis
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="tone" role="tabpanel" aria-labelledby="tone-tab">
+                            <div class="mb-3">
+                                <p>Analyze if your writing maintains appropriate tone, formality, and professionalism for legal contexts.</p>
+                                <div class="d-grid">
+                                    <button class="btn btn-primary" onclick="setAnalysisType('tone')" data-bs-toggle="modal" data-bs-target="#textEntryModal">
+                                        <i class="fas fa-pencil-alt"></i> Analyze Tone
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="complexity" role="tabpanel" aria-labelledby="complexity-tab">
+                            <div class="mb-3">
+                                <p>Evaluate whether your legal writing is overly complex and get suggestions for simplification.</p>
+                                <div class="d-grid">
+                                    <button class="btn btn-primary" onclick="setAnalysisType('complexity')" data-bs-toggle="modal" data-bs-target="#textEntryModal">
+                                        <i class="fas fa-pencil-alt"></i> Analyze Complexity
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="clarity" role="tabpanel" aria-labelledby="clarity-tab">
+                            <div class="mb-3">
+                                <p>Check your legal writing for clarity, precision, and potential ambiguities.</p>
+                                <div class="d-grid">
+                                    <button class="btn btn-primary" onclick="setAnalysisType('clarity')" data-bs-toggle="modal" data-bs-target="#textEntryModal">
+                                        <i class="fas fa-pencil-alt"></i> Analyze Clarity
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Analysis Results Section (Hidden initially) -->
+    <div class="row mt-4" id="analysisResults" style="display: none;">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Analysis Results</h5>
+                    <div>
+                        <button class="btn btn-sm btn-outline-secondary" id="copyAnalysisBtn">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="hideResults()">
+                            <i class="fas fa-times"></i> Close
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h6>Original Text:</h6>
+                        <div class="border rounded p-3 bg-light original-text-container">
+                            <div id="originalText" class="original-text"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h6>Analysis:</h6>
+                        <div class="border rounded p-3 analysis-container">
+                            <div id="analysisContent" class="analysis-text"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button class="btn btn-success" id="improveTextBtn" onclick="improveText()">
+                            <i class="fas fa-magic"></i> Generate Improved Version
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Improved Text Section (Hidden initially) -->
+    <div class="row mt-4" id="improvedTextSection" style="display: none;">
+        <div class="col-md-12">
+            <div class="card border-success">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-check-circle"></i> Improved Text</h5>
+                    <div>
+                        <button class="btn btn-sm btn-outline-light" id="copyImprovedBtn">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="border rounded p-3 improved-text-container">
+                        <div id="improvedText" class="improved-text"></div>
+                    </div>
+                    
+                    <div class="alert alert-light mt-3">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-lightbulb text-warning me-2 fa-2x"></i>
+                            <div>
+                                <strong>Tip:</strong> Review and modify the improved text as needed. AI is a helpful tool but should not replace professional legal judgment.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Text Entry Modal -->
+<div class="modal fade" id="textEntryModal" tabindex="-1" aria-labelledby="textEntryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="textEntryModalLabel">Enter Legal Text for Analysis</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="textAnalysisForm">
+                    <input type="hidden" id="analysisType" name="analysisType" value="full">
+                    <div class="mb-3">
+                        <label for="legalText" class="form-label">Paste or type your legal text:</label>
+                        <textarea class="form-control" id="legalText" rows="15" placeholder="Enter your legal text here..."></textarea>
+                    </div>
+                    <div class="alert alert-info">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-coins text-warning me-2"></i>
+                            <div>
+                                <strong>Token Usage:</strong> Basic analysis costs 5 tokens. Longer texts may require additional tokens.
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="analyzeBtn" onclick="analyzeText()">
+                    <i class="fas fa-search"></i> Analyze
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style="background-color: rgba(0,0,0,0.5); z-index: 9999; display: none;">
+    <div class="card p-4">
+        <div class="d-flex flex-column align-items-center">
+            <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <h5 id="loadingText">Analyzing text...</h5>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentAnalysisType = 'full';
+let currentAnalysisData = null;
+
+function setAnalysisType(type) {
+    currentAnalysisType = type;
+    document.getElementById('analysisType').value = type;
+    
+    // Update modal title
+    const modalTitle = document.getElementById('textEntryModalLabel');
+    switch(type) {
+        case 'tone':
+            modalTitle.innerText = 'Analyze Tone of Legal Text';
+            break;
+        case 'complexity':
+            modalTitle.innerText = 'Analyze Complexity of Legal Text';
+            break;
+        case 'clarity':
+            modalTitle.innerText = 'Analyze Clarity of Legal Text';
+            break;
+        default:
+            modalTitle.innerText = 'Full Analysis of Legal Text';
+    }
+}
+
+function analyzeText() {
+    const text = document.getElementById('legalText').value.trim();
+    
+    if (!text) {
+        alert('Please enter some text to analyze.');
+        return;
+    }
+    
+    // Show loading overlay
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const loadingText = document.getElementById('loadingText');
+    loadingText.innerText = 'Analyzing text...';
+    loadingOverlay.style.display = 'flex';
+    
+    // Close the modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('textEntryModal'));
+    modal.hide();
+    
+    // Send request to server
+    const formData = new FormData();
+    formData.append('text', text);
+    formData.append('analysis_type', currentAnalysisType);
+    
+    fetch('/writing/analyze', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Hide loading overlay
+        loadingOverlay.style.display = 'none';
+        
+        if (data.success) {
+            // Store the analysis data
+            currentAnalysisData = data.analysis;
+            
+            // Display results
+            document.getElementById('originalText').innerText = data.analysis.original_text;
+            document.getElementById('analysisContent').innerText = data.analysis.analysis;
+            document.getElementById('analysisResults').style.display = 'block';
+            
+            // Scroll to results
+            document.getElementById('analysisResults').scrollIntoView({ behavior: 'smooth' });
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        loadingOverlay.style.display = 'none';
+        alert('Error analyzing text: ' + error);
+    });
+}
+
+function improveText() {
+    if (!currentAnalysisData) {
+        alert('Please analyze text first.');
+        return;
+    }
+    
+    // Show loading overlay
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const loadingText = document.getElementById('loadingText');
+    loadingText.innerText = 'Generating improved text...';
+    loadingOverlay.style.display = 'flex';
+    
+    // Send request to server
+    const formData = new FormData();
+    formData.append('text', currentAnalysisData.original_text);
+    formData.append('improvements', currentAnalysisData.analysis);
+    
+    fetch('/writing/improve', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Hide loading overlay
+        loadingOverlay.style.display = 'none';
+        
+        if (data.success) {
+            // Display improved text
+            document.getElementById('improvedText').innerText = data.improved_text;
+            document.getElementById('improvedTextSection').style.display = 'block';
+            
+            // Scroll to improved text
+            document.getElementById('improvedTextSection').scrollIntoView({ behavior: 'smooth' });
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        loadingOverlay.style.display = 'none';
+        alert('Error improving text: ' + error);
+    });
+}
+
+function hideResults() {
+    document.getElementById('analysisResults').style.display = 'none';
+    document.getElementById('improvedTextSection').style.display = 'none';
+    currentAnalysisData = null;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Copy buttons functionality
+    document.getElementById('copyAnalysisBtn').addEventListener('click', function() {
+        const analysisText = document.getElementById('analysisContent').innerText;
+        navigator.clipboard.writeText(analysisText)
+            .then(() => {
+                alert('Analysis copied to clipboard!');
+            })
+            .catch(err => {
+                console.error('Error copying text: ', err);
+            });
+    });
+    
+    document.getElementById('copyImprovedBtn').addEventListener('click', function() {
+        const improvedText = document.getElementById('improvedText').innerText;
+        navigator.clipboard.writeText(improvedText)
+            .then(() => {
+                alert('Improved text copied to clipboard!');
+            })
+            .catch(err => {
+                console.error('Error copying text: ', err);
+            });
+    });
+});
+</script>
+{% endblock %}

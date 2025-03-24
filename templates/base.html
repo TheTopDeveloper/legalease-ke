@@ -1,1 +1,224 @@
-layout.html
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Kenyan Legal Assistant{% endblock %}</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fab.css') }}">
+    {% block styles %}{% endblock %}
+</head>
+<body data-authenticated="{{ 'true' if current_user.is_authenticated else 'false' }}">
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('dashboard.index') }}">
+                <i class="fas fa-balance-scale"></i> Kenyan Legal Assistant
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint.startswith('dashboard.') %}active{% endif %}" href="{{ url_for('dashboard.index') }}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint.startswith('cases.') %}active{% endif %}" href="{{ url_for('cases.index') }}">Cases</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint.startswith('documents.') %}active{% endif %}" href="{{ url_for('documents.index') }}">Documents</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint.startswith('contracts.') %}active{% endif %}" href="{{ url_for('contracts.index') }}">Contracts</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint.startswith('research.') %}active{% endif %}" href="{{ url_for('research.index') }}">Research</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint.startswith('writing.') %}active{% endif %}" href="{{ url_for('writing.index') }}">
+                            <i class="fas fa-pen-fancy"></i> Writing Assistant
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint.startswith('gamification.') %}active{% endif %}" href="{{ url_for('gamification.dashboard') }}">
+                            <i class="fas fa-trophy"></i> Achievements
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint.startswith('notifications.') %}active{% endif %}" href="{{ url_for('notifications.index') }}">
+                            <i class="fas fa-bell"></i> Notifications
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if request.endpoint.startswith('billing.') %}active{% endif %}" href="#" id="billingDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-credit-card"></i> Billing
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="billingDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('billing.subscriptions') }}">Subscriptions</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('billing.tokens') }}">Buy Tokens</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('billing.payment_history') }}">Payment History</a></li>
+                            {% if current_user.role == 'admin' %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('billing.admin_subscriptions') }}">Manage Subscriptions</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('billing.admin_tokens') }}">Manage Token Packages</a></li>
+                            {% endif %}
+                        </ul>
+                    </li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav">
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i> {{ current_user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}">Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">Logout</a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.register') }}">Register</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <header class="main-header">
+        <div class="container">
+            <h1>{% block header %}Kenyan Legal Assistant{% endblock %}</h1>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container my-4">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Page Content -->
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Floating Action Button - Only show for authenticated users -->
+    {% if current_user.is_authenticated %}
+    <div class="fab-container">
+        <div class="fab-main" tabindex="0" aria-label="Quick Actions">
+            <i class="fas fa-plus"></i>
+        </div>
+        <ul class="fab-options">
+            <li style="--i:1">
+                <a href="{{ url_for('cases.create') }}" class="fab-item">
+                    <i class="fas fa-gavel"></i>
+                    <span class="fab-label">New Case</span>
+                </a>
+            </li>
+            <li style="--i:2">
+                <a href="{{ url_for('documents.create') }}" class="fab-item">
+                    <i class="fas fa-file-alt"></i>
+                    <span class="fab-label">New Document</span>
+                </a>
+            </li>
+            <li style="--i:3">
+                <a href="{{ url_for('contracts.create') }}" class="fab-item">
+                    <i class="fas fa-file-signature"></i>
+                    <span class="fab-label">New Contract</span>
+                </a>
+            </li>
+            <li style="--i:4">
+                <a href="{{ url_for('research.research_issue') }}" class="fab-item">
+                    <i class="fas fa-search"></i>
+                    <span class="fab-label">Research</span>
+                </a>
+            </li>
+            {% if current_user.tokens_available < 50 %}
+            <li style="--i:5">
+                <a href="{{ url_for('billing.tokens') }}" class="fab-item">
+                    <i class="fas fa-coins"></i>
+                    <span class="fab-label">Buy Tokens</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Kenyan Legal Assistant</h5>
+                    <p>A comprehensive case management system with AI-powered research and document generation capabilities for Kenyan legal professionals.</p>
+                </div>
+                <div class="col-md-3">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('dashboard.index') }}" class="text-light">Dashboard</a></li>
+                        <li><a href="{{ url_for('cases.index') }}" class="text-light">Cases</a></li>
+                        <li><a href="{{ url_for('documents.index') }}" class="text-light">Documents</a></li>
+                        <li><a href="{{ url_for('contracts.index') }}" class="text-light">Contracts</a></li>
+                        <li><a href="{{ url_for('research.index') }}" class="text-light">Research</a></li>
+                        <li><a href="{{ url_for('writing.index') }}" class="text-light">Writing Assistant</a></li>
+                        <li><a href="{{ url_for('notifications.index') }}" class="text-light">Notifications</a></li>
+                        <li><a href="{{ url_for('billing.subscriptions') }}" class="text-light">Subscriptions</a></li>
+                        <li><a href="{{ url_for('billing.tokens') }}" class="text-light">Tokens</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>Resources</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="https://new.kenyalaw.org" target="_blank" class="text-light">Kenya Law</a></li>
+                        <li><a href="https://new.kenyalaw.org/judgments/" target="_blank" class="text-light">Case Law</a></li>
+                        <li><a href="https://new.kenyalaw.org/legislation/" target="_blank" class="text-light">Legislation</a></li>
+                        <li><a href="https://new.kenyalaw.org/gazettes/" target="_blank" class="text-light">Kenya Gazette</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr>
+            <div class="text-center">
+                <p>&copy; 2025 Kenyan Legal Assistant. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Modernizr for feature detection -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/fab.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/gamification.js') }}"></script>
+    
+    <!-- Achievement sound -->
+    <audio id="achievement-sound">
+        <source src="{{ url_for('static', filename='sounds/achievement.mp3') }}" type="audio/mpeg">
+    </audio>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>
