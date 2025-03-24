@@ -6,25 +6,22 @@
 <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
 <style>
   .import-option {
+    border-left: 4px solid var(--bs-primary);
     transition: transform 0.2s;
-    cursor: pointer;
   }
   .import-option:hover {
     transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
   }
-  .import-option.active {
-    border-color: var(--bs-primary);
-    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+  .token-info {
+    font-size: 0.9rem;
+    color: var(--bs-secondary);
+    margin-top: 0.5rem;
   }
   .court-icon {
-    font-size: 2rem;
-    width: 60px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    margin-right: 0.5rem;
+    color: var(--bs-primary);
   }
 </style>
 {% endblock %}
@@ -40,187 +37,290 @@
         </ol>
       </nav>
       <h1 class="mb-0">Import Rulings</h1>
-      <p class="text-muted">Add judicial rulings from Kenya Law</p>
+      <p class="text-muted">Import rulings from the Kenya Law website</p>
     </div>
   </div>
 
-  <div class="card mb-4">
-    <div class="card-body">
-      <p>
-        This tool allows you to import rulings from the Kenya Law website. You can import:
-      </p>
-      <ul>
-        <li>A specific ruling by URL</li>
-        <li>Multiple rulings from a specific court</li>
-      </ul>
+  <!-- Token Information -->
+  <div class="row mb-4">
+    <div class="col-12">
       <div class="alert alert-info">
-        <i class="fas fa-info-circle"></i> Imported rulings will be added to your account and will be available for analysis, annotation, and reference.
+        <div class="d-flex align-items-center">
+          <i class="fas fa-info-circle me-3 fa-2x"></i>
+          <div>
+            <h5 class="alert-heading">Token Usage Information</h5>
+            <p class="mb-0">Importing rulings uses AI tokens for processing and analysis. You currently have <strong>{{ current_user.tokens_available }}</strong> tokens available.</p>
+            <ul class="mb-0 mt-2">
+              <li>Importing a single case uses approximately 5-10 tokens</li>
+              <li>Batch imports use 5-10 tokens per ruling imported</li>
+              <li>Analysis of imported rulings requires additional tokens</li>
+            </ul>
+            {% if current_user.tokens_available < 50 %}
+              <div class="mt-2">
+                <a href="{{ url_for('billing.tokens') }}" class="btn btn-sm btn-outline-primary">Purchase More Tokens</a>
+              </div>
+            {% endif %}
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
   <div class="row mb-4">
-    <div class="col-md-6">
-      <div class="card import-option" id="urlImportOption">
-        <div class="card-body text-center py-4">
-          <div class="court-icon bg-primary mx-auto">
-            <i class="fas fa-link text-white"></i>
+    <!-- Import Options -->
+    <div class="col-lg-4 mb-4 mb-lg-0">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Import Options</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="list-group list-group-flush">
+            <a href="#importByUrl" class="list-group-item list-group-item-action active" data-bs-toggle="list">
+              <div class="d-flex align-items-center">
+                <i class="fas fa-link court-icon"></i>
+                <div>
+                  <h6 class="mb-0">Import by URL</h6>
+                  <small>Import a specific case using its Kenya Law URL</small>
+                </div>
+              </div>
+            </a>
+            <a href="#importByCourt" class="list-group-item list-group-item-action" data-bs-toggle="list">
+              <div class="d-flex align-items-center">
+                <i class="fas fa-university court-icon"></i>
+                <div>
+                  <h6 class="mb-0">Import by Court</h6>
+                  <small>Batch import recent cases from a specific court</small>
+                </div>
+              </div>
+            </a>
+            <a href="#importHelp" class="list-group-item list-group-item-action" data-bs-toggle="list">
+              <div class="d-flex align-items-center">
+                <i class="fas fa-question-circle court-icon"></i>
+                <div>
+                  <h6 class="mb-0">Import Help</h6>
+                  <small>How to find case URLs and troubleshoot imports</small>
+                </div>
+              </div>
+            </a>
           </div>
-          <h4>Import Single Ruling</h4>
-          <p>Import a specific ruling from Kenya Law by URL</p>
-          <button class="btn btn-primary" data-option="url">Select</button>
         </div>
       </div>
     </div>
 
-    <div class="col-md-6">
-      <div class="card import-option" id="courtImportOption">
-        <div class="card-body text-center py-4">
-          <div class="court-icon bg-success mx-auto">
-            <i class="fas fa-gavel text-white"></i>
+    <!-- Import Forms -->
+    <div class="col-lg-8">
+      <div class="tab-content">
+        <!-- Import by URL -->
+        <div class="tab-pane fade show active" id="importByUrl">
+          <div class="card import-option">
+            <div class="card-header">
+              <h5 class="card-title mb-0">Import by URL</h5>
+            </div>
+            <div class="card-body">
+              <form action="{{ url_for('rulings.import_rulings') }}" method="post">
+                <input type="hidden" name="import_type" value="case_url">
+                <div class="mb-3">
+                  <label for="caseUrl" class="form-label">Case URL</label>
+                  <input type="url" class="form-control" id="caseUrl" name="case_url" placeholder="http://kenyalaw.org/caselaw/cases/view/..." required>
+                  <div class="form-text">Enter the full URL of the case from the Kenya Law website.</div>
+                </div>
+                <div class="mb-3 form-check">
+                  <input type="checkbox" class="form-check-input" id="runAnalysis" name="run_analysis" value="1">
+                  <label class="form-check-label" for="runAnalysis">Run AI analysis after import (uses additional tokens)</label>
+                </div>
+                <div class="d-grid">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-cloud-download-alt me-2"></i> Import Case
+                  </button>
+                </div>
+                <div class="token-info">
+                  <i class="fas fa-coins me-1"></i> Estimated token usage: 5-10 tokens
+                </div>
+              </form>
+            </div>
           </div>
-          <h4>Import Court Rulings</h4>
-          <p>Import multiple rulings from a specific court</p>
-          <button class="btn btn-success" data-option="court">Select</button>
+        </div>
+
+        <!-- Import by Court -->
+        <div class="tab-pane fade" id="importByCourt">
+          <div class="card import-option">
+            <div class="card-header">
+              <h5 class="card-title mb-0">Import by Court</h5>
+            </div>
+            <div class="card-body">
+              <form action="{{ url_for('rulings.import_rulings') }}" method="post">
+                <input type="hidden" name="import_type" value="court_batch">
+                <div class="mb-3">
+                  <label for="court" class="form-label">Court</label>
+                  <select class="form-select" id="court" name="court" required>
+                    <option value="">Select a court...</option>
+                    <option value="Supreme Court">Supreme Court</option>
+                    <option value="Court of Appeal">Court of Appeal</option>
+                    <option value="High Court">High Court</option>
+                    <option value="Employment and Labour Relations Court">Employment and Labour Relations Court</option>
+                    <option value="Environment and Land Court">Environment and Land Court</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label for="limit" class="form-label">Number of Rulings to Import</label>
+                  <select class="form-select" id="limit" name="limit">
+                    <option value="5">5 rulings</option>
+                    <option value="10" selected>10 rulings</option>
+                    <option value="20">20 rulings</option>
+                    <option value="50">50 rulings</option>
+                  </select>
+                  <div class="form-text">
+                    Select the number of most recent rulings to import. Higher numbers use more tokens.
+                  </div>
+                </div>
+                <div class="mb-3 form-check">
+                  <input type="checkbox" class="form-check-input" id="skipExisting" name="skip_existing" value="1" checked>
+                  <label class="form-check-label" for="skipExisting">Skip rulings that already exist in the database</label>
+                </div>
+                <div class="d-grid">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-cloud-download-alt me-2"></i> Import Rulings
+                  </button>
+                </div>
+                <div class="token-info">
+                  <i class="fas fa-coins me-1"></i> Estimated token usage: <span id="tokenEstimate">50-100</span> tokens
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Import Help -->
+        <div class="tab-pane fade" id="importHelp">
+          <div class="card import-option">
+            <div class="card-header">
+              <h5 class="card-title mb-0">Import Help</h5>
+            </div>
+            <div class="card-body">
+              <h5>How to Find Case URLs</h5>
+              <p>To import a specific case by URL, follow these steps:</p>
+              <ol>
+                <li>Visit <a href="http://kenyalaw.org/caselaw/" target="_blank" rel="noopener">Kenya Law Case Database</a></li>
+                <li>Search for the case you want to import</li>
+                <li>Click on the case title to view the full case</li>
+                <li>Copy the URL from your browser's address bar</li>
+                <li>Paste the URL into the "Case URL" field in the Import by URL tab</li>
+              </ol>
+
+              <div class="alert alert-info mt-4">
+                <h5 class="alert-heading">Example URLs</h5>
+                <p>Valid Kenya Law case URLs typically look like one of these examples:</p>
+                <ul class="mb-0">
+                  <li><code>http://kenyalaw.org/caselaw/cases/view/123456/</code></li>
+                  <li><code>http://kenyalaw.org/caselaw/cases/view/178401/</code> (Supreme Court)</li>
+                  <li><code>http://kenyalaw.org/caselaw/cases/view/175255/</code> (Court of Appeal)</li>
+                </ul>
+              </div>
+
+              <h5 class="mt-4">Troubleshooting Import Issues</h5>
+              <div class="list-group mb-3">
+                <div class="list-group-item">
+                  <h6 class="mb-1">Invalid URL Error</h6>
+                  <p class="mb-0">Ensure you are using a URL from the Kenya Law website. The URL should start with "http://kenyalaw.org/caselaw/".</p>
+                </div>
+                <div class="list-group-item">
+                  <h6 class="mb-1">Case Not Found</h6>
+                  <p class="mb-0">If the system cannot find the case, the URL may be incorrect or the case may not be available. Try a different case.</p>
+                </div>
+                <div class="list-group-item">
+                  <h6 class="mb-1">Import Failed</h6>
+                  <p class="mb-0">If an import fails, check your token balance. You may need to purchase more tokens or try importing a smaller batch.</p>
+                </div>
+              </div>
+
+              <h5>Contact Support</h5>
+              <p>If you continue to experience issues with importing rulings, please contact our support team for assistance.</p>
+              <a href="mailto:support@kenyalegalassistant.com" class="btn btn-outline-primary">
+                <i class="fas fa-envelope me-2"></i> Contact Support
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- URL Import Form -->
-  <div class="card mb-4" id="urlImportForm" style="display: none;">
-    <div class="card-header">
-      <h5 class="card-title mb-0">Import Single Ruling by URL</h5>
-    </div>
-    <div class="card-body">
-      <form action="{{ url_for('rulings.import_rulings') }}" method="post">
-        <input type="hidden" name="import_type" value="case_url">
-        <div class="mb-3">
-          <label for="case_url" class="form-label">Kenya Law Case URL</label>
-          <input type="url" class="form-control" id="case_url" name="case_url" required 
-                placeholder="e.g., http://kenyalaw.org/caselaw/cases/view/XXXXX/">
-          <div class="form-text">
-            Enter the full URL of a Kenya Law case, e.g., http://kenyalaw.org/caselaw/cases/view/123456/
-          </div>
+  <!-- Recent Imports -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0">Recent Imports</h5>
+          <a href="{{ url_for('rulings.index') }}" class="btn btn-sm btn-outline-primary">View All Rulings</a>
         </div>
-        <button type="submit" class="btn btn-primary">Import Ruling</button>
-        <button type="button" class="btn btn-outline-secondary" onclick="resetImportForms()">Cancel</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Court Import Form -->
-  <div class="card mb-4" id="courtImportForm" style="display: none;">
-    <div class="card-header">
-      <h5 class="card-title mb-0">Import Rulings by Court</h5>
-    </div>
-    <div class="card-body">
-      <form action="{{ url_for('rulings.import_rulings') }}" method="post">
-        <input type="hidden" name="import_type" value="court_batch">
-        <div class="mb-3">
-          <label for="court" class="form-label">Select Court</label>
-          <select class="form-select" id="court" name="court" required>
-            <option value="">Select a court...</option>
-            {% for court in COURTS %}
-              <option value="{{ court }}">{{ court }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="mb-3">
-          <label for="limit" class="form-label">Number of Rulings to Import</label>
-          <select class="form-select" id="limit" name="limit">
-            <option value="5">5 rulings</option>
-            <option value="10" selected>10 rulings</option>
-            <option value="20">20 rulings</option>
-            <option value="50">50 rulings</option>
-          </select>
-          <div class="form-text">
-            Larger imports may take longer to process.
-          </div>
-        </div>
-        <div class="alert alert-warning">
-          <i class="fas fa-exclamation-triangle"></i> Importing multiple rulings may take some time. Be patient while the system processes your request.
-        </div>
-        <button type="submit" class="btn btn-success">Import Rulings</button>
-        <button type="button" class="btn btn-outline-secondary" onclick="resetImportForms()">Cancel</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Tips and info -->
-  <div class="card">
-    <div class="card-header">
-      <h5 class="card-title mb-0">Tips for Importing</h5>
-    </div>
-    <div class="card-body">
-      <div class="row">
-        <div class="col-md-6">
-          <h6><i class="fas fa-lightbulb text-warning"></i> Finding Case URLs</h6>
-          <ol>
-            <li>Visit the <a href="http://kenyalaw.org/caselaw/" target="_blank">Kenya Law website</a></li>
-            <li>Search for a case or browse by court</li>
-            <li>Click on a case to view it</li>
-            <li>Copy the URL from your browser's address bar</li>
-          </ol>
-        </div>
-        <div class="col-md-6">
-          <h6><i class="fas fa-info-circle text-info"></i> What Gets Imported</h6>
-          <p>When you import a ruling, the system will extract:</p>
-          <ul>
-            <li>Case number and title</li>
-            <li>Court and date</li>
-            <li>Judges involved</li>
-            <li>Full text of the ruling</li>
-            <li>Case citation</li>
-          </ul>
+        <div class="card-body p-0">
+          {% if recent_imports %}
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Case Number</th>
+                    <th>Title</th>
+                    <th>Court</th>
+                    <th>Date Imported</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for ruling in recent_imports %}
+                    <tr>
+                      <td>{{ ruling.case_number }}</td>
+                      <td>{{ ruling.title }}</td>
+                      <td>{{ ruling.court }}</td>
+                      <td>{{ ruling.created_at.strftime('%d %b %Y, %H:%M') }}</td>
+                      <td>
+                        {% if ruling.analysis_id %}
+                          <span class="badge bg-success">Analyzed</span>
+                        {% else %}
+                          <span class="badge bg-secondary">Imported</span>
+                        {% endif %}
+                      </td>
+                      <td>
+                        <a href="{{ url_for('rulings.view_ruling', ruling_id=ruling.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+                        {% if not ruling.analysis_id and current_user.has_permission('advanced_research') %}
+                          <form action="{{ url_for('rulings.analyze_ruling', ruling_id=ruling.id) }}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-info">Analyze</button>
+                          </form>
+                        {% endif %}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="p-4 text-center">
+              <p class="mb-0">No recent imports. Import rulings using the options above.</p>
+            </div>
+          {% endif %}
         </div>
       </div>
     </div>
   </div>
 </div>
-{% endblock %}
 
 {% block scripts %}
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // Add event listeners to import option buttons
-    document.querySelectorAll('.import-option button').forEach(button => {
-      button.addEventListener('click', function() {
-        const option = this.getAttribute('data-option');
-        resetImportForms();
-        
-        // Show the selected form
-        if (option === 'url') {
-          document.getElementById('urlImportForm').style.display = 'block';
-          document.getElementById('urlImportOption').classList.add('active');
-          document.getElementById('case_url').focus();
-        } else if (option === 'court') {
-          document.getElementById('courtImportForm').style.display = 'block';
-          document.getElementById('courtImportOption').classList.add('active');
-          document.getElementById('court').focus();
-        }
-      });
-    });
-
-    // Initialize the form based on URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const option = urlParams.get('option');
+    // Update token estimate based on limit selection
+    const limitSelect = document.getElementById('limit');
+    const tokenEstimate = document.getElementById('tokenEstimate');
     
-    if (option === 'url') {
-      document.querySelector('[data-option="url"]').click();
-    } else if (option === 'court') {
-      document.querySelector('[data-option="court"]').click();
+    if (limitSelect && tokenEstimate) {
+      limitSelect.addEventListener('change', function() {
+        const limit = parseInt(this.value);
+        const minTokens = limit * 5;
+        const maxTokens = limit * 10;
+        tokenEstimate.textContent = `${minTokens}-${maxTokens}`;
+      });
     }
   });
-
-  function resetImportForms() {
-    // Hide all forms
-    document.getElementById('urlImportForm').style.display = 'none';
-    document.getElementById('courtImportForm').style.display = 'none';
-    
-    // Remove active class from options
-    document.getElementById('urlImportOption').classList.remove('active');
-    document.getElementById('courtImportOption').classList.remove('active');
-  }
 </script>
+{% endblock %}
 {% endblock %}

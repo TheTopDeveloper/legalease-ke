@@ -1,48 +1,34 @@
 {% extends "layout.html" %}
 
-{% block title %}Judicial Trends Analysis{% endblock %}
+{% block title %}Judicial Trends{% endblock %}
 
 {% block styles %}
 <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
 <style>
-  .stats-card {
-    border-left: 4px solid var(--bs-primary);
+  .trend-card {
     transition: transform 0.2s;
+    border-left: 4px solid var(--bs-primary);
   }
-  .stats-card:hover {
+  .trend-card:hover {
     transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
   }
   .chart-container {
     position: relative;
     height: 300px;
+    width: 100%;
+  }
+  .trend-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    border-radius: 0 0.25rem 0 0.25rem;
+  }
+  .trend-highlight {
+    background-color: rgba(var(--bs-info-rgb), 0.1);
+    border-left: 3px solid var(--bs-info);
+    padding: 1rem;
     margin-bottom: 1rem;
-  }
-  .network-container {
-    height: 500px;
-    border: 1px solid rgba(var(--bs-secondary-rgb), 0.2);
-    border-radius: 0.25rem;
-  }
-  .top-item {
-    padding: 0.5rem;
-    border-bottom: 1px solid rgba(var(--bs-secondary-rgb), 0.2);
-    transition: background-color 0.2s;
-  }
-  .top-item:hover {
-    background-color: rgba(var(--bs-secondary-rgb), 0.1);
-  }
-  .top-item:last-child {
-    border-bottom: none;
-  }
-  .distribution-bar {
-    height: 24px;
-    border-radius: 12px;
-    overflow: hidden;
-    background-color: rgba(var(--bs-secondary-rgb), 0.2);
-  }
-  .distribution-segment {
-    height: 100%;
-    float: left;
-    transition: width 0.3s ease;
   }
 </style>
 {% endblock %}
@@ -54,528 +40,414 @@
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="{{ url_for('rulings.index') }}">Rulings</a></li>
-          <li class="breadcrumb-item active">Trends</li>
+          <li class="breadcrumb-item active">Judicial Trends</li>
         </ol>
       </nav>
       <h1 class="mb-0">Judicial Trends Analysis</h1>
-      <p class="text-muted">Explore patterns and insights from Kenyan court decisions</p>
+      <p class="text-muted">Insights and patterns in Kenyan judicial decisions</p>
     </div>
   </div>
 
-  {% if trends_summary %}
-    <!-- Overview statistics -->
-    <div class="row mb-4">
-      <div class="col-md-3 mb-3">
-        <div class="card stats-card h-100">
-          <div class="card-body">
-            <h5 class="card-title">Total Rulings</h5>
-            <h2 class="mb-0">{{ trends_summary.total_rulings }}</h2>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3 mb-3">
-        <div class="card stats-card h-100">
-          <div class="card-body">
-            <h5 class="card-title">Judges</h5>
-            <h2 class="mb-0">{{ trends_summary.total_judges }}</h2>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3 mb-3">
-        <div class="card stats-card h-100">
-          <div class="card-body">
-            <h5 class="card-title">Legal Concepts</h5>
-            <h2 class="mb-0">{{ trends_summary.total_tags }}</h2>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3 mb-3">
-        <div class="card stats-card h-100">
-          <div class="card-body">
-            <h5 class="card-title">Landmark Cases</h5>
-            <h2 class="mb-0">{{ trends_summary.landmark_cases_count }}</h2>
-          </div>
+  <!-- Filters -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Filter Trends</h5>
+          <form action="{{ url_for('rulings.trends') }}" method="get" class="row g-3">
+            <div class="col-md-3">
+              <label for="court" class="form-label">Court</label>
+              <select class="form-select" id="court" name="court">
+                <option value="">All Courts</option>
+                {% for court in COURTS %}
+                  <option value="{{ court }}" {% if selected_court == court %}selected{% endif %}>{{ court }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label for="time_period" class="form-label">Time Period</label>
+              <select class="form-select" id="time_period" name="time_period">
+                <option value="1y" {% if time_period == '1y' %}selected{% endif %}>Last Year</option>
+                <option value="3y" {% if time_period == '3y' %}selected{% endif %}>Last 3 Years</option>
+                <option value="5y" {% if time_period == '5y' %}selected{% endif %}>Last 5 Years</option>
+                <option value="10y" {% if time_period == '10y' %}selected{% endif %}>Last 10 Years</option>
+                <option value="all" {% if time_period == 'all' %}selected{% endif %}>All Time</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label for="concept" class="form-label">Legal Concept</label>
+              <select class="form-select" id="concept" name="concept">
+                <option value="">All Concepts</option>
+                {% for tag in tags %}
+                  <option value="{{ tag.id }}" {% if selected_concept_id == tag.id %}selected{% endif %}>{{ tag.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+              <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
+  </div>
 
-    <div class="row mb-4">
-      <!-- Court distribution -->
-      <div class="col-md-6 mb-4">
-        <div class="card h-100">
-          <div class="card-header">
-            <h5 class="card-title mb-0">Court Distribution</h5>
-          </div>
-          <div class="card-body">
-            <div class="chart-container">
-              <canvas id="courtDistributionChart"></canvas>
-            </div>
-            <div class="table-responsive mt-3">
-              <table class="table table-sm">
-                <thead>
-                  <tr>
-                    <th>Court</th>
-                    <th>Rulings</th>
-                    <th>%</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for court, count in trends_summary.court_distribution.items() %}
-                    <tr>
-                      <td>{{ court }}</td>
-                      <td>{{ count }}</td>
-                      <td>{{ (count / trends_summary.total_rulings * 100)|round(1) }}%</td>
-                      <td>
-                        <a href="{{ url_for('rulings.court_trends', court=court) }}" class="btn btn-sm btn-outline-primary">View Trends</a>
-                      </td>
-                    </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Yearly trend -->
-      <div class="col-md-6 mb-4">
-        <div class="card h-100">
-          <div class="card-header">
-            <h5 class="card-title mb-0">Yearly Trend</h5>
-          </div>
-          <div class="card-body">
-            <div class="chart-container">
-              <canvas id="yearlyTrendChart"></canvas>
-            </div>
-            <div class="alert alert-info mt-3">
-              <i class="fas fa-info-circle"></i> This chart shows the number of rulings per year in the database.
-            </div>
-          </div>
+  <!-- Overview Stats -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card trend-card h-100">
+        <div class="card-body">
+          <h5 class="card-title">Total Rulings</h5>
+          <h2 class="display-4">{{ stats.total_rulings }}</h2>
+          <p class="text-muted">In selected period</p>
         </div>
       </div>
     </div>
-
-    <div class="row mb-4">
-      <!-- Outcome distribution -->
-      <div class="col-md-6 mb-4">
-        <div class="card h-100">
-          <div class="card-header">
-            <h5 class="card-title mb-0">Outcome Distribution</h5>
-          </div>
-          <div class="card-body">
-            <div class="chart-container">
-              <canvas id="outcomeDistributionChart"></canvas>
-            </div>
-            <div class="distribution-visualization mt-3">
-              <div class="distribution-bar">
-                {% for outcome, count in trends_summary.outcome_distribution.items() %}
-                  {% set percentage = (count / trends_summary.total_rulings * 100)|round(1) %}
-                  {% set color = loop.index0 % 6 %}
-                  {% set colors = ['primary', 'success', 'danger', 'warning', 'info', 'secondary'] %}
-                  <div class="distribution-segment bg-{{ colors[color] }}" style="width: {{ percentage }}%;" title="{{ outcome }}: {{ percentage }}%"></div>
-                {% endfor %}
-              </div>
-              <div class="d-flex justify-content-between mt-2">
-                {% for outcome, count in trends_summary.outcome_distribution.items() %}
-                  {% set percentage = (count / trends_summary.total_rulings * 100)|round(1) %}
-                  {% if loop.index0 < 4 %}
-                    <small class="text-muted">{{ outcome }}: {{ percentage }}%</small>
-                  {% endif %}
-                {% endfor %}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Category distribution -->
-      <div class="col-md-6 mb-4">
-        <div class="card h-100">
-          <div class="card-header">
-            <h5 class="card-title mb-0">Category Distribution</h5>
-          </div>
-          <div class="card-body">
-            <div class="chart-container">
-              <canvas id="categoryDistributionChart"></canvas>
-            </div>
-            <div class="distribution-visualization mt-3">
-              <div class="distribution-bar">
-                {% for category, count in trends_summary.category_distribution.items() %}
-                  {% set percentage = (count / trends_summary.total_rulings * 100)|round(1) %}
-                  {% set color = loop.index0 % 6 %}
-                  {% set colors = ['primary', 'success', 'danger', 'warning', 'info', 'secondary'] %}
-                  <div class="distribution-segment bg-{{ colors[color] }}" style="width: {{ percentage }}%;" title="{{ category }}: {{ percentage }}%"></div>
-                {% endfor %}
-              </div>
-              <div class="d-flex justify-content-between mt-2">
-                {% for category, count in trends_summary.category_distribution.items() %}
-                  {% set percentage = (count / trends_summary.total_rulings * 100)|round(1) %}
-                  {% if loop.index0 < 4 %}
-                    <small class="text-muted">{{ category }}: {{ percentage }}%</small>
-                  {% endif %}
-                {% endfor %}
-              </div>
-            </div>
-          </div>
+    <div class="col-md-3">
+      <div class="card trend-card h-100">
+        <div class="card-body">
+          <h5 class="card-title">Landmark Cases</h5>
+          <h2 class="display-4">{{ stats.landmark_count }}</h2>
+          <p class="text-muted">{{ '%0.1f'|format(stats.landmark_percentage) }}% of total</p>
         </div>
       </div>
     </div>
+    <div class="col-md-3">
+      <div class="card trend-card h-100">
+        <div class="card-body">
+          <h5 class="card-title">Avg. Importance</h5>
+          <h2 class="display-4">{{ '%0.1f'|format(stats.avg_importance) }}</h2>
+          <p class="text-muted">On scale of 1-10</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card trend-card h-100">
+        <div class="card-body">
+          <h5 class="card-title">Top Court</h5>
+          <h2 class="h3">{{ stats.top_court }}</h2>
+          <p class="text-muted">{{ stats.top_court_percentage }}% of rulings</p>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    <div class="row mb-4">
-      <!-- Top judges -->
-      <div class="col-md-6 mb-4">
-        <div class="card h-100">
-          <div class="card-header">
-            <h5 class="card-title mb-0">Top Judges</h5>
-          </div>
-          <div class="card-body">
-            {% if trends_summary.top_judges %}
-              <div class="list-group list-group-flush">
-                {% for judge in trends_summary.top_judges %}
-                  <div class="top-item d-flex justify-content-between align-items-center">
-                    <div>
-                      <h6 class="mb-0">{{ judge.name }}</h6>
-                      <small class="text-muted">{{ judge.ruling_count }} rulings</small>
-                    </div>
-                    <a href="{{ url_for('rulings.view_judge', judge_id=judge.id) }}" class="btn btn-sm btn-outline-primary">View Profile</a>
-                  </div>
-                {% endfor %}
+  <!-- Main Content -->
+  <div class="row">
+    <!-- Trends Charts Column -->
+    <div class="col-lg-8">
+      <!-- Ruling Trend Over Time -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Rulings Over Time</h5>
+        </div>
+        <div class="card-body">
+          <div id="timeChart" class="chart-container">
+            {% if not time_data %}
+              <div class="alert alert-info">
+                Not enough data to display a trend chart. Import more rulings to see patterns.
               </div>
-            {% else %}
-              <p class="text-muted">No judge data available.</p>
             {% endif %}
           </div>
-          <div class="card-footer text-end">
-            <a href="{{ url_for('rulings.judges') }}" class="btn btn-sm btn-primary">View All Judges</a>
-          </div>
         </div>
       </div>
 
-      <!-- Top legal concepts -->
-      <div class="col-md-6 mb-4">
-        <div class="card h-100">
-          <div class="card-header">
-            <h5 class="card-title mb-0">Top Legal Concepts</h5>
-          </div>
-          <div class="card-body">
-            {% if trends_summary.top_legal_concepts %}
-              <div class="list-group list-group-flush">
-                {% for tag in trends_summary.top_legal_concepts %}
-                  <div class="top-item d-flex justify-content-between align-items-center">
-                    <div>
-                      <h6 class="mb-0">{{ tag.name }}</h6>
-                      <small class="text-muted">{{ tag.ruling_count }} rulings</small>
-                    </div>
-                    <a href="{{ url_for('rulings.view_tag', tag_id=tag.id) }}" class="btn btn-sm btn-outline-primary">View Details</a>
-                  </div>
-                {% endfor %}
+      <!-- Court Distribution -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Distribution by Court</h5>
+        </div>
+        <div class="card-body">
+          <div id="courtChart" class="chart-container">
+            {% if not court_data %}
+              <div class="alert alert-info">
+                Not enough data to display court distribution. Import rulings from multiple courts.
               </div>
-            {% else %}
-              <p class="text-muted">No legal concept data available.</p>
             {% endif %}
           </div>
-          <div class="card-footer text-end">
-            <a href="{{ url_for('rulings.tags') }}" class="btn btn-sm btn-primary">View All Concepts</a>
+        </div>
+      </div>
+
+      <!-- Outcome Trends -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Outcome Trends</h5>
+        </div>
+        <div class="card-body">
+          <div id="outcomeChart" class="chart-container">
+            {% if not outcome_data %}
+              <div class="alert alert-info">
+                Not enough data to display outcome trends. Add outcome data to rulings.
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Citation Network -->
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Citation Network</h5>
+        </div>
+        <div class="card-body">
+          <div id="citationNetwork" class="chart-container">
+            {% if not citation_network %}
+              <div class="alert alert-info">
+                Not enough citation data to display a network. Add references between rulings.
+              </div>
+            {% endif %}
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Citation network -->
-    <h3 class="mb-3" id="citation-network">Citation Network</h3>
-    <div class="card mb-4">
-      <div class="card-header">
-        <h5 class="card-title mb-0">Ruling Citation Network</h5>
-      </div>
-      <div class="card-body">
-        <div class="network-container" id="citationNetwork">
-          <!-- Network visualization will be rendered here -->
-          <div class="d-flex justify-content-center align-items-center h-100">
-            <div class="text-center">
-              <div class="spinner-border text-primary mb-3" role="status">
-                <span class="visually-hidden">Loading...</span>
+    <!-- Insights Column -->
+    <div class="col-lg-4">
+      <!-- Key Insights -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Key Insights</h5>
+        </div>
+        <div class="card-body">
+          {% if insights %}
+            {% for insight in insights %}
+              <div class="trend-highlight">
+                <h6>{{ insight.title }}</h6>
+                <p>{{ insight.description }}</p>
+                {% if insight.change %}
+                  <div class="d-flex align-items-center">
+                    <span class="badge bg-{{ 'success' if insight.change > 0 else 'danger' }}">
+                      {{ '+' if insight.change > 0 else '' }}{{ insight.change }}%
+                    </span>
+                    <span class="ms-2 small text-muted">{{ insight.period }}</span>
+                  </div>
+                {% endif %}
               </div>
-              <p>Loading citation network...</p>
+            {% endfor %}
+          {% else %}
+            <div class="alert alert-info">
+              No insights available yet. Add more rulings to generate judicial insights.
             </div>
-          </div>
+          {% endif %}
         </div>
-        <div class="mt-3">
-          <p class="text-muted">
-            <i class="fas fa-info-circle"></i> This network shows citation relationships between rulings. 
-            Larger nodes represent landmark cases or rulings with high importance scores. 
-            Edges indicate citations between rulings.
-          </p>
+      </div>
+
+      <!-- Top Cited Cases -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Most Influential Cases</h5>
+        </div>
+        <div class="card-body p-0">
+          {% if top_cases %}
+            <div class="list-group list-group-flush">
+              {% for case in top_cases %}
+                <a href="{{ url_for('rulings.view_ruling', ruling_id=case.id) }}" class="list-group-item list-group-item-action">
+                  <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">{{ case.title }}</h6>
+                    <span class="badge bg-primary">{{ case.citation_count }} citations</span>
+                  </div>
+                  <p class="mb-1">{{ case.case_number }}</p>
+                  <small class="text-muted">{{ case.court }} ({{ case.date_of_ruling.strftime('%Y') }})</small>
+                </a>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="list-group-item">
+              No influential cases identified yet. Add more citation data.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Top Legal Concepts -->
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Trending Legal Concepts</h5>
+        </div>
+        <div class="card-body p-0">
+          {% if trending_concepts %}
+            <div class="list-group list-group-flush">
+              {% for concept in trending_concepts %}
+                <a href="{{ url_for('rulings.search') }}?tags={{ concept.id }}" class="list-group-item list-group-item-action">
+                  <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">{{ concept.name }}</h6>
+                    <span class="badge bg-{{ 'success' if concept.trend > 0 else 'danger' }}">
+                      {{ '+' if concept.trend > 0 else '' }}{{ concept.trend }}%
+                    </span>
+                  </div>
+                  <p class="mb-1">{{ concept.count }} rulings</p>
+                  <div class="progress mt-1" style="height: 4px;">
+                    <div class="progress-bar" role="progressbar" style="width: {{ concept.frequency }}%"></div>
+                  </div>
+                </a>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="list-group-item">
+              No trending concepts available yet. Tag rulings with legal concepts.
+            </div>
+          {% endif %}
         </div>
       </div>
     </div>
-  {% else %}
-    <div class="alert alert-info">
-      <h4 class="alert-heading">No data available for trend analysis</h4>
-      <p>There are not enough rulings in the database to generate meaningful trends. Add more rulings to see trend analysis.</p>
-      <hr>
-      <p class="mb-0">
-        <a href="{{ url_for('rulings.import_rulings') }}" class="btn btn-primary">Import Rulings</a>
-        <a href="{{ url_for('rulings.create_ruling') }}" class="btn btn-success">Add Ruling Manually</a>
-      </p>
-    </div>
-  {% endif %}
+  </div>
 </div>
-{% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/vis-network.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    {% if trends_summary %}
-      // Court distribution chart
-      const courtCtx = document.getElementById('courtDistributionChart').getContext('2d');
-      const courtLabels = {{ trends_summary.court_distribution.keys()|list|tojson }};
-      const courtData = {{ trends_summary.court_distribution.values()|list|tojson }};
-      
-      new Chart(courtCtx, {
-        type: 'pie',
-        data: {
-          labels: courtLabels,
-          datasets: [{
-            data: courtData,
-            backgroundColor: [
-              'rgba(var(--bs-primary-rgb), 0.7)',
-              'rgba(var(--bs-success-rgb), 0.7)',
-              'rgba(var(--bs-danger-rgb), 0.7)',
-              'rgba(var(--bs-warning-rgb), 0.7)',
-              'rgba(var(--bs-info-rgb), 0.7)',
-              'rgba(var(--bs-secondary-rgb), 0.7)'
-            ],
-            borderColor: [
-              'rgba(var(--bs-primary-rgb), 1)',
-              'rgba(var(--bs-success-rgb), 1)',
-              'rgba(var(--bs-danger-rgb), 1)',
-              'rgba(var(--bs-warning-rgb), 1)',
-              'rgba(var(--bs-info-rgb), 1)',
-              'rgba(var(--bs-secondary-rgb), 1)'
-            ],
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'right',
+    // Time Chart
+    {% if time_data %}
+    var timeCtx = document.getElementById('timeChart').getContext('2d');
+    var timeChart = new Chart(timeCtx, {
+      type: 'line',
+      data: {
+        labels: {{ time_data.labels | tojson }},
+        datasets: [{
+          label: 'Number of Rulings',
+          data: {{ time_data.values | tojson }},
+          borderColor: 'rgba(var(--bs-primary-rgb), 1)',
+          backgroundColor: 'rgba(var(--bs-primary-rgb), 0.1)',
+          borderWidth: 2,
+          tension: 0.3,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              precision: 0
             }
           }
         }
-      });
-
-      // Yearly trend chart
-      const yearlyCtx = document.getElementById('yearlyTrendChart').getContext('2d');
-      const yearlyLabels = {{ trends_summary.yearly_trend.keys()|list|tojson }};
-      const yearlyData = {{ trends_summary.yearly_trend.values()|list|tojson }};
-      
-      new Chart(yearlyCtx, {
-        type: 'line',
-        data: {
-          labels: yearlyLabels,
-          datasets: [{
-            label: 'Number of Rulings',
-            data: yearlyData,
-            backgroundColor: 'rgba(var(--bs-primary-rgb), 0.2)',
-            borderColor: 'rgba(var(--bs-primary-rgb), 1)',
-            tension: 0.1,
-            fill: true
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: {
-              beginAtZero: true,
-              title: {
-                display: true,
-                text: 'Number of Rulings'
-              }
-            },
-            x: {
-              title: {
-                display: true,
-                text: 'Year'
-              }
-            }
-          }
-        }
-      });
-
-      // Outcome distribution chart
-      const outcomeCtx = document.getElementById('outcomeDistributionChart').getContext('2d');
-      const outcomeLabels = {{ trends_summary.outcome_distribution.keys()|list|tojson }};
-      const outcomeData = {{ trends_summary.outcome_distribution.values()|list|tojson }};
-      
-      new Chart(outcomeCtx, {
-        type: 'bar',
-        data: {
-          labels: outcomeLabels,
-          datasets: [{
-            label: 'Number of Rulings',
-            data: outcomeData,
-            backgroundColor: [
-              'rgba(var(--bs-primary-rgb), 0.7)',
-              'rgba(var(--bs-success-rgb), 0.7)',
-              'rgba(var(--bs-danger-rgb), 0.7)',
-              'rgba(var(--bs-warning-rgb), 0.7)',
-              'rgba(var(--bs-info-rgb), 0.7)',
-              'rgba(var(--bs-secondary-rgb), 0.7)'
-            ],
-            borderColor: [
-              'rgba(var(--bs-primary-rgb), 1)',
-              'rgba(var(--bs-success-rgb), 1)',
-              'rgba(var(--bs-danger-rgb), 1)',
-              'rgba(var(--bs-warning-rgb), 1)',
-              'rgba(var(--bs-info-rgb), 1)',
-              'rgba(var(--bs-secondary-rgb), 1)'
-            ],
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: {
-              beginAtZero: true
-            }
-          }
-        }
-      });
-
-      // Category distribution chart
-      const categoryCtx = document.getElementById('categoryDistributionChart').getContext('2d');
-      const categoryLabels = {{ trends_summary.category_distribution.keys()|list|tojson }};
-      const categoryData = {{ trends_summary.category_distribution.values()|list|tojson }};
-      
-      new Chart(categoryCtx, {
-        type: 'doughnut',
-        data: {
-          labels: categoryLabels,
-          datasets: [{
-            data: categoryData,
-            backgroundColor: [
-              'rgba(var(--bs-primary-rgb), 0.7)',
-              'rgba(var(--bs-success-rgb), 0.7)',
-              'rgba(var(--bs-danger-rgb), 0.7)',
-              'rgba(var(--bs-warning-rgb), 0.7)',
-              'rgba(var(--bs-info-rgb), 0.7)',
-              'rgba(var(--bs-secondary-rgb), 0.7)'
-            ],
-            borderColor: [
-              'rgba(var(--bs-primary-rgb), 1)',
-              'rgba(var(--bs-success-rgb), 1)',
-              'rgba(var(--bs-danger-rgb), 1)',
-              'rgba(var(--bs-warning-rgb), 1)',
-              'rgba(var(--bs-info-rgb), 1)',
-              'rgba(var(--bs-secondary-rgb), 1)'
-            ],
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom',
-            }
-          }
-        }
-      });
-
-      // Citation network visualization
-      if (document.getElementById('citationNetwork')) {
-        // Fetch citation network data from API
-        fetch("{{ url_for('rulings.api_citation_network') }}")
-          .then(response => response.json())
-          .then(data => {
-            const container = document.getElementById('citationNetwork');
-            
-            // Create nodes with different sizes based on importance
-            const nodes = new vis.DataSet(data.nodes.map(node => {
-              return {
-                id: node.id,
-                label: node.label,
-                title: `${node.title}<br>${node.court} (${node.date})`,
-                shape: node.is_landmark ? 'star' : 'dot',
-                size: node.is_landmark ? 25 : 15,
-                color: {
-                  background: node.is_landmark ? 'rgba(var(--bs-warning-rgb), 0.7)' : 'rgba(var(--bs-primary-rgb), 0.7)',
-                  border: node.is_landmark ? 'rgba(var(--bs-warning-rgb), 1)' : 'rgba(var(--bs-primary-rgb), 1)',
-                  highlight: {
-                    background: node.is_landmark ? 'rgba(var(--bs-warning-rgb), 0.9)' : 'rgba(var(--bs-primary-rgb), 0.9)',
-                    border: node.is_landmark ? 'rgba(var(--bs-warning-rgb), 1)' : 'rgba(var(--bs-primary-rgb), 1)'
-                  }
-                }
-              };
-            }));
-            
-            // Create edges
-            const edges = new vis.DataSet(data.edges.map(edge => {
-              return {
-                from: edge.source,
-                to: edge.target,
-                arrows: 'to',
-                title: edge.type,
-                color: {
-                  color: 'rgba(var(--bs-secondary-rgb), 0.5)',
-                  highlight: 'rgba(var(--bs-secondary-rgb), 0.8)'
-                }
-              };
-            }));
-            
-            // Create network
-            const networkData = { nodes, edges };
-            const options = {
-              physics: {
-                stabilization: true,
-                barnesHut: {
-                  gravitationalConstant: -5000,
-                  centralGravity: 0.3,
-                  springLength: 200,
-                  springConstant: 0.04,
-                  damping: 0.09
-                }
-              },
-              layout: {
-                randomSeed: 42,
-                improvedLayout: true
-              },
-              interaction: {
-                navigationButtons: true,
-                keyboard: true
-              }
-            };
-            
-            const network = new vis.Network(container, networkData, options);
-            
-            // Handle click events
-            network.on('doubleClick', function(params) {
-              if (params.nodes.length > 0) {
-                const nodeId = params.nodes[0];
-                window.location.href = `/rulings/ruling/${nodeId}`;
-              }
-            });
-          })
-          .catch(error => {
-            console.error('Error loading citation network:', error);
-            document.getElementById('citationNetwork').innerHTML = `
-              <div class="alert alert-danger m-3">
-                <i class="fas fa-exclamation-triangle"></i> Error loading citation network: ${error.message}
-              </div>
-            `;
-          });
       }
+    });
+    {% endif %}
+
+    // Court Chart
+    {% if court_data %}
+    var courtCtx = document.getElementById('courtChart').getContext('2d');
+    var courtChart = new Chart(courtCtx, {
+      type: 'pie',
+      data: {
+        labels: {{ court_data.labels | tojson }},
+        datasets: [{
+          data: {{ court_data.values | tojson }},
+          backgroundColor: [
+            'rgba(var(--bs-primary-rgb), 0.7)',
+            'rgba(var(--bs-success-rgb), 0.7)',
+            'rgba(var(--bs-info-rgb), 0.7)',
+            'rgba(var(--bs-warning-rgb), 0.7)',
+            'rgba(var(--bs-danger-rgb), 0.7)',
+            'rgba(var(--bs-secondary-rgb), 0.7)'
+          ]
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right'
+          }
+        }
+      }
+    });
+    {% endif %}
+
+    // Outcome Chart
+    {% if outcome_data %}
+    var outcomeCtx = document.getElementById('outcomeChart').getContext('2d');
+    var outcomeChart = new Chart(outcomeCtx, {
+      type: 'bar',
+      data: {
+        labels: {{ outcome_data.labels | tojson }},
+        datasets: [{
+          label: 'Outcomes',
+          data: {{ outcome_data.values | tojson }},
+          backgroundColor: 'rgba(var(--bs-info-rgb), 0.7)',
+          borderColor: 'rgba(var(--bs-info-rgb), 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              precision: 0
+            }
+          }
+        }
+      }
+    });
+    {% endif %}
+
+    // Citation Network (placeholder for a more complex visualization)
+    {% if citation_network %}
+    // This would ideally use D3.js or a similar library for a more complex network visualization
+    var citationCtx = document.getElementById('citationNetwork').getContext('2d');
+    var citationChart = new Chart(citationCtx, {
+      type: 'bubble',
+      data: {
+        datasets: [
+          {% for node in citation_network.nodes %}
+          {
+            label: '{{ node.label }}',
+            data: [{
+              x: {{ node.x }},
+              y: {{ node.y }},
+              r: {{ node.size }}
+            }],
+            backgroundColor: 'rgba(var(--bs-{{ node.color }}-rgb), 0.7)'
+          },
+          {% endfor %}
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return context.dataset.label;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: {
+              display: false
+            },
+            grid: {
+              display: false
+            }
+          },
+          y: {
+            ticks: {
+              display: false
+            },
+            grid: {
+              display: false
+            }
+          }
+        }
+      }
+    });
     {% endif %}
   });
 </script>
+{% endblock %}
 {% endblock %}

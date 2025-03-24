@@ -7,31 +7,45 @@
 <style>
   .judge-card {
     transition: transform 0.2s;
+    border-top: 4px solid var(--bs-primary);
   }
   .judge-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
   }
-  .judge-avatar {
-    width: 80px;
-    height: 80px;
+  .court-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    border-radius: 0 0.25rem 0 0.25rem;
+  }
+  .stat-circle {
+    width: 70px;
+    height: 70px;
     border-radius: 50%;
-    object-fit: cover;
     background-color: rgba(var(--bs-primary-rgb), 0.1);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
-    color: var(--bs-primary);
+    flex-direction: column;
   }
-  .judge-initials {
-    text-transform: uppercase;
+  .activity-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
   }
-  .ruling-count-badge {
-    position: absolute;
-    top: 0;
-    right: 0;
-    margin: 0.5rem;
+  .active-indicator {
+    background-color: var(--bs-success);
+  }
+  .inactive-indicator {
+    background-color: var(--bs-danger);
+  }
+  .chart-container {
+    position: relative;
+    height: 150px;
+    width: 100%;
   }
 </style>
 {% endblock %}
@@ -43,142 +57,232 @@
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="{{ url_for('rulings.index') }}">Rulings</a></li>
-          <li class="breadcrumb-item active">Judges</li>
+          <li class="breadcrumb-item active">Judges Database</li>
         </ol>
       </nav>
       <h1 class="mb-0">Judges Database</h1>
-      <p class="text-muted">Explore judges and their ruling patterns</p>
+      <p class="text-muted">Profiles and ruling patterns of Kenyan judges</p>
     </div>
   </div>
 
-  <!-- Filter and search -->
-  <div class="card mb-4">
-    <div class="card-body">
-      <form action="{{ url_for('rulings.judges') }}" method="get" class="row g-3">
-        <div class="col-md-4">
-          <div class="input-group">
-            <span class="input-group-text"><i class="fas fa-search"></i></span>
-            <input type="text" class="form-control" name="query" placeholder="Search judges..." value="{{ request.args.get('query', '') }}">
-          </div>
+  <!-- Search and Filters -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <form action="{{ url_for('rulings.judges') }}" method="get" class="row g-3">
+            <div class="col-lg-4">
+              <div class="input-group">
+                <input type="text" class="form-control" name="query" placeholder="Search by name..." value="{{ query if query else '' }}">
+                <button class="btn btn-primary" type="submit">
+                  <i class="fas fa-search"></i>
+                </button>
+              </div>
+            </div>
+            <div class="col-lg-3">
+              <select class="form-select" name="court">
+                <option value="">All Courts</option>
+                {% for court in courts %}
+                  <option value="{{ court }}" {% if selected_court == court %}selected{% endif %}>{{ court }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-lg-3">
+              <select class="form-select" name="sort">
+                <option value="name" {% if sort == 'name' %}selected{% endif %}>Name (A-Z)</option>
+                <option value="rulings_count" {% if sort == 'rulings_count' %}selected{% endif %}>Most Rulings</option>
+                <option value="recent" {% if sort == 'recent' %}selected{% endif %}>Most Recent</option>
+              </select>
+            </div>
+            <div class="col-lg-2">
+              <div class="form-check form-switch mt-2">
+                <input class="form-check-input" type="checkbox" name="active_only" id="activeOnly" {% if active_only %}checked{% endif %}>
+                <label class="form-check-label" for="activeOnly">Active Only</label>
+              </div>
+            </div>
+          </form>
         </div>
-        <div class="col-md-3">
-          <select name="court" class="form-select">
-            <option value="">All Courts</option>
-            {% for court in COURTS %}
-              <option value="{{ court }}" {% if request.args.get('court') == court %}selected{% endif %}>{{ court }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="col-md-3">
-          <select name="sort" class="form-select">
-            <option value="name" {% if request.args.get('sort') == 'name' %}selected{% endif %}>Sort by Name</option>
-            <option value="rulings" {% if request.args.get('sort', 'rulings') == 'rulings' %}selected{% endif %}>Sort by Ruling Count</option>
-            <option value="court" {% if request.args.get('sort') == 'court' %}selected{% endif %}>Sort by Court</option>
-          </select>
-        </div>
-        <div class="col-md-2">
-          <button type="submit" class="btn btn-primary w-100">Apply</button>
-        </div>
-      </form>
+      </div>
     </div>
   </div>
 
-  <!-- Judges list -->
-  <div class="row">
+  <!-- Judge List -->
+  <div class="row mb-4">
     {% if judges %}
-      {% for judge, ruling_count in judges %}
-        <div class="col-md-4 mb-4">
-          <div class="card judge-card h-100 position-relative">
-            <div class="ruling-count-badge">
-              <span class="badge bg-{{ 'success' if ruling_count > 10 else 'primary' }}">{{ ruling_count }} rulings</span>
-            </div>
-            <div class="card-body d-flex">
-              <div class="judge-avatar me-3">
-                {% if judge.photo_url %}
-                  <img src="{{ judge.photo_url }}" alt="{{ judge.name }}" class="w-100 h-100">
-                {% else %}
-                  <span class="judge-initials">{{ judge.name.split()|map('first')|join }}</span>
-                {% endif %}
+      {% for judge in judges %}
+        <div class="col-md-6 col-xl-4 mb-4">
+          <div class="card judge-card h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title mb-0">
+                  <span class="activity-indicator {{ 'active-indicator' if judge.is_active else 'inactive-indicator' }}"></span>
+                  {{ judge.name }}
+                </h5>
+                <span class="badge bg-{{ 'primary' if judge.court == 'Supreme Court' else ('success' if judge.court == 'Court of Appeal' else 'info') }}">
+                  {{ judge.court }}
+                </span>
               </div>
-              <div>
-                <h5 class="card-title mb-1">{{ judge.name }}</h5>
-                {% if judge.title %}
-                  <h6 class="card-subtitle mb-2 text-muted">{{ judge.title }}</h6>
-                {% endif %}
-                <p class="card-text mb-1">
-                  {% if judge.court %}
-                    <span class="badge bg-primary">{{ judge.court }}</span>
-                  {% endif %}
-                  {% if judge.is_active %}
-                    <span class="badge bg-success">Active</span>
-                  {% else %}
-                    <span class="badge bg-secondary">Inactive</span>
-                  {% endif %}
-                </p>
-                {% if judge.start_date %}
-                  <small class="text-muted">Since {{ judge.start_date.strftime('%Y') }}</small>
-                {% endif %}
+              
+              {% if judge.title %}
+                <p class="text-muted">{{ judge.title }}</p>
+              {% endif %}
+              
+              <div class="row mb-3">
+                <div class="col-4 text-center">
+                  <div class="stat-circle mx-auto">
+                    <h4 class="mb-0">{{ judge.rulings_count }}</h4>
+                    <small class="text-muted">Rulings</small>
+                  </div>
+                </div>
+                <div class="col-4 text-center">
+                  <div class="stat-circle mx-auto">
+                    <h4 class="mb-0">{{ judge.avg_importance|round(1) }}</h4>
+                    <small class="text-muted">Importance</small>
+                  </div>
+                </div>
+                <div class="col-4 text-center">
+                  <div class="stat-circle mx-auto">
+                    <h4 class="mb-0">{{ judge.citations }}</h4>
+                    <small class="text-muted">Citations</small>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div class="card-footer bg-transparent">
-              <a href="{{ url_for('rulings.view_judge', judge_id=judge.id) }}" class="btn btn-sm btn-outline-primary">View Profile</a>
-              <a href="{{ url_for('rulings.search', judge_id=judge.id) }}" class="btn btn-sm btn-outline-secondary">View Rulings</a>
+              
+              {% if judge.ruling_trend %}
+                <div class="chart-container mb-3">
+                  <canvas id="trendChart{{ judge.id }}" width="400" height="150"></canvas>
+                </div>
+              {% endif %}
+              
+              <div class="d-flex justify-content-between">
+                <a href="{{ url_for('rulings.view_judge', judge_id=judge.id) }}" class="btn btn-primary">View Profile</a>
+                <a href="{{ url_for('rulings.search') }}?judge={{ judge.id }}" class="btn btn-outline-secondary">View Rulings</a>
+              </div>
             </div>
           </div>
         </div>
       {% endfor %}
     {% else %}
-      <div class="col">
+      <div class="col-12">
         <div class="alert alert-info">
-          No judges found. Import rulings to populate the judges database.
+          <i class="fas fa-info-circle"></i> No judges found matching your criteria. Try adjusting your search or import more rulings.
         </div>
       </div>
     {% endif %}
   </div>
 
   <!-- Pagination -->
-  {% if pagination %}
-    <nav aria-label="Judge pagination" class="mt-4">
-      <ul class="pagination justify-content-center">
-        {% if pagination.has_prev %}
-          <li class="page-item">
-            <a class="page-link" href="{{ url_for('rulings.judges', page=pagination.prev_num, query=request.args.get('query', ''), court=request.args.get('court', ''), sort=request.args.get('sort', '')) }}">Previous</a>
-          </li>
-        {% else %}
-          <li class="page-item disabled">
-            <span class="page-link">Previous</span>
-          </li>
-        {% endif %}
-
-        {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
-          {% if page_num %}
-            {% if page_num == pagination.page %}
-              <li class="page-item active">
-                <span class="page-link">{{ page_num }} <span class="sr-only">(current)</span></span>
-              </li>
-            {% else %}
-              <li class="page-item">
-                <a class="page-link" href="{{ url_for('rulings.judges', page=page_num, query=request.args.get('query', ''), court=request.args.get('court', ''), sort=request.args.get('sort', '')) }}">{{ page_num }}</a>
-              </li>
-            {% endif %}
-          {% else %}
-            <li class="page-item disabled">
-              <span class="page-link">...</span>
+  {% if pagination.pages > 1 %}
+    <div class="row">
+      <div class="col-12">
+        <nav aria-label="Judge navigation">
+          <ul class="pagination justify-content-center">
+            <li class="page-item {{ 'disabled' if pagination.current_page == 1 else '' }}">
+              <a class="page-link" href="{{ url_for('rulings.judges', page=pagination.current_page-1, query=query, court=selected_court, sort=sort, active_only=active_only) }}" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+              </a>
             </li>
-          {% endif %}
-        {% endfor %}
-
-        {% if pagination.has_next %}
-          <li class="page-item">
-            <a class="page-link" href="{{ url_for('rulings.judges', page=pagination.next_num, query=request.args.get('query', ''), court=request.args.get('court', ''), sort=request.args.get('sort', '')) }}">Next</a>
-          </li>
-        {% else %}
-          <li class="page-item disabled">
-            <span class="page-link">Next</span>
-          </li>
-        {% endif %}
-      </ul>
-    </nav>
+            {% for page_num in range(1, pagination.pages + 1) %}
+              <li class="page-item {{ 'active' if page_num == pagination.current_page else '' }}">
+                <a class="page-link" href="{{ url_for('rulings.judges', page=page_num, query=query, court=selected_court, sort=sort, active_only=active_only) }}">{{ page_num }}</a>
+              </li>
+            {% endfor %}
+            <li class="page-item {{ 'disabled' if pagination.current_page == pagination.pages else '' }}">
+              <a class="page-link" href="{{ url_for('rulings.judges', page=pagination.current_page+1, query=query, court=selected_court, sort=sort, active_only=active_only) }}" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
   {% endif %}
+
+  <!-- Statistics -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Judicial Statistics</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4">
+              <div class="card mb-3">
+                <div class="card-body">
+                  <h6 class="card-title">Total Judges</h6>
+                  <h3>{{ stats.total_judges }}</h3>
+                  <div class="text-muted">{{ stats.active_judges }} active judges</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card mb-3">
+                <div class="card-body">
+                  <h6 class="card-title">Top Court</h6>
+                  <h3>{{ stats.top_court }}</h3>
+                  <div class="text-muted">{{ stats.top_court_judges }} judges</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card mb-3">
+                <div class="card-body">
+                  <h6 class="card-title">Most Rulings</h6>
+                  <h3>{{ stats.most_rulings_judge }}</h3>
+                  <div class="text-muted">{{ stats.most_rulings_count }} rulings</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    {% for judge in judges %}
+      {% if judge.ruling_trend %}
+        var ctx{{ judge.id }} = document.getElementById('trendChart{{ judge.id }}').getContext('2d');
+        var chart{{ judge.id }} = new Chart(ctx{{ judge.id }}, {
+          type: 'line',
+          data: {
+            labels: {{ judge.ruling_trend.labels | tojson }},
+            datasets: [{
+              label: 'Rulings',
+              data: {{ judge.ruling_trend.values | tojson }},
+              borderColor: 'rgba(var(--bs-primary-rgb), 1)',
+              backgroundColor: 'rgba(var(--bs-primary-rgb), 0.1)',
+              tension: 0.4,
+              fill: true
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              }
+            },
+            scales: {
+              x: {
+                display: false
+              },
+              y: {
+                display: false,
+                beginAtZero: true
+              }
+            }
+          }
+        });
+      {% endif %}
+    {% endfor %}
+  });
+</script>
+{% endblock %}
 {% endblock %}

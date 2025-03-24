@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}Judicial Rulings Database{% endblock %}
+{% block title %}Rulings Database{% endblock %}
 
 {% block styles %}
 <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
@@ -12,12 +12,39 @@
     transform: translateY(-5px);
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
   }
-  .tag-badge {
-    margin-right: 5px;
-    margin-bottom: 5px;
+  .court-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    border-radius: 0 0.25rem 0 0.25rem;
+  }
+  .tag-cloud .badge {
+    margin: 0.2rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tag-cloud .badge:hover {
+    transform: scale(1.1);
   }
   .stats-card {
     border-left: 4px solid var(--bs-primary);
+    transition: transform 0.2s;
+  }
+  .stats-card:hover {
+    transform: translateY(-5px);
+  }
+  .search-bar {
+    position: relative;
+  }
+  .search-bar .form-control {
+    padding-left: 2.5rem;
+  }
+  .search-bar i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--bs-secondary);
   }
 </style>
 {% endblock %}
@@ -25,345 +52,270 @@
 {% block content %}
 <div class="container mt-4">
   <div class="row mb-4">
-    <div class="col-md-8">
-      <h1 class="display-5 mb-0">Judicial Rulings Database</h1>
-      <p class="text-muted">Track, analyze and identify patterns in Kenyan court decisions</p>
+    <div class="col-lg-9">
+      <h1 class="mb-0">Rulings Database</h1>
+      <p class="text-muted">Explore Kenyan court rulings and legal precedents</p>
     </div>
-    <div class="col-md-4 text-md-end">
-      {% if current_user.has_permission('CREATE_CASE') %}
-      <a href="{{ url_for('rulings.create_ruling') }}" class="btn btn-primary me-2">
+    <div class="col-lg-3 text-end d-flex gap-2 justify-content-lg-end">
+      <a href="{{ url_for('rulings.import_rulings') }}" class="btn btn-primary">
+        <i class="fas fa-cloud-download-alt"></i> Import Rulings
+      </a>
+      <a href="{{ url_for('rulings.create_ruling') }}" class="btn btn-success">
         <i class="fas fa-plus"></i> Add Ruling
       </a>
-      {% endif %}
-      <a href="{{ url_for('rulings.import_rulings') }}" class="btn btn-success">
-        <i class="fas fa-file-import"></i> Import Rulings
-      </a>
     </div>
   </div>
 
-  <!-- Statistics cards -->
   <div class="row mb-4">
-    <div class="col-md-3 mb-3">
-      <div class="card stats-card h-100">
+    <div class="col-md-8">
+      <!-- Search bar -->
+      <div class="card mb-4">
         <div class="card-body">
-          <h5 class="card-title">Total Rulings</h5>
-          <h2 class="mb-0">{{ total_rulings }}</h2>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3 mb-3">
-      <div class="card stats-card h-100">
-        <div class="card-body">
-          <h5 class="card-title">Courts</h5>
-          <h2 class="mb-0">{{ courts|length }}</h2>
-          <a href="#court-section" class="stretched-link"></a>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3 mb-3">
-      <div class="card stats-card h-100">
-        <div class="card-body">
-          <h5 class="card-title">Categories</h5>
-          <h2 class="mb-0">{{ categories|length }}</h2>
-          <a href="#category-section" class="stretched-link"></a>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3 mb-3">
-      <div class="card stats-card h-100">
-        <div class="card-body">
-          <h5 class="card-title">Legal Concepts</h5>
-          <h2 class="mb-0">{{ top_tags|length }}</h2>
-          <a href="{{ url_for('rulings.tags') }}" class="stretched-link"></a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Quick search -->
-  <div class="card mb-4">
-    <div class="card-body">
-      <h5 class="card-title">Quick Search</h5>
-      <form action="{{ url_for('rulings.search') }}" method="get">
-        <div class="row g-3">
-          <div class="col-md-4">
-            <div class="input-group">
-              <span class="input-group-text"><i class="fas fa-search"></i></span>
-              <input type="text" class="form-control" name="query" placeholder="Search rulings...">
+          <h5 class="card-title">Search Rulings</h5>
+          <form action="{{ url_for('rulings.search') }}" method="get">
+            <div class="input-group mb-3">
+              <div class="search-bar w-100">
+                <i class="fas fa-search"></i>
+                <input type="text" class="form-control" name="query" placeholder="Search by title, case number, or content..." aria-label="Search">
+              </div>
+              <button class="btn btn-primary" type="submit">Search</button>
+              <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#advancedSearch" aria-expanded="false" aria-controls="advancedSearch">
+                <i class="fas fa-sliders-h"></i>
+              </button>
             </div>
-          </div>
-          <div class="col-md-3">
-            <select name="court" class="form-select">
-              <option value="">All Courts</option>
-              {% for court in COURTS %}
-              <option value="{{ court }}">{{ court }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="col-md-3">
-            <select name="category" class="form-select">
-              <option value="">All Categories</option>
-              {% for category in CATEGORIES %}
-              <option value="{{ category }}">{{ category }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="col-md-2">
-            <button type="submit" class="btn btn-primary w-100">Search</button>
-          </div>
-        </div>
-        <div class="mt-2">
-          <a data-bs-toggle="collapse" href="#advancedSearch" role="button" aria-expanded="false">
-            Advanced Search <i class="fas fa-chevron-down"></i>
-          </a>
-        </div>
-        <div class="collapse mt-3" id="advancedSearch">
-          <div class="row g-3">
-            <div class="col-md-3">
-              <label class="form-label">Date From</label>
-              <input type="date" class="form-control" name="date_from">
-            </div>
-            <div class="col-md-3">
-              <label class="form-label">Date To</label>
-              <input type="date" class="form-control" name="date_to">
-            </div>
-            <div class="col-md-3">
-              <label class="form-label">Outcome</label>
-              <select name="outcome" class="form-select">
-                <option value="">All Outcomes</option>
-                {% for outcome in OUTCOMES %}
-                <option value="{{ outcome }}">{{ outcome }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="col-md-3">
-              <label class="form-label">Landmark Cases Only</label>
-              <div class="form-check form-switch mt-2">
-                <input class="form-check-input" type="checkbox" name="is_landmark" value="true" id="landmarkSwitch">
-                <label class="form-check-label" for="landmarkSwitch">Show only landmark cases</label>
+            <div class="collapse" id="advancedSearch">
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <label for="court" class="form-label">Court</label>
+                  <select class="form-select" id="court" name="court">
+                    <option value="">All Courts</option>
+                    {% for court in COURTS %}
+                      <option value="{{ court }}">{{ court }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label for="category" class="form-label">Category</label>
+                  <select class="form-select" id="category" name="category">
+                    <option value="">All Categories</option>
+                    {% for category in CATEGORIES %}
+                      <option value="{{ category }}">{{ category }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label for="outcome" class="form-label">Outcome</label>
+                  <select class="form-select" id="outcome" name="outcome">
+                    <option value="">All Outcomes</option>
+                    {% for outcome in OUTCOMES %}
+                      <option value="{{ outcome }}">{{ outcome }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label for="date_from" class="form-label">Date From</label>
+                  <input type="date" class="form-control" id="date_from" name="date_from">
+                </div>
+                <div class="col-md-6">
+                  <label for="date_to" class="form-label">Date To</label>
+                  <input type="date" class="form-control" id="date_to" name="date_to">
+                </div>
+                <div class="col-12">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="1" id="is_landmark" name="is_landmark">
+                    <label class="form-check-label" for="is_landmark">
+                      Landmark Cases Only
+                    </label>
+                  </div>
+                </div>
+                <div class="col-12 text-end">
+                  <button type="submit" class="btn btn-primary">Apply Filters</button>
+                  <button type="reset" class="btn btn-outline-secondary">Clear</button>
+                </div>
               </div>
             </div>
-          </div>
+          </form>
         </div>
-      </form>
+      </div>
+
+      <!-- Recent Rulings -->
+      <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0">Recent Rulings</h5>
+          <a href="{{ url_for('rulings.search') }}?sort=recent" class="text-primary">View All</a>
+        </div>
+        <div class="card-body">
+          {% if recent_rulings %}
+            <div class="row">
+              {% for ruling in recent_rulings %}
+                <div class="col-md-6 mb-3">
+                  <div class="card ruling-card h-100 position-relative">
+                    <span class="badge bg-{{ 'primary' if ruling.court == 'Supreme Court' else ('success' if ruling.court == 'Court of Appeal' else 'info') }} court-badge">{{ ruling.court }}</span>
+                    <div class="card-body">
+                      <h5 class="card-title">{{ ruling.title }}</h5>
+                      <h6 class="card-subtitle mb-2 text-muted">{{ ruling.case_number }}</h6>
+                      <p class="card-text">
+                        {% if ruling.summary %}
+                          {{ ruling.summary|truncate(100) }}
+                        {% else %}
+                          {{ ruling.full_text|truncate(100) }}
+                        {% endif %}
+                      </p>
+                      <div class="d-flex justify-content-between">
+                        <small class="text-muted">{{ ruling.date_of_ruling.strftime('%d %b %Y') }}</small>
+                        {% if ruling.is_landmark %}
+                          <span class="badge bg-warning">Landmark</span>
+                        {% endif %}
+                      </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                      <a href="{{ url_for('rulings.view_ruling', ruling_id=ruling.id) }}" class="btn btn-sm btn-outline-primary">View Details</a>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="alert alert-info">
+              No rulings available. Import rulings from Kenya Law or add them manually.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+      
+      <!-- Landmark Cases -->
+      <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0">Landmark Cases</h5>
+          <a href="{{ url_for('rulings.search') }}?is_landmark=1" class="text-primary">View All</a>
+        </div>
+        <div class="card-body">
+          {% if landmark_cases %}
+            <div class="list-group list-group-flush">
+              {% for ruling in landmark_cases %}
+                <a href="{{ url_for('rulings.view_ruling', ruling_id=ruling.id) }}" class="list-group-item list-group-item-action">
+                  <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">{{ ruling.title }}</h5>
+                    <small>{{ ruling.date_of_ruling.strftime('%d %b %Y') }}</small>
+                  </div>
+                  <p class="mb-1">{{ ruling.case_number }}</p>
+                  <small class="text-muted">{{ ruling.court }}</small>
+                </a>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="alert alert-info">
+              No landmark cases available. Mark important rulings as landmarks.
+            </div>
+          {% endif %}
+        </div>
+      </div>
     </div>
-  </div>
 
-  <!-- Recent rulings -->
-  <h3 class="mb-3">Recent Rulings</h3>
-  <div class="row mb-4">
-    {% if recent_rulings %}
-      {% for ruling in recent_rulings %}
-        <div class="col-md-6 col-lg-4 mb-4">
-          <div class="card ruling-card h-100">
-            <div class="card-body">
-              <h5 class="card-title">{{ ruling.title }}</h5>
-              <h6 class="card-subtitle mb-2 text-muted">{{ ruling.case_number }}</h6>
-              <p class="card-text">
-                <span class="badge bg-primary">{{ ruling.court }}</span>
-                <span class="badge bg-secondary">{{ ruling.date_of_ruling.strftime('%d %b %Y') }}</span>
-                {% if ruling.outcome %}
-                  <span class="badge bg-info">{{ ruling.outcome }}</span>
-                {% endif %}
-                {% if ruling.is_landmark %}
-                  <span class="badge bg-warning">Landmark</span>
-                {% endif %}
-              </p>
-              {% if ruling.summary %}
-                <p class="card-text">{{ ruling.summary|truncate(100) }}</p>
-              {% endif %}
-            </div>
-            <div class="card-footer bg-transparent">
-              <a href="{{ url_for('rulings.view_ruling', ruling_id=ruling.id) }}" class="btn btn-sm btn-outline-primary">View Details</a>
-              {% if current_user.has_permission('ADVANCED_RESEARCH') %}
-                <a href="{{ url_for('rulings.analyze_ruling', ruling_id=ruling.id) }}" class="btn btn-sm btn-outline-secondary">Analyze</a>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-      {% endfor %}
-    {% else %}
-      <div class="col">
-        <div class="alert alert-info">
-          No rulings found. <a href="{{ url_for('rulings.import_rulings') }}">Import rulings</a> or <a href="{{ url_for('rulings.create_ruling') }}">create a new ruling</a>.
-        </div>
-      </div>
-    {% endif %}
-  </div>
-
-  <!-- Landmark cases -->
-  <h3 class="mb-3">Landmark Cases</h3>
-  <div class="row mb-4">
-    {% if landmark_cases %}
-      {% for ruling in landmark_cases %}
-        <div class="col-md-6 mb-4">
-          <div class="card ruling-card h-100 border-warning">
-            <div class="card-body">
-              <h5 class="card-title">{{ ruling.title }}</h5>
-              <h6 class="card-subtitle mb-2 text-muted">{{ ruling.case_number }}</h6>
-              <p class="card-text">
-                <span class="badge bg-primary">{{ ruling.court }}</span>
-                <span class="badge bg-secondary">{{ ruling.date_of_ruling.strftime('%d %b %Y') }}</span>
-                {% if ruling.outcome %}
-                  <span class="badge bg-info">{{ ruling.outcome }}</span>
-                {% endif %}
-                <span class="badge bg-warning">Landmark</span>
-              </p>
-              {% if ruling.summary %}
-                <p class="card-text">{{ ruling.summary|truncate(150) }}</p>
-              {% endif %}
-            </div>
-            <div class="card-footer bg-transparent">
-              <a href="{{ url_for('rulings.view_ruling', ruling_id=ruling.id) }}" class="btn btn-sm btn-outline-primary">View Details</a>
-              {% if current_user.has_permission('ADVANCED_RESEARCH') %}
-                <a href="{{ url_for('rulings.analyze_ruling', ruling_id=ruling.id) }}" class="btn btn-sm btn-outline-secondary">Analyze</a>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-      {% endfor %}
-    {% else %}
-      <div class="col">
-        <div class="alert alert-info">No landmark cases found.</div>
-      </div>
-    {% endif %}
-  </div>
-
-  <div class="row mb-4">
-    <!-- Court distribution -->
-    <div class="col-md-6 mb-4" id="court-section">
-      <div class="card h-100">
+    <div class="col-md-4">
+      <!-- Statistics -->
+      <div class="card mb-4">
         <div class="card-header">
-          <h5 class="card-title mb-0">Court Distribution</h5>
+          <h5 class="card-title mb-0">Database Statistics</h5>
         </div>
         <div class="card-body">
-          <div class="table-responsive">
-            <table class="table table-hover">
-              <thead>
-                <tr>
-                  <th>Court</th>
-                  <th>Rulings</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for court, count in courts %}
-                <tr>
-                  <td>{{ court }}</td>
-                  <td>{{ count }}</td>
-                  <td>
-                    <a href="{{ url_for('rulings.search', court=court) }}" class="btn btn-sm btn-outline-primary">
-                      View
-                    </a>
-                    <a href="{{ url_for('rulings.court_trends', court=court) }}" class="btn btn-sm btn-outline-secondary">
-                      Trends
-                    </a>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
+          <div class="row">
+            <div class="col-12 mb-3">
+              <div class="card stats-card">
+                <div class="card-body">
+                  <h5 class="card-title">Total Rulings</h5>
+                  <h2 class="mb-0">{{ total_rulings }}</h2>
+                </div>
+              </div>
+            </div>
+            <div class="col-12">
+              <a href="{{ url_for('rulings.trends') }}" class="btn btn-outline-primary w-100">
+                <i class="fas fa-chart-line"></i> View Judicial Trends
+              </a>
+            </div>
           </div>
         </div>
-        <div class="card-footer text-end">
-          <a href="{{ url_for('rulings.trends') }}" class="btn btn-sm btn-primary">View All Trends</a>
-        </div>
       </div>
-    </div>
-    
-    <!-- Category distribution -->
-    <div class="col-md-6 mb-4" id="category-section">
-      <div class="card h-100">
+
+      <!-- Courts -->
+      <div class="card mb-4">
         <div class="card-header">
-          <h5 class="card-title mb-0">Category Distribution</h5>
+          <h5 class="card-title mb-0">Courts</h5>
         </div>
-        <div class="card-body">
-          <div class="table-responsive">
-            <table class="table table-hover">
-              <thead>
-                <tr>
-                  <th>Category</th>
-                  <th>Rulings</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for category, count in categories %}
-                <tr>
-                  <td>{{ category }}</td>
-                  <td>{{ count }}</td>
-                  <td>
-                    <a href="{{ url_for('rulings.search', category=category) }}" class="btn btn-sm btn-outline-primary">
-                      View
-                    </a>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
+        <div class="card-body p-0">
+          <div class="list-group list-group-flush">
+            {% for court, count in courts %}
+              <a href="{{ url_for('rulings.search') }}?court={{ court }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                {{ court }}
+                <span class="badge bg-primary rounded-pill">{{ count }}</span>
+              </a>
+            {% else %}
+              <div class="list-group-item">No courts data available</div>
+            {% endfor %}
           </div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- Top legal concepts/tags -->
-  <h3 class="mb-3">Top Legal Concepts</h3>
-  <div class="card mb-4">
-    <div class="card-body">
-      {% if top_tags %}
-        {% for id, name, count in top_tags %}
-          <a href="{{ url_for('rulings.view_tag', tag_id=id) }}" class="badge bg-secondary tag-badge p-2">
-            {{ name }} ({{ count }})
-          </a>
-        {% endfor %}
-      {% else %}
-        <p class="text-muted">No legal concepts/tags found.</p>
-      {% endif %}
-    </div>
-    <div class="card-footer text-end">
-      <a href="{{ url_for('rulings.tags') }}" class="btn btn-sm btn-primary">View All Tags</a>
-    </div>
-  </div>
-
-  <!-- Tools and analysis -->
-  <h3 class="mb-3">Tools & Analysis</h3>
-  <div class="row mb-4">
-    <div class="col-md-4 mb-3">
-      <div class="card h-100">
-        <div class="card-body">
-          <h5 class="card-title"><i class="fas fa-chart-line"></i> Judicial Trends</h5>
-          <p class="card-text">Analyze trends and patterns in judicial decisions across courts and time periods.</p>
-          <a href="{{ url_for('rulings.trends') }}" class="btn btn-primary">View Trends</a>
+      <!-- Categories -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Categories</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="list-group list-group-flush">
+            {% for category, count in categories %}
+              <a href="{{ url_for('rulings.search') }}?category={{ category }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                {{ category if category else 'Uncategorized' }}
+                <span class="badge bg-success rounded-pill">{{ count }}</span>
+              </a>
+            {% else %}
+              <div class="list-group-item">No categories data available</div>
+            {% endfor %}
+          </div>
         </div>
       </div>
-    </div>
-    <div class="col-md-4 mb-3">
-      <div class="card h-100">
+
+      <!-- Popular Tags -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Popular Legal Concepts</h5>
+        </div>
         <div class="card-body">
-          <h5 class="card-title"><i class="fas fa-gavel"></i> Judges</h5>
-          <p class="card-text">Explore judges and their ruling patterns across different courts and case types.</p>
-          <a href="{{ url_for('rulings.judges') }}" class="btn btn-primary">View Judges</a>
+          <div class="tag-cloud">
+            {% for tag_id, tag_name, count in top_tags %}
+              <a href="{{ url_for('rulings.search') }}?tags={{ tag_id }}" class="badge bg-info text-decoration-none">
+                {{ tag_name }} ({{ count }})
+              </a>
+            {% else %}
+              <div class="alert alert-info">No tags data available</div>
+            {% endfor %}
+          </div>
         </div>
       </div>
-    </div>
-    <div class="col-md-4 mb-3">
-      <div class="card h-100">
-        <div class="card-body">
-          <h5 class="card-title"><i class="fas fa-network-wired"></i> Citation Network</h5>
-          <p class="card-text">Visualize connections between rulings and identify influential precedents.</p>
-          <a href="{{ url_for('rulings.trends') }}#citation-network" class="btn btn-primary">View Network</a>
+
+      <!-- Quick Links -->
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Quick Links</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="list-group list-group-flush">
+            <a href="{{ url_for('rulings.judges') }}" class="list-group-item list-group-item-action">
+              <i class="fas fa-gavel"></i> Judges Database
+            </a>
+            <a href="{{ url_for('rulings.trends') }}" class="list-group-item list-group-item-action">
+              <i class="fas fa-chart-line"></i> Judicial Trends
+            </a>
+            <a href="{{ url_for('rulings.import_rulings') }}" class="list-group-item list-group-item-action">
+              <i class="fas fa-cloud-download-alt"></i> Import Rulings
+            </a>
+            <a href="{{ url_for('rulings.create_ruling') }}" class="list-group-item list-group-item-action">
+              <i class="fas fa-plus"></i> Add Ruling Manually
+            </a>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Initialize any interactive components here
-  });
-</script>
 {% endblock %}
