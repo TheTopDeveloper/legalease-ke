@@ -240,7 +240,7 @@ Yours faithfully,
     
     def generate_document_from_template(self, template_name: str, context: Dict[str, Any]) -> str:
         """
-        Generate a document using a template
+        Generate a document using a template file
         
         Args:
             template_name: Name of the template
@@ -271,6 +271,42 @@ Yours faithfully,
         
         except Exception as e:
             logger.error(f"Error generating document from template {template_name}: {str(e)}")
+            return f"Error generating document: {str(e)}"
+            
+    def generate_from_user_template(self, template_content: str, context: Dict[str, Any]) -> str:
+        """
+        Generate a document using a template string from the database
+        
+        Args:
+            template_content: Content of the template as a string
+            context: Dictionary with template variables
+            
+        Returns:
+            Generated document
+        """
+        try:
+            # Create a template from the string
+            template = jinja2.Template(template_content)
+            
+            # Add date-related context if not provided
+            now = datetime.datetime.now()
+            if 'day' not in context:
+                context['day'] = now.day
+            if 'month' not in context:
+                context['month'] = now.strftime("%B")
+            if 'year' not in context:
+                context['year'] = now.year
+            if 'date' not in context:
+                context['date'] = now.strftime("%d %B %Y")
+            
+            # Generate document
+            document = template.render(**context)
+            logger.info("Generated document from user template")
+            
+            return document
+        
+        except Exception as e:
+            logger.error(f"Error generating document from user template: {str(e)}")
             return f"Error generating document: {str(e)}"
     
     def generate_pleading(self, case_info: Dict[str, Any], document_info: Dict[str, Any]) -> str:

@@ -1,0 +1,396 @@
+{% extends "layout.html" %}
+
+{% block title %}Generate Document - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}Document Generator{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header">
+                <h4>Document Generator</h4>
+            </div>
+            <div class="card-body">
+                <p class="lead">Choose a document type to generate using our templates or AI assistance.</p>
+                
+                <ul class="nav nav-tabs mb-4" id="documentTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="templates-tab" data-bs-toggle="tab" data-bs-target="#templates" type="button" role="tab" aria-controls="templates" aria-selected="true">
+                            <i class="fas fa-file-alt"></i> Standard Templates
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="ai-tab" data-bs-toggle="tab" data-bs-target="#ai" type="button" role="tab" aria-controls="ai" aria-selected="false">
+                            <i class="fas fa-robot"></i> AI Assistant
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="user-templates-tab" data-bs-toggle="tab" data-bs-target="#user-templates" type="button" role="tab" aria-controls="user-templates" aria-selected="false">
+                            <i class="fas fa-file-code"></i> My Templates
+                        </button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content" id="documentTabsContent">
+                    <!-- Standard Templates Tab -->
+                    <div class="tab-pane fade show active" id="templates" role="tabpanel" aria-labelledby="templates-tab">
+                        <div class="mb-4">
+                            <label for="template-selector" class="form-label">Select Template Type</label>
+                            <select class="form-select" id="template-selector" name="template_type">
+                                <option value="">Select Template Type</option>
+                                <option value="pleading">Court Pleading</option>
+                                <option value="contract">Contract</option>
+                                <option value="legal_opinion">Legal Opinion</option>
+                                <option value="affidavit">Affidavit</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Court Pleading Template Form -->
+                        <div id="pleading-form" class="template-form d-none">
+                            <form method="POST" action="{{ url_for('documents.generate') }}">
+                                <input type="hidden" name="template_type" value="pleading">
+                                
+                                <h5 class="mb-3">Case Information</h5>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="court_level" class="form-label">Court Level <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="court_level" name="court_level" required>
+                                            <option value="">Select Court Level</option>
+                                            {% for court_level in court_levels %}
+                                            <option value="{{ court_level }}">{{ court_level }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="court_location" class="form-label">Court Location <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="court_location" name="court_location" placeholder="e.g., Nairobi" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="case_type" class="form-label">Case Type <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="case_type" name="case_type" placeholder="e.g., Civil Suit" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="case_number" class="form-label">Case Number</label>
+                                        <input type="text" class="form-control" id="case_number" name="case_number" placeholder="e.g., 123 of 2025">
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="plaintiff" class="form-label">Plaintiff/Petitioner <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="plaintiff" name="plaintiff" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="defendant" class="form-label">Defendant/Respondent <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="defendant" name="defendant" required>
+                                    </div>
+                                </div>
+                                
+                                <h5 class="mt-4 mb-3">Document Information</h5>
+                                <div class="mb-3">
+                                    <label for="document_title" class="form-label">Document Title <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="document_title" name="document_title" placeholder="e.g., Plaint" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="document_content" class="form-label">Document Content <span class="text-danger">*</span></label>
+                                    <textarea class="form-control" id="document_content" name="document_content" rows="10" required></textarea>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="city" class="form-label">City <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="city" name="city" value="Nairobi" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="party" class="form-label">Party Filing <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="party" name="party" required>
+                                            <option value="Plaintiff">Plaintiff/Petitioner</option>
+                                            <option value="Defendant">Defendant/Respondent</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="law_firm" class="form-label">Law Firm/Advocates <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="law_firm" name="law_firm" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="address" class="form-label">Address <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="address" name="address" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="contact_info" class="form-label">Contact Information</label>
+                                    <input type="text" class="form-control" id="contact_info" name="contact_info" placeholder="Phone, Email, etc.">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="case_id" class="form-label">Associate with Case</label>
+                                    <select class="form-select" id="case_id" name="case_id">
+                                        <option value="">None</option>
+                                        {% for case in cases %}
+                                        <option value="{{ case.id }}">{{ case.case_number }} - {{ case.title }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <button type="submit" class="btn btn-primary">Generate Document</button>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <!-- Contract Template Form -->
+                        <div id="contract-form" class="template-form d-none">
+                            <!-- Contract form content similar to pleading but with contract-specific fields -->
+                            <form method="POST" action="{{ url_for('documents.generate') }}">
+                                <input type="hidden" name="template_type" value="contract">
+                                
+                                <div class="mb-3">
+                                    <label for="contract_title" class="form-label">Contract Title <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="contract_title" name="contract_title" required>
+                                </div>
+                                
+                                <h5 class="mb-3">Party 1 Information</h5>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="party1_name" class="form-label">Name <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="party1_name" name="party1_name" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="party1_address" class="form-label">Address <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="party1_address" name="party1_address" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="party1_reference" class="form-label">Reference/ID</label>
+                                    <input type="text" class="form-control" id="party1_reference" name="party1_reference">
+                                </div>
+                                
+                                <h5 class="mb-3">Party 2 Information</h5>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="party2_name" class="form-label">Name <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="party2_name" name="party2_name" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="party2_address" class="form-label">Address <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="party2_address" name="party2_address" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="party2_reference" class="form-label">Reference/ID</label>
+                                    <input type="text" class="form-control" id="party2_reference" name="party2_reference">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="recitals" class="form-label">Recitals/Background <span class="text-danger">*</span></label>
+                                    <textarea class="form-control" id="recitals" name="recitals" rows="4" required></textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="contract_clauses" class="form-label">Contract Clauses <span class="text-danger">*</span></label>
+                                    <textarea class="form-control" id="contract_clauses" name="contract_clauses" rows="10" required></textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="case_id" class="form-label">Associate with Case</label>
+                                    <select class="form-select" id="case_id" name="case_id">
+                                        <option value="">None</option>
+                                        {% for case in cases %}
+                                        <option value="{{ case.id }}">{{ case.case_number }} - {{ case.title }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <button type="submit" class="btn btn-primary">Generate Contract</button>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <!-- Legal Opinion Template Form - Only showing header to save space -->
+                        <div id="legal_opinion-form" class="template-form d-none">
+                            <form method="POST" action="{{ url_for('documents.generate') }}">
+                                <input type="hidden" name="template_type" value="legal_opinion">
+                                <!-- Legal opinion form fields would go here -->
+                                <div class="mb-3">
+                                    <label for="opinion_subject" class="form-label">Subject <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="opinion_subject" name="opinion_subject" required>
+                                </div>
+                                
+                                <!-- More legal opinion fields would go here -->
+                                
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                                    <button type="submit" class="btn btn-primary">Generate Legal Opinion</button>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <!-- Affidavit Template Form - Only showing header to save space -->
+                        <div id="affidavit-form" class="template-form d-none">
+                            <form method="POST" action="{{ url_for('documents.generate') }}">
+                                <input type="hidden" name="template_type" value="affidavit">
+                                <!-- Affidavit form fields would go here -->
+                                <div class="mb-3">
+                                    <label for="deponent_name" class="form-label">Deponent Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="deponent_name" name="deponent_name" required>
+                                </div>
+                                
+                                <!-- More affidavit fields would go here -->
+                                
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                                    <button type="submit" class="btn btn-primary">Generate Affidavit</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- AI Assistant Tab -->
+                    <div class="tab-pane fade" id="ai" role="tabpanel" aria-labelledby="ai-tab">
+                        <form method="POST" action="{{ url_for('documents.generate') }}">
+                            <input type="hidden" name="template_type" value="ai_document">
+                            
+                            <div class="mb-3">
+                                <label for="ai_document_type" class="form-label">Document Type <span class="text-danger">*</span></label>
+                                <select class="form-select" id="ai_document_type" name="ai_document_type" required>
+                                    <option value="">Select Document Type</option>
+                                    {% for doc_type in document_types %}
+                                    <option value="{{ doc_type }}">{{ doc_type }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="ai_instructions" class="form-label">Instructions for AI <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="ai_instructions" name="ai_instructions" rows="4" placeholder="Example: Create a demand letter for overdue payment of Ksh 50,000" required></textarea>
+                                <div class="form-text">Be specific about the document type, purpose, and key details you want included.</div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="ai_case_info" class="form-label">Case Information</label>
+                                    <textarea class="form-control" id="ai_case_info" name="ai_case_info" rows="4" placeholder="Relevant details about the case"></textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="ai_client_info" class="form-label">Client Information</label>
+                                    <textarea class="form-control" id="ai_client_info" name="ai_client_info" rows="4" placeholder="Information about your client"></textarea>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="ai_additional_context" class="form-label">Additional Context</label>
+                                <textarea class="form-control" id="ai_additional_context" name="ai_additional_context" rows="4" placeholder="Any other information that might be helpful"></textarea>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="case_id" class="form-label">Associate with Case</label>
+                                <select class="form-select" id="case_id" name="case_id">
+                                    <option value="">None</option>
+                                    {% for case in cases %}
+                                    <option value="{{ case.id }}">{{ case.case_number }} - {{ case.title }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> Using AI to generate documents will consume tokens from your account. Make sure your instructions are clear to get the best results.
+                            </div>
+                            
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <button type="submit" class="btn btn-primary">Generate with AI</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- User Templates Tab -->
+                    <div class="tab-pane fade" id="user-templates" role="tabpanel" aria-labelledby="user-templates-tab">
+                        {% if user_templates %}
+                        <div class="table-responsive mb-4">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Template Name</th>
+                                        <th>Type</th>
+                                        <th>Description</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for template in user_templates %}
+                                    <tr>
+                                        <td>{{ template.title }}</td>
+                                        <td>{{ template.template_type }}</td>
+                                        <td>{{ template.description | truncate(50) }}</td>
+                                        <td>
+                                            <a href="{{ url_for('templates.use_template', template_id=template.id) }}" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-file-alt"></i> Use Template
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info">
+                            <p>You haven't created any custom templates yet.</p>
+                            <a href="{{ url_for('templates.create') }}" class="btn btn-primary mt-2">
+                                <i class="fas fa-plus"></i> Create New Template
+                            </a>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mt-3">
+                            <a href="{{ url_for('templates.index') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-cogs"></i> Manage Templates
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Template selector logic
+        const templateSelector = document.getElementById('template-selector');
+        if (templateSelector) {
+            templateSelector.addEventListener('change', function() {
+                // Hide all template forms
+                document.querySelectorAll('.template-form').forEach(form => {
+                    form.classList.add('d-none');
+                });
+                
+                // Show the selected form
+                const selectedValue = this.value;
+                if (selectedValue) {
+                    const selectedForm = document.getElementById(`${selectedValue}-form`);
+                    if (selectedForm) {
+                        selectedForm.classList.remove('d-none');
+                    }
+                }
+            });
+        }
+        
+        // Initialize rich text editors if needed for document content
+        const richEditors = document.querySelectorAll('.rich-editor');
+        if (richEditors.length > 0 && typeof CKEDITOR !== 'undefined') {
+            richEditors.forEach(editor => {
+                CKEDITOR.replace(editor.id);
+            });
+        }
+    });
+</script>
+{% endblock %}

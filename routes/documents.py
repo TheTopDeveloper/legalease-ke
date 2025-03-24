@@ -1,7 +1,7 @@
 import logging
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify
 from flask_login import login_required, current_user
-from models import Document, Case, db
+from models import Document, Case, DocumentTemplate, db
 from utils.document_generator import DocumentGenerator
 import config
 
@@ -267,7 +267,14 @@ def generate():
     # Get cases for selection
     cases = Case.query.filter_by(user_id=current_user.id).all()
     
+    # Get user templates
+    user_templates = DocumentTemplate.query.filter(
+        (DocumentTemplate.user_id == current_user.id) | 
+        (DocumentTemplate.is_public == True)
+    ).order_by(DocumentTemplate.title).all()
+    
     return render_template('documents/generate.html', 
                           court_levels=config.COURT_LEVELS,
                           document_types=config.DOCUMENT_TYPES,
-                          cases=cases)
+                          cases=cases,
+                          user_templates=user_templates)
