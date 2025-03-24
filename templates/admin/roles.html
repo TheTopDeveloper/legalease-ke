@@ -17,16 +17,32 @@
         </div>
     </div>
     <div class="card-body">
+        <!-- Section Help -->
+        <div class="section-help mb-4">
+            <h6><i class="fas fa-info-circle"></i> Role Management</h6>
+            <p>Manage user roles that determine access permissions in the system. Each role contains a set of specific permissions that control what actions users with that role can perform.</p>
+        </div>
+
         <!-- Optional search filter for roles -->
         <div class="admin-filters mb-4">
             <div class="row g-2">
                 <div class="col-md-6">
                     <div class="form-group">
+                        <label for="searchRoles" class="form-label">Search Roles
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Search for roles by name">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </label>
                         <input type="text" class="form-control" id="searchRoles" placeholder="Search roles..." onkeyup="filterRoles()">
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-group">
+                        <label for="filterRoleType" class="form-label">Filter by Type
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="<b>Default</b>: System-defined roles that cannot be modified<br><b>Custom</b>: User-created roles that can be edited and deleted<br><b>Standard</b>: Pre-configured roles that can be modified">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </label>
                         <select class="form-select" id="filterRoleType" onchange="filterRoles()">
                             <option value="">All Role Types</option>
                             <option value="default">Default</option>
@@ -45,11 +61,31 @@
                 <table class="table table-hover" id="rolesTable">
                     <thead>
                         <tr>
-                            <th>Name</th>
-                            <th>Description</th>
-                            <th>Type</th>
-                            <th>Permissions</th>
-                            <th>Actions</th>
+                            <th>Name
+                                <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="The unique name of the role in the system">
+                                    <i class="fas fa-question"></i>
+                                </span>
+                            </th>
+                            <th>Description
+                                <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Brief explanation of this role's purpose">
+                                    <i class="fas fa-question"></i>
+                                </span>
+                            </th>
+                            <th>Type
+                                <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Role category: Default (system), Custom (user-created), or Standard">
+                                    <i class="fas fa-question"></i>
+                                </span>
+                            </th>
+                            <th>Permissions
+                                <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Specific actions that users with this role can perform">
+                                    <i class="fas fa-question"></i>
+                                </span>
+                            </th>
+                            <th>Actions
+                                <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Available operations for this role">
+                                    <i class="fas fa-question"></i>
+                                </span>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>

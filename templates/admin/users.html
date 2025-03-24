@@ -13,20 +13,39 @@
         <div class="action-buttons">
             <a href="{{ url_for('admin.create_user') }}" class="btn btn-primary btn-sm">
                 <i class="fas fa-user-plus"></i> Create User
+                <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Add a new user account to the system with specified role and permissions.">
+                    <i class="fas fa-question"></i>
+                </span>
             </a>
         </div>
     </div>
     <div class="card-body">
+        <!-- Section Help -->
+        <div class="section-help mb-4">
+            <h6><i class="fas fa-info-circle"></i> User Management</h6>
+            <p>Manage all user accounts in the system. You can create new users, edit existing ones, or deactivate accounts as needed. Each user has specific roles that determine their permissions in the system.</p>
+        </div>
+
         <!-- Mobile-friendly search filter -->
         <div class="admin-filters mb-4">
             <div class="row g-2">
                 <div class="col-md-4">
                     <div class="form-group">
+                        <label for="searchUsers" class="form-label">Search Users
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Search by username or email address">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </label>
                         <input type="text" class="form-control" id="searchUsers" placeholder="Search users..." onkeyup="filterUsers()">
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-group">
+                        <label for="filterRole" class="form-label">Filter by Role
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="<b>Admin</b>: Full system access<br><b>Organization</b>: Law firm or company owner<br><b>Organization Member</b>: Member of a law firm<br><b>Individual</b>: Single user account">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </label>
                         <select class="form-select" id="filterRole" onchange="filterUsers()">
                             <option value="">All Roles</option>
                             <option value="admin">Admin</option>
@@ -38,6 +57,11 @@
                 </div>
                 <div class="col-md-4">
                     <div class="form-group">
+                        <label for="filterStatus" class="form-label">Filter by Status
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="<b>Active</b>: User can log in and use the system<br><b>Inactive</b>: User account is disabled">
+                                <i class="fas fa-question"></i>
+                            </span>
+                        </label>
                         <select class="form-select" id="filterStatus" onchange="filterUsers()">
                             <option value="">All Status</option>
                             <option value="active">Active</option>
@@ -54,12 +78,36 @@
                 <table class="table table-striped" id="usersTable">
                     <thead>
                         <tr>
-                            <th>Username</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Account Type</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                            <th>Username 
+                                <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Unique identifier for each user. Used for login.">
+                                    <i class="fas fa-question"></i>
+                                </span>
+                            </th>
+                            <th>Email
+                                <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Primary contact email used for notifications and password resets.">
+                                    <i class="fas fa-question"></i>
+                                </span>
+                            </th>
+                            <th>Role
+                                <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="User's system role that determines permissions and access levels.">
+                                    <i class="fas fa-question"></i>
+                                </span>
+                            </th>
+                            <th>Account Type
+                                <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Subscription tier: free, basic, premium, or enterprise.">
+                                    <i class="fas fa-question"></i>
+                                </span>
+                            </th>
+                            <th>Status
+                                <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Indicates whether the user can access the system.">
+                                    <i class="fas fa-question"></i>
+                                </span>
+                            </th>
+                            <th>Actions
+                                <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Available operations for this user.">
+                                    <i class="fas fa-question"></i>
+                                </span>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -83,11 +131,15 @@
                             </td>
                             <td>
                                 <div class="admin-actions">
-                                    <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="btn btn-sm btn-primary">
+                                    <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="btn btn-sm btn-primary" 
+                                       data-bs-toggle="tooltip" data-bs-title="Edit user details, change role, or update status">
                                         <i class="fas fa-edit"></i><span class="d-none d-md-inline"> Edit</span>
                                     </a>
                                     {% if current_user.id != user.id %}
-                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ user.id }}">
+                                    <button type="button" class="btn btn-sm btn-danger delete-btn" 
+                                           data-bs-toggle="modal" 
+                                           data-bs-target="#deleteUserModal{{ user.id }}"
+                                           title="Permanently remove this user account">
                                         <i class="fas fa-trash"></i><span class="d-none d-md-inline"> Delete</span>
                                     </button>
                                     {% endif %}
@@ -159,11 +211,15 @@
                     </div>
                 </div>
                 <div class="mobile-card-footer">
-                    <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="btn btn-sm btn-primary">
+                    <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="btn btn-sm btn-primary"
+                       title="Edit user details, change role, or update status">
                         <i class="fas fa-edit"></i> Edit
                     </a>
                     {% if current_user.id != user.id %}
-                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModalMobile{{ user.id }}">
+                    <button type="button" class="btn btn-sm btn-danger delete-btn" 
+                           data-bs-toggle="modal" 
+                           data-bs-target="#deleteUserModalMobile{{ user.id }}"
+                           title="Permanently remove this user account">
                         <i class="fas fa-trash"></i> Delete
                     </button>
                     
