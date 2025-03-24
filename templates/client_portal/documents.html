@@ -1,0 +1,190 @@
+{% extends "client_portal/layout.html" %}
+
+{% block title %}Shared Documents - Client Portal{% endblock %}
+
+{% block header %}Shared Documents{% endblock %}
+{% block subheader %}Access legal documents shared with you{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-info text-white">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i> Your Shared Documents</h5>
+                    </div>
+                    <div class="col-auto">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="documentSearch" placeholder="Search documents...">
+                            <button class="btn btn-outline-light" type="button" id="searchBtn">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                {% if documents %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="documentsTable">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Related Case</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for document in documents %}
+                            <tr>
+                                <td>{{ document.title }}</td>
+                                <td>{{ document.document_type }}</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if document.status == 'Final' %}bg-success
+                                        {% elif document.status == 'Draft' %}bg-warning
+                                        {% elif document.status == 'Submitted' %}bg-info
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ document.status }}
+                                    </span>
+                                </td>
+                                <td>{{ document.created_at.strftime('%b %d, %Y') }}</td>
+                                <td>
+                                    {% if document.cases %}
+                                        {% for case in document.cases %}
+                                            {% if loop.index <= 2 %}
+                                                <a href="{{ url_for('client_portal.view_case', case_id=case.id) }}" class="badge bg-secondary text-decoration-none">
+                                                    {{ case.case_number }}
+                                                </a>
+                                            {% endif %}
+                                            {% if loop.index == 3 %}
+                                                <span class="badge bg-secondary">+{{ document.cases|length - 2 }} more</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        <span class="text-muted small">No associated case</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('client_portal.view_document', document_id=document.id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye me-1"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="p-5 text-center">
+                    <div class="display-6 text-muted mb-4">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <h4>No Documents Shared Yet</h4>
+                    <p class="text-muted">Your legal representative hasn't shared any documents with you yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Document Categories Section -->
+{% if documents %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-folder me-2"></i> Document Categories</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% set document_types = {} %}
+                    {% for doc in documents %}
+                        {% if doc.document_type %}
+                            {% if doc.document_type in document_types %}
+                                {% set _ = document_types.update({doc.document_type: document_types[doc.document_type] + 1}) %}
+                            {% else %}
+                                {% set _ = document_types.update({doc.document_type: 1}) %}
+                            {% endif %}
+                        {% else %}
+                            {% if 'Other' in document_types %}
+                                {% set _ = document_types.update({'Other': document_types['Other'] + 1}) %}
+                            {% else %}
+                                {% set _ = document_types.update({'Other': 1}) %}
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% for type, count in document_types.items() %}
+                    <div class="col-md-4 col-lg-3 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <div class="display-6 mb-2">
+                                    <i class="fas {% if type == 'Pleading' %}fa-gavel
+                                    {% elif type == 'Affidavit' %}fa-file-signature
+                                    {% elif type == 'Contract' %}fa-file-contract
+                                    {% elif type == 'Opinion' %}fa-comment-dots
+                                    {% else %}fa-file-alt{% endif %} text-primary"></i>
+                                </div>
+                                <h5 class="card-title">{{ type }}</h5>
+                                <p class="display-6 mb-0">{{ count }}</p>
+                                <p class="text-muted">document{% if count != 1 %}s{% endif %}</p>
+                                <button class="btn btn-sm btn-outline-primary mt-2 filter-btn" data-type="{{ type }}">
+                                    Filter Documents
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Document search functionality
+        const searchInput = document.getElementById('documentSearch');
+        const searchBtn = document.getElementById('searchBtn');
+        const table = document.getElementById('documentsTable');
+        
+        if (searchInput && searchBtn && table) {
+            const searchTable = function() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const rows = table.querySelectorAll('tbody tr');
+                
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(searchTerm) ? '' : 'none';
+                });
+            };
+            
+            searchBtn.addEventListener('click', searchTable);
+            searchInput.addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') {
+                    searchTable();
+                }
+            });
+            
+            // Category filter functionality
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const filterType = this.getAttribute('data-type');
+                    searchInput.value = filterType;
+                    searchTable();
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

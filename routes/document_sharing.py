@@ -1,369 +1,218 @@
 """
-Routes for document sharing functionality, allowing lawyers to share documents with clients.
+Routes for document sharing functionality, allowing legal professionals to share documents with clients.
 """
-import os
-import logging
-import secrets
-import string
+
 from datetime import datetime, timedelta
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
+import uuid
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
-from sqlalchemy import desc, or_, and_
-
+from sqlalchemy import and_
 from app import db
-from models import Client, ClientPortalUser, Document, Case
-from utils.permissions import has_permission, Permissions
+from utils.permissions import Permissions, has_permission
 from utils.notification_service import NotificationService
+from models import Document, ClientPortalUser, Client
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# Create notification service
+# Initialize service
 notification_service = NotificationService()
 
-# Create Blueprint
-document_sharing_bp = Blueprint('document_sharing', __name__, url_prefix='/document-sharing')
+document_sharing_bp = Blueprint('document_sharing', __name__, url_prefix='/documents/sharing')
 
-# Document sharing management page
 @document_sharing_bp.route('/')
 @login_required
 @has_permission(Permissions.VIEW_DOCUMENT)
 def index():
-    """Document sharing management dashboard"""
-    # Get clients with portal access
-    clients_with_access = Client.query.filter_by(has_portal_access=True).all()
+    """Document sharing dashboard"""
+    # Get documents shared by the current user
+    shared_documents = Document.query.filter(
+        Document.created_by_id == current_user.id,
+        Document.shared_with.any()
+    ).order_by(Document.created_at.desc()).all()
+    
+    # Get all client portal users
+    client_portal_users = ClientPortalUser.query.all()
     
     # Get all clients
     clients = Client.query.all()
     
-    # Get shared documents
-    shared_docs = Document.query.filter(Document.shared_with.any()).all()
-    
-    return render_template('document_sharing/index.html', 
-                          clients_with_access=clients_with_access,
-                          clients=clients,
-                          shared_docs=shared_docs)
+    return render_template('document_sharing/index.html',
+                          shared_documents=shared_documents,
+                          client_portal_users=client_portal_users,
+                          clients=clients)
 
-# Manage client portal access
-@document_sharing_bp.route('/client/<int:client_id>', methods=['GET', 'POST'])
+@document_sharing_bp.route('/share/<int:document_id>', methods=['GET', 'POST'])
+@login_required
+@has_permission(Permissions.VIEW_DOCUMENT)
+def share_document(document_id):
+    """Share a document with client portal users"""
+    document = Document.query.get_or_404(document_id)
+    
+    # Check if the user has permission to share this document
+    if document.created_by_id != current_user.id and not current_user.has_permission(Permissions.ADMIN_ACCESS):
+        flash('You do not have permission to share this document.', 'danger')
+        return redirect(url_for('documents.view', document_id=document_id))
+    
+    # Get all clients
+    clients = Client.query.all()
+    
+    # Get all client portal users
+    client_portal_users = ClientPortalUser.query.all()
+    
+    if request.method == 'POST':
+        # Get the selected client portal users
+        selected_user_ids = request.form.getlist('client_portal_users')
+        
+        # Clear current sharing
+        document.shared_with = []
+        
+        # Add selected users
+        for user_id in selected_user_ids:
+            user = ClientPortalUser.query.get(int(user_id))
+            if user:
+                document.shared_with.append(user)
+                
+                # Send notification to user
+                try:
+                    notification_service.client_document_shared(
+                        user, 
+                        document, 
+                        shared_by=current_user
+                    )
+                except Exception as e:
+                    flash(f'Document shared but notification failed: {str(e)}', 'warning')
+        
+        db.session.commit()
+        flash('Document sharing updated successfully.', 'success')
+        return redirect(url_for('document_sharing.index'))
+    
+    return render_template('document_sharing/share_document.html',
+                          document=document,
+                          clients=clients,
+                          client_portal_users=client_portal_users)
+
+@document_sharing_bp.route('/client/<int:client_id>/users')
+@login_required
+@has_permission(Permissions.VIEW_CLIENT)
+def get_client_users(client_id):
+    """Get client portal users for a specific client (AJAX)"""
+    client = Client.query.get_or_404(client_id)
+    users = ClientPortalUser.query.filter_by(client_id=client_id).all()
+    
+    users_data = [{'id': user.id, 'email': user.email} for user in users]
+    return {'users': users_data}
+
+@document_sharing_bp.route('/create-portal-user/<int:client_id>', methods=['GET', 'POST'])
 @login_required
 @has_permission(Permissions.EDIT_CLIENT)
-def manage_client_access(client_id):
-    """Manage client portal access"""
+def create_portal_user(client_id):
+    """Create a new portal user for a client"""
     client = Client.query.get_or_404(client_id)
     
     if request.method == 'POST':
-        # Enable/disable portal access
-        enable_access = request.form.get('enable_access') == 'on'
+        email = request.form.get('email')
+        password = request.form.get('password')
         
-        if enable_access and not client.has_portal_access:
-            # Get email and generate password
-            email = request.form.get('email')
-            password = request.form.get('password')
-            
-            if not email or not password:
-                flash('Email and password are required to enable portal access', 'error')
-                return redirect(url_for('document_sharing.manage_client_access', client_id=client.id))
-            
-            # Create portal user
+        if not email or not password:
+            flash('Email and password are required.', 'danger')
+            return redirect(url_for('document_sharing.create_portal_user', client_id=client_id))
+        
+        # Check if email is already used
+        existing_user = ClientPortalUser.query.filter_by(email=email).first()
+        if existing_user:
+            flash('A user with this email already exists.', 'danger')
+            return redirect(url_for('document_sharing.create_portal_user', client_id=client_id))
+        
+        # Create portal user
+        try:
             portal_user = client.create_portal_user(email, password)
-            db.session.commit()
             
-            # Generate access token for secure links
-            token = portal_user.generate_access_token()
-            db.session.commit()
-            
-            # Send notification if client has a phone number
-            if client.phone:
-                notification_service.send_sms(
-                    client.phone,
-                    f"Welcome to the client portal! Your account has been created. "
-                    f"Login at {url_for('client_portal.login', _external=True)} with "
-                    f"email: {email}"
+            # Send welcome notification
+            try:
+                notification_service.client_portal_welcome(
+                    portal_user, 
+                    created_by=current_user
                 )
-            
-            flash('Client portal access enabled successfully', 'success')
-            
-        elif not enable_access and client.has_portal_access:
-            # Disable portal access
-            client.has_portal_access = False
-            
-            # Delete portal users
-            ClientPortalUser.query.filter_by(client_id=client.id).delete()
-            
-            db.session.commit()
-            flash('Client portal access disabled', 'success')
-            
-        return redirect(url_for('document_sharing.manage_client_access', client_id=client.id))
+            except Exception as e:
+                flash(f'Portal user created but welcome notification failed: {str(e)}', 'warning')
+                
+            flash('Portal user created successfully.', 'success')
+            return redirect(url_for('document_sharing.index'))
+        except Exception as e:
+            flash(f'Error creating portal user: {str(e)}', 'danger')
     
-    # Get client portal users
-    portal_users = ClientPortalUser.query.filter_by(client_id=client.id).all()
-    
-    # Get cases for this client
-    cases = client.cases
-    
-    # Get shared documents for this client
-    shared_docs = []
-    for portal_user in portal_users:
-        shared_docs.extend(portal_user.shared_documents)
-    
-    # Remove duplicates
-    shared_docs = list(set(shared_docs))
-    
-    return render_template('document_sharing/manage_client.html',
-                          client=client,
-                          portal_users=portal_users,
-                          cases=cases,
-                          shared_docs=shared_docs)
+    return render_template('document_sharing/create_portal_user.html', client=client)
 
-# Create portal user for client
-@document_sharing_bp.route('/client/<int:client_id>/add-user', methods=['POST'])
+@document_sharing_bp.route('/manage-portal-users/<int:client_id>')
 @login_required
-@has_permission(Permissions.EDIT_CLIENT)
-def add_portal_user(client_id):
-    """Add a portal user for a client"""
+@has_permission(Permissions.VIEW_CLIENT)
+def manage_portal_users(client_id):
+    """Manage portal users for a client"""
     client = Client.query.get_or_404(client_id)
+    portal_users = ClientPortalUser.query.filter_by(client_id=client_id).all()
     
-    # Get user details
-    email = request.form.get('email')
-    password = request.form.get('password')
-    
-    if not email or not password:
-        flash('Email and password are required', 'error')
-        return redirect(url_for('document_sharing.manage_client_access', client_id=client.id))
-    
-    # Check if client has portal access
-    if not client.has_portal_access:
-        client.has_portal_access = True
-    
-    # Check if portal user already exists
-    existing_user = ClientPortalUser.query.filter_by(email=email, client_id=client.id).first()
-    if existing_user:
-        flash(f'Portal user with email {email} already exists', 'error')
-        return redirect(url_for('document_sharing.manage_client_access', client_id=client.id))
-    
-    # Create portal user
-    portal_user = ClientPortalUser(
-        email=email,
-        client_id=client.id,
-        is_active=True
-    )
-    portal_user.set_password(password)
-    
-    # Generate access token
-    portal_user.generate_access_token()
-    
-    db.session.add(portal_user)
-    db.session.commit()
-    
-    flash('Portal user added successfully', 'success')
-    return redirect(url_for('document_sharing.manage_client_access', client_id=client.id))
+    return render_template('document_sharing/manage_portal_users.html',
+                          client=client,
+                          portal_users=portal_users)
 
-# Delete portal user
-@document_sharing_bp.route('/client/user/<int:user_id>/delete', methods=['POST'])
+@document_sharing_bp.route('/delete-portal-user/<int:user_id>', methods=['POST'])
 @login_required
 @has_permission(Permissions.EDIT_CLIENT)
 def delete_portal_user(user_id):
     """Delete a portal user"""
-    portal_user = ClientPortalUser.query.get_or_404(user_id)
-    client_id = portal_user.client_id
+    user = ClientPortalUser.query.get_or_404(user_id)
+    client_id = user.client_id
     
-    db.session.delete(portal_user)
+    # Remove shared documents
+    user.shared_with = []
     
-    # Check if there are any portal users left for this client
-    remaining_users = ClientPortalUser.query.filter_by(client_id=client_id).count()
-    if remaining_users == 0:
-        # Disable portal access for client
-        client = Client.query.get(client_id)
-        if client:
-            client.has_portal_access = False
-    
+    # Delete the user
+    db.session.delete(user)
     db.session.commit()
     
-    flash('Portal user deleted successfully', 'success')
-    return redirect(url_for('document_sharing.manage_client_access', client_id=client_id))
+    flash('Portal user deleted successfully.', 'success')
+    return redirect(url_for('document_sharing.manage_portal_users', client_id=client_id))
 
-# Share a document
-@document_sharing_bp.route('/share-document', methods=['POST'])
+@document_sharing_bp.route('/reset-token/<int:user_id>', methods=['POST'])
 @login_required
-@has_permission(Permissions.EDIT_DOCUMENT)
-def share_document():
-    """Share a document with a client"""
-    document_id = request.form.get('document_id')
-    client_id = request.form.get('client_id')
+@has_permission(Permissions.EDIT_CLIENT)
+def reset_token(user_id):
+    """Reset a portal user's access token"""
+    user = ClientPortalUser.query.get_or_404(user_id)
     
-    if not document_id or not client_id:
-        flash('Document and client are required', 'error')
-        return redirect(url_for('document_sharing.index'))
-    
-    document = Document.query.get_or_404(document_id)
-    client = Client.query.get_or_404(client_id)
-    
-    # Check that client has portal access
-    if not client.has_portal_access:
-        flash('Client does not have portal access', 'error')
-        return redirect(url_for('document_sharing.manage_client_access', client_id=client.id))
-    
-    # Get all portal users for this client
-    portal_users = ClientPortalUser.query.filter_by(client_id=client.id).all()
-    
-    # Share with all portal users
-    for portal_user in portal_users:
-        if document not in portal_user.shared_documents:
-            portal_user.shared_documents.append(document)
-    
+    # Generate new token
+    user.generate_access_token()
     db.session.commit()
     
-    # Send notification if client has a phone number
-    if client.phone:
-        notification_service.send_sms(
-            client.phone,
-            f"A new document has been shared with you: {document.title}. "
-            f"Login to your client portal to view it."
-        )
-    
-    flash(f'Document "{document.title}" shared with {client.name}', 'success')
-    
-    # Redirect back to previous page
-    next_page = request.form.get('next') or url_for('document_sharing.index')
-    return redirect(next_page)
+    flash('Access token reset successfully.', 'success')
+    return redirect(url_for('document_sharing.manage_portal_users', client_id=user.client_id))
 
-# Unshare a document
-@document_sharing_bp.route('/unshare-document', methods=['POST'])
+@document_sharing_bp.route('/reset-password/<int:user_id>', methods=['GET', 'POST'])
 @login_required
-@has_permission(Permissions.EDIT_DOCUMENT)
-def unshare_document():
-    """Unshare a document with a client"""
-    document_id = request.form.get('document_id')
-    client_id = request.form.get('client_id')
+@has_permission(Permissions.EDIT_CLIENT)
+def reset_password(user_id):
+    """Reset a portal user's password"""
+    user = ClientPortalUser.query.get_or_404(user_id)
     
-    if not document_id or not client_id:
-        flash('Document and client are required', 'error')
-        return redirect(url_for('document_sharing.index'))
+    if request.method == 'POST':
+        password = request.form.get('password')
+        
+        if not password:
+            flash('Password is required.', 'danger')
+            return redirect(url_for('document_sharing.reset_password', user_id=user_id))
+        
+        # Update password
+        user.set_password(password)
+        db.session.commit()
+        
+        # Send notification about password reset
+        try:
+            notification_service.client_password_reset(
+                user, 
+                reset_by=current_user
+            )
+        except Exception as e:
+            flash(f'Password reset but notification failed: {str(e)}', 'warning')
+            
+        flash('Password reset successfully.', 'success')
+        return redirect(url_for('document_sharing.manage_portal_users', client_id=user.client_id))
     
-    document = Document.query.get_or_404(document_id)
-    client = Client.query.get_or_404(client_id)
-    
-    # Get all portal users for this client
-    portal_users = ClientPortalUser.query.filter_by(client_id=client.id).all()
-    
-    # Unshare with all portal users
-    for portal_user in portal_users:
-        if document in portal_user.shared_documents:
-            portal_user.shared_documents.remove(document)
-    
-    db.session.commit()
-    
-    flash(f'Document "{document.title}" unshared with {client.name}', 'success')
-    
-    # Redirect back to previous page
-    next_page = request.form.get('next') or url_for('document_sharing.index')
-    return redirect(next_page)
-
-# Share multiple documents with a client
-@document_sharing_bp.route('/share-multiple', methods=['POST'])
-@login_required
-@has_permission(Permissions.EDIT_DOCUMENT)
-def share_multiple_documents():
-    """Share multiple documents with a client"""
-    document_ids = request.form.getlist('document_ids')
-    client_id = request.form.get('client_id')
-    
-    if not document_ids or not client_id:
-        flash('Documents and client are required', 'error')
-        return redirect(url_for('document_sharing.index'))
-    
-    client = Client.query.get_or_404(client_id)
-    
-    # Check that client has portal access
-    if not client.has_portal_access:
-        flash('Client does not have portal access', 'error')
-        return redirect(url_for('document_sharing.manage_client_access', client_id=client.id))
-    
-    # Get all portal users for this client
-    portal_users = ClientPortalUser.query.filter_by(client_id=client.id).all()
-    
-    # Share documents with all portal users
-    shared_count = 0
-    for document_id in document_ids:
-        document = Document.query.get(document_id)
-        if document:
-            for portal_user in portal_users:
-                if document not in portal_user.shared_documents:
-                    portal_user.shared_documents.append(document)
-            shared_count += 1
-    
-    db.session.commit()
-    
-    # Send notification if client has a phone number
-    if client.phone and shared_count > 0:
-        notification_service.send_sms(
-            client.phone,
-            f"{shared_count} new documents have been shared with you. "
-            f"Login to your client portal to view them."
-        )
-    
-    flash(f'{shared_count} documents shared with {client.name}', 'success')
-    
-    # Redirect back to previous page
-    next_page = request.form.get('next') or url_for('document_sharing.index')
-    return redirect(next_page)
-
-# Generate secure link for a document
-@document_sharing_bp.route('/generate-secure-link', methods=['POST'])
-@login_required
-@has_permission(Permissions.EDIT_DOCUMENT)
-def generate_secure_link():
-    """Generate a secure link for a document"""
-    document_id = request.form.get('document_id')
-    client_id = request.form.get('client_id')
-    
-    if not document_id or not client_id:
-        flash('Document and client are required', 'error')
-        return redirect(url_for('document_sharing.index'))
-    
-    document = Document.query.get_or_404(document_id)
-    client = Client.query.get_or_404(client_id)
-    
-    # Check that client has portal access
-    if not client.has_portal_access:
-        flash('Client does not have portal access', 'error')
-        return redirect(url_for('document_sharing.manage_client_access', client_id=client.id))
-    
-    # Get first portal user for this client
-    portal_user = ClientPortalUser.query.filter_by(client_id=client.id).first()
-    
-    if not portal_user:
-        flash('No portal user found for this client', 'error')
-        return redirect(url_for('document_sharing.manage_client_access', client_id=client.id))
-    
-    # Share document with portal user if not already shared
-    if document not in portal_user.shared_documents:
-        portal_user.shared_documents.append(document)
-    
-    # Generate or refresh access token
-    token = portal_user.generate_access_token()
-    
-    db.session.commit()
-    
-    # Generate secure link
-    secure_link = url_for('client_portal.secure_document', 
-                         token=token, 
-                         document_id=document.id,
-                         _external=True)
-    
-    # Just return the secure link
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return jsonify({'secure_link': secure_link})
-    
-    # Otherwise store in session for template to display
-    session = {}
-    session['secure_link'] = secure_link
-    session['secure_link_expires'] = (datetime.utcnow() + timedelta(days=30)).strftime('%Y-%m-%d')
-    
-    flash('Secure link generated successfully', 'success')
-    
-    # Redirect back to previous page
-    next_page = request.form.get('next') or url_for('document_sharing.index')
-    return redirect(next_page)
+    return render_template('document_sharing/reset_password.html', user=user)

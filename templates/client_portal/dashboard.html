@@ -1,0 +1,223 @@
+{% extends "client_portal/layout.html" %}
+
+{% block title %}Dashboard - Client Portal{% endblock %}
+
+{% block header %}Welcome, {{ client.name }}{% endblock %}
+{% block subheader %}Your legal case management dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <!-- Cases Summary Card -->
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card card-dashboard h-100 border-primary">
+            <div class="card-body text-center">
+                <div class="display-4 mb-2">
+                    <i class="fas fa-briefcase text-primary"></i>
+                </div>
+                <h5 class="card-title">Cases</h5>
+                <p class="display-5 mb-0">{{ cases|length }}</p>
+                <p class="text-muted">Active legal cases</p>
+                <a href="{{ url_for('client_portal.cases') }}" class="btn btn-sm btn-outline-primary mt-2">View Cases</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Documents Summary Card -->
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card card-dashboard h-100 border-info">
+            <div class="card-body text-center">
+                <div class="display-4 mb-2">
+                    <i class="fas fa-file-alt text-info"></i>
+                </div>
+                <h5 class="card-title">Documents</h5>
+                <p class="display-5 mb-0">{{ documents|length }}</p>
+                <p class="text-muted">Shared legal documents</p>
+                <a href="{{ url_for('client_portal.documents') }}" class="btn btn-sm btn-outline-info mt-2">View Documents</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Events Summary Card -->
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card card-dashboard h-100 border-warning">
+            <div class="card-body text-center">
+                <div class="display-4 mb-2">
+                    <i class="fas fa-calendar-alt text-warning"></i>
+                </div>
+                <h5 class="card-title">Upcoming Events</h5>
+                <p class="display-5 mb-0">{{ upcoming_events|length }}</p>
+                <p class="text-muted">Scheduled for the next 30 days</p>
+                <a href="{{ url_for('client_portal.calendar') }}" class="btn btn-sm btn-outline-warning mt-2">View Calendar</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Profile Card -->
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card card-dashboard h-100 border-success">
+            <div class="card-body text-center">
+                <div class="display-4 mb-2">
+                    <i class="fas fa-id-card text-success"></i>
+                </div>
+                <h5 class="card-title">Account</h5>
+                <p class="text-muted">Manage your profile and account settings</p>
+                <a href="{{ url_for('client_portal.profile') }}" class="btn btn-sm btn-outline-success mt-2">View Profile</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upcoming Events Section -->
+<div class="row mb-4">
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-calendar-alt me-2"></i> Upcoming Events
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                {% if upcoming_events %}
+                <div class="list-group list-group-flush">
+                    {% for event in upcoming_events %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ event.title }}</h6>
+                            <small class="badge {% if event.priority == 1 %}bg-danger{% elif event.priority == 2 %}bg-warning{% else %}bg-info{% endif %}">
+                                {{ event.event_type }}
+                            </small>
+                        </div>
+                        <p class="mb-1 small">
+                            <i class="fas fa-calendar-day me-1"></i> {{ event.start_time.strftime('%B %d, %Y') }}
+                            <i class="fas fa-clock ms-2 me-1"></i> {{ event.start_time.strftime('%I:%M %p') }}
+                            {% if event.location %}
+                            <i class="fas fa-map-marker-alt ms-2 me-1"></i> {{ event.location }}
+                            {% endif %}
+                        </p>
+                        {% if event.description %}
+                        <small class="text-muted">{{ event.description|truncate(100) }}</small>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="p-4 text-center">
+                    <p class="text-muted">No upcoming events</p>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('client_portal.calendar') }}" class="btn btn-sm btn-outline-primary">View All Events</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Documents Section -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-file-alt me-2"></i> Recent Documents
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                {% if documents %}
+                <div class="list-group list-group-flush">
+                    {% for document in documents[:5] %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ document.title }}</h6>
+                            <small class="badge bg-secondary">{{ document.document_type }}</small>
+                        </div>
+                        <p class="mb-1 small">
+                            <i class="fas fa-calendar me-1"></i> {{ document.created_at.strftime('%B %d, %Y') }}
+                            {% if document.status %}
+                            <span class="badge {% if document.status == 'Final' %}bg-success{% elif document.status == 'Draft' %}bg-warning{% else %}bg-secondary{% endif %} ms-2">
+                                {{ document.status }}
+                            </span>
+                            {% endif %}
+                        </p>
+                        <small>
+                            <a href="{{ url_for('client_portal.view_document', document_id=document.id) }}" class="btn btn-sm btn-outline-info mt-1">
+                                <i class="fas fa-eye me-1"></i> View Document
+                            </a>
+                        </small>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="p-4 text-center">
+                    <p class="text-muted">No documents have been shared with you yet</p>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('client_portal.documents') }}" class="btn btn-sm btn-outline-info">View All Documents</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cases Section -->
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-briefcase me-2"></i> Your Cases
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                {% if cases %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Case Number</th>
+                                <th>Title</th>
+                                <th>Court</th>
+                                <th>Status</th>
+                                <th>Court Stage</th>
+                                <th>Next Court Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for case in cases %}
+                            <tr>
+                                <td>{{ case.case_number }}</td>
+                                <td>{{ case.title }}</td>
+                                <td>{{ case.court_level }}</td>
+                                <td>
+                                    <span class="badge {% if case.status == 'Active' %}bg-success{% elif case.status == 'Closed' %}bg-secondary{% elif case.status == 'Pending' %}bg-warning{% else %}bg-info{% endif %}">
+                                        {{ case.status }}
+                                    </span>
+                                </td>
+                                <td>{{ case.court_stage }}</td>
+                                <td>
+                                    {% if case.next_court_date %}
+                                    {{ case.next_court_date.strftime('%B %d, %Y') }}
+                                    {% else %}
+                                    Not scheduled
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('client_portal.view_case', case_id=case.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="p-4 text-center">
+                    <p class="text-muted">No cases associated with your account</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

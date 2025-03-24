@@ -1,0 +1,319 @@
+{% extends "client_portal/layout.html" %}
+
+{% block title %}Calendar - Client Portal{% endblock %}
+
+{% block header %}Your Calendar{% endblock %}
+{% block subheader %}View upcoming court dates and deadlines{% endblock %}
+
+{% block head %}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.0/main.min.css" rel="stylesheet" />
+<style>
+    .fc-header-toolbar {
+        margin-bottom: 1rem !important;
+    }
+    .fc-toolbar-title {
+        font-size: 1.25rem !important;
+    }
+    .fc-event {
+        cursor: pointer;
+    }
+    .fc-daygrid-event {
+        white-space: normal !important;
+    }
+    .fc .fc-button-primary {
+        background-color: var(--bs-primary);
+        border-color: var(--bs-primary);
+    }
+    .fc .fc-button-primary:not(:disabled).fc-button-active, 
+    .fc .fc-button-primary:not(:disabled):active {
+        background-color: var(--bs-primary-subtle);
+        border-color: var(--bs-primary-subtle);
+    }
+    .event-hearing {
+        background-color: var(--bs-danger);
+        border-color: var(--bs-danger);
+    }
+    .event-filing {
+        background-color: var(--bs-primary);
+        border-color: var(--bs-primary);
+    }
+    .event-deadline {
+        background-color: var(--bs-warning);
+        border-color: var(--bs-warning);
+    }
+    .event-meeting {
+        background-color: var(--bs-info);
+        border-color: var(--bs-info);
+    }
+    .event-other {
+        background-color: var(--bs-secondary);
+        border-color: var(--bs-secondary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-9">
+        <!-- Calendar Card -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i> Event Calendar</h5>
+            </div>
+            <div class="card-body">
+                <div id="calendar"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3">
+        <!-- Event Type Legend -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="fas fa-list me-2"></i> Event Types</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <div class="list-group-item d-flex align-items-center">
+                        <span class="badge bg-danger me-2" style="width: 15px; height: 15px;"></span>
+                        <span>Hearings</span>
+                    </div>
+                    <div class="list-group-item d-flex align-items-center">
+                        <span class="badge bg-primary me-2" style="width: 15px; height: 15px;"></span>
+                        <span>Filings</span>
+                    </div>
+                    <div class="list-group-item d-flex align-items-center">
+                        <span class="badge bg-warning me-2" style="width: 15px; height: 15px;"></span>
+                        <span>Deadlines</span>
+                    </div>
+                    <div class="list-group-item d-flex align-items-center">
+                        <span class="badge bg-info me-2" style="width: 15px; height: 15px;"></span>
+                        <span>Meetings</span>
+                    </div>
+                    <div class="list-group-item d-flex align-items-center">
+                        <span class="badge bg-secondary me-2" style="width: 15px; height: 15px;"></span>
+                        <span>Other Events</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Upcoming Events Card -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-week me-2"></i> Upcoming Events</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if upcoming_events %}
+                <div class="list-group list-group-flush">
+                    {% for event in upcoming_events %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ event.title }}</h6>
+                            <small class="badge 
+                                {% if event.event_type == 'Hearing' %}bg-danger
+                                {% elif event.event_type == 'Filing' %}bg-primary
+                                {% elif event.event_type == 'Deadline' %}bg-warning
+                                {% elif event.event_type == 'Meeting' %}bg-info
+                                {% else %}bg-secondary{% endif %}">
+                                {{ event.event_type }}
+                            </small>
+                        </div>
+                        <p class="mb-1 small">
+                            <i class="fas fa-calendar-day me-1"></i> {{ event.start_time.strftime('%b %d, %Y') }}
+                            <i class="fas fa-clock ms-2 me-1"></i> {{ event.start_time.strftime('%I:%M %p') }}
+                        </p>
+                        {% if event.location %}
+                        <p class="mb-1 small">
+                            <i class="fas fa-map-marker-alt me-1"></i> {{ event.location }}
+                        </p>
+                        {% endif %}
+                        {% if event.case %}
+                        <p class="mb-1 small">
+                            <i class="fas fa-briefcase me-1"></i> 
+                            <a href="{{ url_for('client_portal.view_case', case_id=event.case.id) }}">{{ event.case.case_number }}</a>
+                        </p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="p-4 text-center">
+                    <p class="text-muted">No upcoming events</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Event Detail Modal -->
+<div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" id="eventModalHeader">
+                <h5 class="modal-title" id="eventModalLabel">Event Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3" id="eventDate">
+                    <i class="fas fa-calendar-day me-2"></i> <span id="eventModalDate"></span>
+                </div>
+                <div class="mb-3" id="eventTime">
+                    <i class="fas fa-clock me-2"></i> <span id="eventModalTime"></span>
+                </div>
+                <div class="mb-3" id="eventLocation">
+                    <i class="fas fa-map-marker-alt me-2"></i> <span id="eventModalLocation"></span>
+                </div>
+                <div class="mb-3" id="eventCase">
+                    <i class="fas fa-briefcase me-2"></i> <span id="eventModalCase"></span>
+                </div>
+                <div class="mb-3">
+                    <h6>Description:</h6>
+                    <p id="eventModalDescription" class="bg-light p-3 rounded"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="#" class="btn btn-primary" id="viewCaseBtn">View Case</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.0/main.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize calendar
+        var calendarEl = document.getElementById('calendar');
+        
+        if (calendarEl) {
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
+                },
+                navLinks: true,
+                dayMaxEvents: true,
+                events: [
+                    {% for event in events %}
+                    {
+                        id: '{{ event.id }}',
+                        title: '{{ event.title }}',
+                        start: '{{ event.start_time.isoformat() }}',
+                        {% if event.end_time %}
+                        end: '{{ event.end_time.isoformat() }}',
+                        {% endif %}
+                        allDay: {% if event.all_day %}true{% else %}false{% endif %},
+                        className: '{% if event.event_type == "Hearing" %}event-hearing
+                                    {% elif event.event_type == "Filing" %}event-filing
+                                    {% elif event.event_type == "Deadline" %}event-deadline
+                                    {% elif event.event_type == "Meeting" %}event-meeting
+                                    {% else %}event-other{% endif %}',
+                        extendedProps: {
+                            event_type: '{{ event.event_type }}',
+                            location: '{{ event.location }}',
+                            description: '{{ event.description|replace("\n", " ")|replace("'", "\\'") }}',
+                            {% if event.case %}
+                            case_id: '{{ event.case.id }}',
+                            case_number: '{{ event.case.case_number }}',
+                            {% endif %}
+                        }
+                    }{% if not loop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                eventTimeFormat: {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    meridiem: 'short'
+                },
+                eventClick: function(info) {
+                    showEventModal(info.event);
+                }
+            });
+            
+            calendar.render();
+            
+            // Handle event modal
+            function showEventModal(event) {
+                // Set modal header class based on event type
+                var modalHeader = document.getElementById('eventModalHeader');
+                modalHeader.className = 'modal-header';
+                
+                if (event.extendedProps.event_type === 'Hearing') {
+                    modalHeader.classList.add('bg-danger', 'text-white');
+                } else if (event.extendedProps.event_type === 'Filing') {
+                    modalHeader.classList.add('bg-primary', 'text-white');
+                } else if (event.extendedProps.event_type === 'Deadline') {
+                    modalHeader.classList.add('bg-warning', 'text-white');
+                } else if (event.extendedProps.event_type === 'Meeting') {
+                    modalHeader.classList.add('bg-info', 'text-white');
+                } else {
+                    modalHeader.classList.add('bg-secondary', 'text-white');
+                }
+                
+                // Set modal content
+                document.getElementById('eventModalLabel').textContent = event.title;
+                
+                // Format date
+                var eventDate = new Date(event.start);
+                var dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                document.getElementById('eventModalDate').textContent = eventDate.toLocaleDateString('en-US', dateOptions);
+                
+                // Format time
+                if (!event.allDay) {
+                    var timeOptions = { hour: '2-digit', minute: '2-digit' };
+                    var startTime = eventDate.toLocaleTimeString('en-US', timeOptions);
+                    
+                    if (event.end) {
+                        var endTime = new Date(event.end).toLocaleTimeString('en-US', timeOptions);
+                        document.getElementById('eventModalTime').textContent = startTime + ' - ' + endTime;
+                    } else {
+                        document.getElementById('eventModalTime').textContent = startTime;
+                    }
+                    
+                    document.getElementById('eventTime').style.display = 'block';
+                } else {
+                    document.getElementById('eventTime').style.display = 'none';
+                }
+                
+                // Location
+                if (event.extendedProps.location) {
+                    document.getElementById('eventModalLocation').textContent = event.extendedProps.location;
+                    document.getElementById('eventLocation').style.display = 'block';
+                } else {
+                    document.getElementById('eventLocation').style.display = 'none';
+                }
+                
+                // Case
+                if (event.extendedProps.case_number) {
+                    document.getElementById('eventModalCase').textContent = event.extendedProps.case_number;
+                    document.getElementById('eventCase').style.display = 'block';
+                    
+                    var viewCaseBtn = document.getElementById('viewCaseBtn');
+                    viewCaseBtn.href = "{{ url_for('client_portal.view_case', case_id='EVENT_CASE_ID') }}".replace('EVENT_CASE_ID', event.extendedProps.case_id);
+                    viewCaseBtn.style.display = 'block';
+                } else {
+                    document.getElementById('eventCase').style.display = 'none';
+                    document.getElementById('viewCaseBtn').style.display = 'none';
+                }
+                
+                // Description
+                if (event.extendedProps.description) {
+                    document.getElementById('eventModalDescription').textContent = event.extendedProps.description;
+                } else {
+                    document.getElementById('eventModalDescription').textContent = 'No description available.';
+                }
+                
+                // Show modal
+                var eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
+                eventModal.show();
+            }
+        }
+    });
+</script>
+{% endblock %}

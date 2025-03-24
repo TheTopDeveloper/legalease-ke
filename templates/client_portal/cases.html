@@ -1,0 +1,242 @@
+{% extends "client_portal/layout.html" %}
+
+{% block title %}Your Cases - Client Portal{% endblock %}
+
+{% block header %}Your Legal Cases{% endblock %}
+{% block subheader %}Overview of your associated legal cases{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-secondary text-white">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="mb-0"><i class="fas fa-briefcase me-2"></i> Case Overview</h5>
+                    </div>
+                    <div class="col-auto">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="caseSearch" placeholder="Search cases...">
+                            <button class="btn btn-outline-light" type="button" id="searchBtn">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                {% if cases %}
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped mb-0" id="casesTable">
+                        <thead>
+                            <tr>
+                                <th>Case Number</th>
+                                <th>Title</th>
+                                <th>Court</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Court Stage</th>
+                                <th>Next Court Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for case in cases %}
+                            <tr>
+                                <td>{{ case.case_number }}</td>
+                                <td>{{ case.title }}</td>
+                                <td>{{ case.court_level }}</td>
+                                <td>{{ case.case_type }}</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if case.status == 'Active' %}bg-success
+                                        {% elif case.status == 'Closed' %}bg-secondary
+                                        {% elif case.status == 'Pending' %}bg-warning
+                                        {% else %}bg-info{% endif %}">
+                                        {{ case.status }}
+                                    </span>
+                                </td>
+                                <td>{{ case.court_stage }}</td>
+                                <td>
+                                    {% if case.next_court_date %}
+                                    {{ case.next_court_date.strftime('%b %d, %Y') }}
+                                    {% else %}
+                                    <span class="text-muted">Not scheduled</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('client_portal.view_case', case_id=case.id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye me-1"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="p-5 text-center">
+                    <div class="display-6 text-muted mb-4">
+                        <i class="fas fa-briefcase"></i>
+                    </div>
+                    <h4>No Cases Found</h4>
+                    <p class="text-muted">You don't have any cases associated with your account yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Case Status Overview -->
+{% if cases %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i> Case Status Overview</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% set case_status = {'Active': 0, 'Pending': 0, 'Closed': 0, 'Other': 0} %}
+                    {% for case in cases %}
+                        {% if case.status == 'Active' %}
+                            {% set _ = case_status.update({'Active': case_status['Active'] + 1}) %}
+                        {% elif case.status == 'Pending' %}
+                            {% set _ = case_status.update({'Pending': case_status['Pending'] + 1}) %}
+                        {% elif case.status == 'Closed' %}
+                            {% set _ = case_status.update({'Closed': case_status['Closed'] + 1}) %}
+                        {% else %}
+                            {% set _ = case_status.update({'Other': case_status['Other'] + 1}) %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% for status, count in case_status.items() %}
+                        {% if count > 0 %}
+                        <div class="col-md-3 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <div class="display-6 mb-2">
+                                        <i class="fas {% if status == 'Active' %}fa-play-circle text-success
+                                        {% elif status == 'Pending' %}fa-pause-circle text-warning
+                                        {% elif status == 'Closed' %}fa-stop-circle text-secondary
+                                        {% else %}fa-question-circle text-info{% endif %}"></i>
+                                    </div>
+                                    <h5 class="card-title">{{ status }}</h5>
+                                    <p class="display-6 mb-0">{{ count }}</p>
+                                    <p class="text-muted">case{% if count != 1 %}s{% endif %}</p>
+                                    <button class="btn btn-sm btn-outline-primary mt-2 filter-btn" data-status="{{ status }}">
+                                        Filter Cases
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Court Level Breakdown -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-balance-scale me-2"></i> Court Level Breakdown</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% set court_levels = {} %}
+                    {% for case in cases %}
+                        {% if case.court_level %}
+                            {% if case.court_level in court_levels %}
+                                {% set _ = court_levels.update({case.court_level: court_levels[case.court_level] + 1}) %}
+                            {% else %}
+                                {% set _ = court_levels.update({case.court_level: 1}) %}
+                            {% endif %}
+                        {% else %}
+                            {% if 'Other' in court_levels %}
+                                {% set _ = court_levels.update({'Other': court_levels['Other'] + 1}) %}
+                            {% else %}
+                                {% set _ = court_levels.update({'Other': 1}) %}
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% for court, count in court_levels.items() %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <div class="display-6 mb-2">
+                                        <i class="fas {% if court == 'Supreme Court' %}fa-gavel text-danger
+                                        {% elif court == 'Court of Appeal' %}fa-gavel text-warning
+                                        {% elif court == 'High Court' %}fa-gavel text-info
+                                        {% elif court == 'Magistrate Court' %}fa-gavel text-success
+                                        {% else %}fa-gavel text-secondary{% endif %}"></i>
+                                    </div>
+                                    <h5 class="card-title">{{ court }}</h5>
+                                    <p class="display-6 mb-0">{{ count }}</p>
+                                    <p class="text-muted">case{% if count != 1 %}s{% endif %}</p>
+                                    <button class="btn btn-sm btn-outline-primary mt-2 filter-btn" data-court="{{ court }}">
+                                        Filter Cases
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Case search functionality
+        const searchInput = document.getElementById('caseSearch');
+        const searchBtn = document.getElementById('searchBtn');
+        const table = document.getElementById('casesTable');
+        
+        if (searchInput && searchBtn && table) {
+            const searchTable = function() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const rows = table.querySelectorAll('tbody tr');
+                
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(searchTerm) ? '' : 'none';
+                });
+            };
+            
+            searchBtn.addEventListener('click', searchTable);
+            searchInput.addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') {
+                    searchTable();
+                }
+            });
+            
+            // Filter buttons functionality
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    let filterTerm = '';
+                    
+                    if (this.hasAttribute('data-status')) {
+                        filterTerm = this.getAttribute('data-status');
+                    } else if (this.hasAttribute('data-court')) {
+                        filterTerm = this.getAttribute('data-court');
+                    }
+                    
+                    searchInput.value = filterTerm;
+                    searchTable();
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

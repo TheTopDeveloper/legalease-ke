@@ -1,0 +1,141 @@
+{% extends "client_portal/layout.html" %}
+
+{% block title %}{{ document.title }} - Client Portal{% endblock %}
+
+{% block header %}{{ document.title }}{% endblock %}
+{% block subheader %}
+    <span class="badge 
+        {% if document.status == 'Final' %}bg-success
+        {% elif document.status == 'Draft' %}bg-warning
+        {% elif document.status == 'Submitted' %}bg-info
+        {% else %}bg-secondary{% endif %}">
+        {{ document.status }}
+    </span>
+    <span class="badge bg-secondary ms-2">{{ document.document_type }}</span>
+    <span class="text-muted ms-2">Shared on {{ document.created_at.strftime('%B %d, %Y') }}</span>
+{% endblock %}
+
+{% block header_buttons %}
+<div class="col-md-auto">
+    <a href="{{ url_for('client_portal.documents') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back to Documents
+    </a>
+    <button class="btn btn-primary ms-2" id="printBtn">
+        <i class="fas fa-print me-1"></i> Print
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Document Content -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i> Document Content</h5>
+            </div>
+            <div class="card-body">
+                <!-- Display formatted content if available -->
+                {% if document.content %}
+                <div class="document-content p-4 bg-light rounded">
+                    {{ document.content|safe }}
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i> No content available for this document.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Document Info -->
+    <div class="col-lg-4">
+        <!-- Document Details Card -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i> Document Details</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-heading me-2"></i> Title</span>
+                        <span class="text-primary">{{ document.title }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-tag me-2"></i> Type</span>
+                        <span>{{ document.document_type }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-check-circle me-2"></i> Status</span>
+                        <span class="badge 
+                            {% if document.status == 'Final' %}bg-success
+                            {% elif document.status == 'Draft' %}bg-warning
+                            {% elif document.status == 'Submitted' %}bg-info
+                            {% else %}bg-secondary{% endif %}">
+                            {{ document.status }}
+                        </span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-calendar me-2"></i> Created</span>
+                        <span>{{ document.created_at.strftime('%B %d, %Y') }}</span>
+                    </li>
+                    {% if document.updated_at %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-edit me-2"></i> Last Updated</span>
+                        <span>{{ document.updated_at.strftime('%B %d, %Y') }}</span>
+                    </li>
+                    {% endif %}
+                    {% if document.version %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-code-branch me-2"></i> Version</span>
+                        <span>{{ document.version }}</span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Related Cases Card -->
+        {% if document.cases %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="fas fa-briefcase me-2"></i> Related Cases</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for case in document.cases %}
+                    <a href="{{ url_for('client_portal.view_case', case_id=case.id) }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ case.title }}</h6>
+                            <small class="text-muted">{{ case.case_number }}</small>
+                        </div>
+                        <p class="mb-1 small">
+                            <span class="badge {% if case.status == 'Active' %}bg-success{% elif case.status == 'Closed' %}bg-secondary{% else %}bg-warning{% endif %}">
+                                {{ case.status }}
+                            </span>
+                            <span class="ms-2">{{ case.court_level }}</span>
+                        </p>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Print functionality
+        const printBtn = document.getElementById('printBtn');
+        if (printBtn) {
+            printBtn.addEventListener('click', function() {
+                window.print();
+            });
+        }
+    });
+</script>
+{% endblock %}

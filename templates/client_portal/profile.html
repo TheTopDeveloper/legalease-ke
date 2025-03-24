@@ -1,0 +1,204 @@
+{% extends "client_portal/layout.html" %}
+
+{% block title %}Your Profile - Client Portal{% endblock %}
+
+{% block header %}Your Profile{% endblock %}
+{% block subheader %}Manage your account settings and preferences{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- User Profile Card -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-user me-2"></i> Account Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('client_portal.profile') }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="email" value="{{ current_user.email }}" readonly>
+                            <small class="form-text text-muted">Email address cannot be changed. Contact your legal representative for assistance.</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="client" class="form-label">Client</label>
+                            <input type="text" class="form-control" id="client" value="{{ client.name }}" readonly>
+                            <small class="form-text text-muted">Your associated client account.</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="password" name="password" autocomplete="new-password">
+                        <small class="form-text text-muted">Leave blank to keep your current password.</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password_confirm" class="form-label">Confirm New Password</label>
+                        <input type="password" class="form-control" id="password_confirm" name="password_confirm" autocomplete="new-password">
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Notification Preferences Card -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-bell me-2"></i> Notification Preferences</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('client_portal.notification_preferences') }}">
+                    {{ notification_form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Phone Number for SMS Notifications</label>
+                        <input type="tel" class="form-control" id="phone" name="phone" value="{{ notification_preferences.phone if notification_preferences else '' }}">
+                        <small class="form-text text-muted">Enter your phone number to receive SMS notifications for important updates.</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="email_notifications" name="email_notifications"
+                                {{ 'checked' if notification_preferences and notification_preferences.email_notifications else '' }}>
+                            <label class="form-check-label" for="email_notifications">
+                                Enable Email Notifications
+                            </label>
+                        </div>
+                        <small class="form-text text-muted">Receive notifications about case updates and document sharing via email.</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="sms_notifications" name="sms_notifications"
+                                {{ 'checked' if notification_preferences and notification_preferences.sms_notifications else '' }}>
+                            <label class="form-check-label" for="sms_notifications">
+                                Enable SMS Notifications
+                            </label>
+                        </div>
+                        <small class="form-text text-muted">Receive urgent notifications via SMS (requires valid phone number).</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="court_date_reminders" name="court_date_reminders"
+                                {{ 'checked' if notification_preferences and notification_preferences.court_date_reminders else '' }}>
+                            <label class="form-check-label" for="court_date_reminders">
+                                Court Date Reminders
+                            </label>
+                        </div>
+                        <small class="form-text text-muted">Receive reminders before upcoming court dates.</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="document_updates" name="document_updates"
+                                {{ 'checked' if notification_preferences and notification_preferences.document_updates else '' }}>
+                            <label class="form-check-label" for="document_updates">
+                                Document Updates
+                            </label>
+                        </div>
+                        <small class="form-text text-muted">Receive notifications when new documents are shared with you.</small>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-info text-white">
+                            <i class="fas fa-save me-1"></i> Save Preferences
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Account Security Card -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i> Account Security</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <h6>Password Security</h6>
+                    <ul class="list-group list-group-flush mb-3">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Password Last Changed</span>
+                            <span class="text-muted">{{ password_last_changed if password_last_changed else 'Never' }}</span>
+                        </li>
+                    </ul>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> It's recommended to change your password regularly to maintain account security.
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <h6>Login Activity</h6>
+                    <ul class="list-group list-group-flush mb-3">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Last Login</span>
+                            <span class="text-muted">{{ current_user.last_login.strftime('%b %d, %Y %I:%M %p') if current_user.last_login else 'Never' }}</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="mb-3">
+                    <h6>Access Token</h6>
+                    <p class="small">Your access token allows secure access to shared documents without logging in. Keep this confidential.</p>
+                    
+                    {% if current_user.access_token and current_user.is_token_valid() %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i> Your access token is valid
+                        <p class="small mb-0">Expires: {{ current_user.token_expiry.strftime('%b %d, %Y') }}</p>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i> Your access token has expired or is not set
+                    </div>
+                    {% endif %}
+                    
+                    <form method="POST" action="{{ url_for('client_portal.generate_token') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-success w-100">
+                            <i class="fas fa-sync-alt me-1"></i> Generate New Access Token
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Account Activity Card -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i> Recent Activity</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if activities %}
+                <div class="list-group list-group-flush">
+                    {% for activity in activities %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ activity.activity_type }}</h6>
+                            <small class="text-muted">{{ activity.timestamp.strftime('%b %d, %Y') }}</small>
+                        </div>
+                        <p class="mb-1 small text-muted">{{ activity.description }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="p-4 text-center">
+                    <p class="text-muted">No recent activity recorded</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
