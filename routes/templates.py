@@ -5,6 +5,7 @@ from flask_login import login_required, current_user
 from models import DocumentTemplate, Document, Case, db
 import config
 import jinja2
+from utils.document_generator import DocumentGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -176,10 +177,9 @@ def use_template(template_id):
             context[var] = request.form.get(var, '')
         
         # Apply the context to the template to create document content
-        jinja_env = jinja2.Environment(autoescape=True)
+        document_generator = DocumentGenerator()
         try:
-            template_obj = jinja_env.from_string(template.content)
-            document_content = template_obj.render(**context)
+            document_content = document_generator.generate_from_user_template(template.content, context)
         except Exception as e:
             logger.error(f"Error rendering template: {str(e)}")
             flash(f'Error rendering template: {str(e)}', 'error')
