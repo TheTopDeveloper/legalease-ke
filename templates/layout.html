@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fab.css') }}">
     {% block styles %}{% endblock %}
 </head>
 <body>
@@ -106,6 +107,49 @@
         <!-- Page Content -->
         {% block content %}{% endblock %}
     </main>
+    
+    <!-- Floating Action Button - Only show for authenticated users -->
+    {% if current_user.is_authenticated %}
+    <div class="fab-container">
+        <div class="fab-main" tabindex="0" aria-label="Quick Actions">
+            <i class="fas fa-plus"></i>
+        </div>
+        <ul class="fab-options">
+            <li style="--i:1">
+                <a href="{{ url_for('cases.create') }}" class="fab-item">
+                    <i class="fas fa-gavel"></i>
+                    <span class="fab-label">New Case</span>
+                </a>
+            </li>
+            <li style="--i:2">
+                <a href="{{ url_for('documents.create') }}" class="fab-item">
+                    <i class="fas fa-file-alt"></i>
+                    <span class="fab-label">New Document</span>
+                </a>
+            </li>
+            <li style="--i:3">
+                <a href="{{ url_for('contracts.create') }}" class="fab-item">
+                    <i class="fas fa-file-signature"></i>
+                    <span class="fab-label">New Contract</span>
+                </a>
+            </li>
+            <li style="--i:4">
+                <a href="{{ url_for('research.research_issue') }}" class="fab-item">
+                    <i class="fas fa-search"></i>
+                    <span class="fab-label">Research</span>
+                </a>
+            </li>
+            {% if current_user.tokens_available < 50 %}
+            <li style="--i:5">
+                <a href="{{ url_for('billing.tokens') }}" class="fab-item">
+                    <i class="fas fa-coins"></i>
+                    <span class="fab-label">Buy Tokens</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+    {% endif %}
 
     <!-- Footer -->
     <footer class="bg-dark text-light py-4 mt-5">
@@ -150,6 +194,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js"></script>
     <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/fab.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

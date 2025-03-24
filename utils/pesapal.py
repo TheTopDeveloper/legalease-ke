@@ -4,7 +4,7 @@ This will be replaced with PesaPal or DPO integration when API keys are availabl
 """
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import url_for
 
 from app import db
@@ -56,7 +56,6 @@ class MockPaymentSystem:
                 user = User.query.get(payment.user_id)
                 
                 if subscription and user:
-                    from datetime import datetime, timedelta
                     # Update user's subscription
                     user.account_type = subscription.name
                     user.max_cases = subscription.max_cases
