@@ -1,0 +1,133 @@
+{% extends "layout.html" %}
+
+{% block title %}Analyze Legal Document - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}Document Analysis{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h4>Analyze Legal Document</h4>
+                <p class="mb-0">Use AI to analyze judicial rulings, statutes, contracts, and other legal documents</p>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('research.analyze_document') }}" id="document-analysis-form">
+                    <div class="mb-3">
+                        <label for="document_text" class="form-label">Document Text <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="document_text" name="document_text" rows="15" required placeholder="Paste the document text here for analysis..."></textarea>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> The AI will automatically identify the document type and provide an appropriate analysis. You can paste court rulings, statutes, contracts, pleadings, or other legal documents.
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-primary">
+                            <span id="analysis-loading" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            Analyze Document
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if analysis_results %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Analysis Results</h4>
+                <p class="mb-0">Document type identified: <strong>{{ analysis_results.document_type }}</strong></p>
+            </div>
+            <div class="card-body">
+                {% if analysis_results.error %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i> Error analyzing document: {{ analysis_results.error }}
+                </div>
+                {% else %}
+                    {% if analysis_results.document_type == 'Court ruling/judgment' %}
+                        <div class="mb-4">
+                            <h5>Case Summary</h5>
+                            <div class="mb-3">{{ analysis_results.analysis.summary }}</div>
+                            
+                            <h5>Key Legal Issues</h5>
+                            <div class="mb-3">{{ analysis_results.analysis.legal_issues }}</div>
+                            
+                            <h5>Legal Principles Established</h5>
+                            <div class="mb-3">{{ analysis_results.analysis.legal_principles }}</div>
+                            
+                            <h5>Decision/Holding</h5>
+                            <div class="mb-3">{{ analysis_results.analysis.decision }}</div>
+                            
+                            <h5>Precedents Cited</h5>
+                            <div class="mb-3">{{ analysis_results.analysis.precedents_cited }}</div>
+                            
+                            <h5>Statutes Referenced</h5>
+                            <div class="mb-3">{{ analysis_results.analysis.statutes_referenced }}</div>
+                        </div>
+                    {% elif analysis_results.document_type == 'Statute or regulation' %}
+                        <div class="mb-4">
+                            <h5>Title</h5>
+                            <div class="mb-3">{{ analysis_results.analysis.title }}</div>
+                            
+                            <h5>Purpose and Scope</h5>
+                            <div class="mb-3">{{ analysis_results.analysis.purpose }}</div>
+                            
+                            <h5>Key Definitions</h5>
+                            <div class="mb-3">{{ analysis_results.analysis.key_definitions }}</div>
+                            
+                            <h5>Main Provisions</h5>
+                            <div class="mb-3">{{ analysis_results.analysis.main_provisions }}</div>
+                            
+                            <h5>Key Obligations</h5>
+                            <div class="mb-3">{{ analysis_results.analysis.obligations }}</div>
+                            
+                            <h5>Penalties and Consequences</h5>
+                            <div class="mb-3">{{ analysis_results.analysis.penalties }}</div>
+                        </div>
+                    {% else %}
+                        <div class="research-results">
+                            {{ analysis_results.analysis.analysis|safe|nl2br }}
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Related Research</h4>
+            </div>
+            <div class="card-body">
+                <p>Based on this document analysis, you might want to explore:</p>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <a href="{{ url_for('research.research_issue') }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-brain"></i> Research Related Issues
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a href="{{ url_for('research.precedents') }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-balance-scale"></i> Find Relevant Precedents
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a href="{{ url_for('documents.generate') }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-file-alt"></i> Generate Related Document
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

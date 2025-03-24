@@ -1,0 +1,93 @@
+{% extends "layout.html" %}
+
+{% block title %}Create New Contract - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}Create New Contract{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header">
+                <h4>New Contract Information</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('contracts.create') }}">
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label for="title" class="form-label">Contract Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="contract_type" class="form-label">Contract Type <span class="text-danger">*</span></label>
+                            <select class="form-select" id="contract_type" name="contract_type" required>
+                                <option value="">Select Contract Type</option>
+                                {% for contract_type in contract_types %}
+                                <option value="{{ contract_type }}">{{ contract_type }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="client_id" class="form-label">Client</label>
+                            <select class="form-select" id="client_id" name="client_id">
+                                <option value="">No Client (Internal Contract)</option>
+                                {% for client in clients %}
+                                <option value="{{ client.id }}">{{ client.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="Draft">Draft</option>
+                                <option value="Review">Review</option>
+                                <option value="Negotiation">Negotiation</option>
+                                <option value="Executed">Executed</option>
+                                <option value="Active">Active</option>
+                                <option value="Expired">Expired</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="start_date" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="end_date" class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="key_terms" class="form-label">Key Terms</label>
+                        <textarea class="form-control" id="key_terms" name="key_terms" rows="3" placeholder="Enter key terms and conditions of the contract"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="content" class="form-label">Contract Content</label>
+                        <textarea class="form-control document-editor rich-editor" id="content" name="content" rows="15"></textarea>
+                        <div class="form-text">
+                            Format your contract according to Kenyan contract law standards. Include all necessary clauses and provisions.
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('contracts.index') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Create Contract</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer">
+                <div class="text-center">
+                    <p class="mb-0">Need help creating a contract? <a href="{{ url_for('contracts.generate') }}">Use contract generator</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

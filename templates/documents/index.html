@@ -1,0 +1,162 @@
+{% extends "layout.html" %}
+
+{% block title %}Documents - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}Document Management{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h2>Your Documents</h2>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <div class="btn-group">
+            <a href="{{ url_for('documents.create') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> New Document
+            </a>
+            <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                <span class="visually-hidden">Toggle Dropdown</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                    <a class="dropdown-item" href="{{ url_for('documents.generate') }}">
+                        <i class="fas fa-magic"></i> Generate Document
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Filters and Search -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('documents.index') }}" class="row g-3">
+            <div class="col-md-4">
+                <label for="search" class="form-label">Search</label>
+                <input type="text" class="form-control" id="search" name="search" placeholder="Search documents..." value="{{ request.args.get('search', '') }}">
+            </div>
+            <div class="col-md-3">
+                <label for="document_type" class="form-label">Document Type</label>
+                <select class="form-select" id="document_type" name="document_type">
+                    <option value="">All Types</option>
+                    {% for doc_type in config.DOCUMENT_TYPES %}
+                    <option value="{{ doc_type }}" {% if request.args.get('document_type') == doc_type %}selected{% endif %}>{{ doc_type }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">All Statuses</option>
+                    <option value="Draft" {% if request.args.get('status') == 'Draft' %}selected{% endif %}>Draft</option>
+                    <option value="Final" {% if request.args.get('status') == 'Final' %}selected{% endif %}>Final</option>
+                    <option value="Submitted" {% if request.args.get('status') == 'Submitted' %}selected{% endif %}>Submitted</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Documents Table -->
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Version</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Related Case</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for document in documents %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('documents.view', document_id=document.id) }}">{{ document.title }}</a>
+                        </td>
+                        <td>{{ document.document_type }}</td>
+                        <td>v{{ document.version }}</td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if document.status == 'Final' else 'warning' if document.status == 'Draft' else 'info' }}">
+                                {{ document.status }}
+                            </span>
+                        </td>
+                        <td>{{ document.created_at.strftime('%d %b %Y') }}</td>
+                        <td>
+                            {% if document.cases %}
+                                {% for case in document.cases %}
+                                    <a href="{{ url_for('cases.view', case_id=case.id) }}" class="badge bg-secondary">{{ case.case_number }}</a>
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-muted">None</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('documents.view', document_id=document.id) }}" class="btn btn-outline-primary" data-bs-toggle="tooltip" title="View Document">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ url_for('documents.edit', document_id=document.id) }}" class="btn btn-outline-secondary" data-bs-toggle="tooltip" title="Edit Document">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ document.id }}" title="Delete Document">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Delete Confirmation Modal -->
+                            <div class="modal fade" id="deleteModal{{ document.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ document.id }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="deleteModalLabel{{ document.id }}">Confirm Deletion</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Are you sure you want to delete the document "{{ document.title }}"? This action cannot be undone.
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <form action="{{ url_for('documents.delete', document_id=document.id) }}" method="POST" id="delete-form-{{ document.id }}">
+                                                <button type="submit" class="btn btn-danger">Delete</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <p class="mb-0">No documents found. <a href="{{ url_for('documents.create') }}">Create your first document</a>.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Enable all tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    });
+</script>
+{% endblock %}

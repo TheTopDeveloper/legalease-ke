@@ -1,0 +1,127 @@
+{% extends "layout.html" %}
+
+{% block title %}Analyze Contract - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}Contract Analysis{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header">
+                <h4>Analyze Contract</h4>
+                <p class="mb-0">Use AI to analyze contract terms, identify issues, and provide recommendations</p>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('contracts.analyze') }}">
+                    <div class="mb-4">
+                        <label class="form-label">Select Analysis Method</label>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="analysis_type" id="existing_contract" value="existing" checked>
+                                            <label class="form-check-label" for="existing_contract">
+                                                <h5>Analyze Existing Contract</h5>
+                                            </label>
+                                        </div>
+                                        <p class="text-muted">Select one of your saved contracts for analysis</p>
+                                        <select class="form-select" id="contract_id" name="contract_id">
+                                            <option value="">Select Contract</option>
+                                            {% for contract in contracts %}
+                                            <option value="{{ contract.id }}">{{ contract.title }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="analysis_type" id="new_contract" value="new">
+                                            <label class="form-check-label" for="new_contract">
+                                                <h5>Analyze New Contract</h5>
+                                            </label>
+                                        </div>
+                                        <p class="text-muted">Paste contract text for analysis</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="contract_text_container" class="mb-4 d-none">
+                        <label for="contract_text" class="form-label">Contract Text</label>
+                        <textarea class="form-control" id="contract_text" name="contract_text" rows="15" placeholder="Paste contract text here for analysis"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="analysis_focus" class="form-label">Analysis Focus (Optional)</label>
+                        <input type="text" class="form-control" id="analysis_focus" name="analysis_focus" placeholder="E.g., 'Termination clauses', 'Liability limitations', 'Payment terms', etc.">
+                        <div class="form-text">Specify particular aspects of the contract you'd like to focus on</div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Our AI will analyze the contract structure, key terms, potential risks, and compliance with Kenyan contract law. The analysis typically takes 10-30 seconds depending on contract length.
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('contracts.index') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <span id="analysis-loading" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            Analyze Contract
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle analysis type selection
+        const analysisTypeRadios = document.querySelectorAll('input[name="analysis_type"]');
+        const contractIdSelect = document.getElementById('contract_id');
+        const contractTextContainer = document.getElementById('contract_text_container');
+        
+        analysisTypeRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.value === 'existing') {
+                    contractIdSelect.disabled = false;
+                    contractTextContainer.classList.add('d-none');
+                } else {
+                    contractIdSelect.disabled = true;
+                    contractTextContainer.classList.remove('d-none');
+                }
+            });
+        });
+        
+        // Show loading spinner on form submit
+        const form = document.querySelector('form');
+        const loadingSpinner = document.getElementById('analysis-loading');
+        
+        form.addEventListener('submit', function() {
+            const analysisType = document.querySelector('input[name="analysis_type"]:checked').value;
+            
+            // Validate form
+            if (analysisType === 'existing' && !contractIdSelect.value) {
+                alert('Please select a contract to analyze');
+                return false;
+            }
+            
+            if (analysisType === 'new' && !document.getElementById('contract_text').value) {
+                alert('Please enter contract text to analyze');
+                return false;
+            }
+            
+            // Show loading spinner
+            loadingSpinner.classList.remove('d-none');
+        });
+    });
+</script>
+{% endblock %}

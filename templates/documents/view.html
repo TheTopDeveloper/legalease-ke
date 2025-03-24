@@ -1,0 +1,204 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ document.title }} - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}Document View{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2>{{ document.title }}</h2>
+        <p>
+            <span class="badge bg-{{ 'success' if document.status == 'Final' else 'warning' if document.status == 'Draft' else 'info' }}">
+                {{ document.status }}
+            </span>
+            <span class="badge bg-secondary">{{ document.document_type }}</span>
+            <span class="badge bg-dark">Version {{ document.version }}</span>
+        </p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <div class="btn-group">
+            <a href="{{ url_for('documents.edit', document_id=document.id) }}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Edit Document
+            </a>
+            <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                <span class="visually-hidden">Toggle Dropdown</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                    <a class="dropdown-item" href="#" onclick="printDocument()">
+                        <i class="fas fa-print"></i> Print Document
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="#" onclick="downloadDocument()">
+                        <i class="fas fa-download"></i> Download as Text
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{{ url_for('research.analyze_document') }}">
+                        <i class="fas fa-search"></i> Analyze with AI
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <button class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="fas fa-trash"></i> Delete Document
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-9">
+        <!-- Document Content -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Document Content</h5>
+            </div>
+            <div class="card-body">
+                <div class="document-preview legal-document" id="document-content">
+                    {{ document.content|safe }}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <!-- Document Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Document Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <strong>Created:</strong><br>
+                    {{ document.created_at.strftime('%d %B %Y, %H:%M') }}
+                </div>
+                <div class="mb-2">
+                    <strong>Last Modified:</strong><br>
+                    {{ document.updated_at.strftime('%d %B %Y, %H:%M') }}
+                </div>
+                <div class="mb-2">
+                    <strong>Author:</strong><br>
+                    {{ document.created_by.username }}
+                </div>
+                <div>
+                    <strong>Version:</strong><br>
+                    {{ document.version }}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Associated Cases -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Associated Cases</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for case in document.cases %}
+                    <a href="{{ url_for('cases.view', case_id=case.id) }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ case.title }}</h6>
+                        </div>
+                        <small>{{ case.case_number }}</small>
+                    </a>
+                    {% else %}
+                    <div class="list-group-item">
+                        <p class="mb-0 text-center">No cases associated with this document.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete the document "{{ document.title }}"? This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('documents.delete', document_id=document.id) }}" method="POST">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function printDocument() {
+        const content = document.getElementById('document-content').innerHTML;
+        const title = "{{ document.title }}";
+        
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>${title}</title>
+                <style>
+                    body {
+                        font-family: Georgia, serif;
+                        line-height: 1.6;
+                        margin: 40px;
+                    }
+                    h1, h2, h3, h4, h5, h6 {
+                        margin-top: 20px;
+                        margin-bottom: 10px;
+                    }
+                    @media print {
+                        body {
+                            margin: 0.5in;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>${title}</h1>
+                ${content}
+            </body>
+            </html>
+        `);
+        
+        printWindow.document.close();
+        printWindow.focus();
+        
+        // Print after a short delay to ensure content is loaded
+        setTimeout(function() {
+            printWindow.print();
+            printWindow.close();
+        }, 250);
+    }
+    
+    function downloadDocument() {
+        const content = document.getElementById('document-content').innerText;
+        const filename = "{{ document.title.replace(' ', '_') }}.txt";
+        
+        const element = document.createElement('a');
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(content));
+        element.setAttribute('download', filename);
+        
+        element.style.display = 'none';
+        document.body.appendChild(element);
+        
+        element.click();
+        
+        document.body.removeChild(element);
+    }
+</script>
+{% endblock %}

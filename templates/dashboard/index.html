@@ -1,0 +1,205 @@
+{% extends "layout.html" %}
+
+{% block title %}Dashboard - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Sidebar -->
+    <div class="col-md-3 mb-4">
+        <div class="sidebar">
+            <h5>Navigation</h5>
+            <div class="nav flex-column">
+                <a href="{{ url_for('dashboard.index') }}" class="nav-link active">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a href="{{ url_for('cases.index') }}" class="nav-link">
+                    <i class="fas fa-gavel"></i> Cases
+                </a>
+                <a href="{{ url_for('documents.index') }}" class="nav-link">
+                    <i class="fas fa-file-alt"></i> Documents
+                </a>
+                <a href="{{ url_for('contracts.index') }}" class="nav-link">
+                    <i class="fas fa-file-signature"></i> Contracts
+                </a>
+                <a href="{{ url_for('research.index') }}" class="nav-link">
+                    <i class="fas fa-search"></i> Research
+                </a>
+                {% if current_user.role == 'admin' %}
+                <a href="#" class="nav-link">
+                    <i class="fas fa-users-cog"></i> Admin Panel
+                </a>
+                {% endif %}
+            </div>
+            
+            <h5 class="mt-4">Quick Links</h5>
+            <div class="nav flex-column">
+                <a href="{{ url_for('cases.create') }}" class="nav-link">
+                    <i class="fas fa-plus"></i> New Case
+                </a>
+                <a href="{{ url_for('documents.create') }}" class="nav-link">
+                    <i class="fas fa-plus"></i> New Document
+                </a>
+                <a href="{{ url_for('contracts.create') }}" class="nav-link">
+                    <i class="fas fa-plus"></i> New Contract
+                </a>
+                <a href="{{ url_for('research.search') }}" class="nav-link">
+                    <i class="fas fa-search"></i> Legal Research
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="col-md-9">
+        <!-- Welcome Message -->
+        <div class="alert alert-info">
+            <h4 class="alert-heading">Welcome, {{ current_user.first_name or current_user.username }}!</h4>
+            <p>This is your legal assistant dashboard. From here, you can manage cases, create documents, research Kenyan law, and more.</p>
+        </div>
+        
+        <!-- Statistics -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card stats-card">
+                    <div class="stats-icon">
+                        <i class="fas fa-gavel"></i>
+                    </div>
+                    <div class="stats-number">{{ case_count }}</div>
+                    <div class="stats-label">Total Cases</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card">
+                    <div class="stats-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="stats-number">{{ document_count }}</div>
+                    <div class="stats-label">Documents</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card">
+                    <div class="stats-icon">
+                        <i class="fas fa-file-signature"></i>
+                    </div>
+                    <div class="stats-number">{{ contract_count }}</div>
+                    <div class="stats-label">Contracts</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card">
+                    <div class="stats-icon">
+                        <i class="fas fa-user-friends"></i>
+                    </div>
+                    <div class="stats-number">{{ client_count }}</div>
+                    <div class="stats-label">Clients</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Cases -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Cases</h5>
+                <a href="{{ url_for('cases.index') }}" class="btn btn-sm btn-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Case Number</th>
+                                <th>Title</th>
+                                <th>Court</th>
+                                <th>Status</th>
+                                <th>Last Updated</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for case in recent_cases %}
+                            <tr>
+                                <td>{{ case.case_number }}</td>
+                                <td>
+                                    <a href="{{ url_for('cases.view', case_id=case.id) }}">{{ case.title }}</a>
+                                </td>
+                                <td>{{ case.court_level }}</td>
+                                <td>
+                                    <span class="case-status status-{{ case.status.lower() }}">{{ case.status }}</span>
+                                </td>
+                                <td>{{ case.updated_at.strftime('%d %b %Y') }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center">No cases found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Upcoming Events -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Upcoming Events</h5>
+                <a href="{{ url_for('dashboard.calendar') }}" class="btn btn-sm btn-primary">View Calendar</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for event in upcoming_events %}
+                    <a href="{{ url_for('cases.view', case_id=event.case_id) }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ event.title }}</h6>
+                            <small>{{ event.start_time.strftime('%d %b %Y, %H:%M') }}</small>
+                        </div>
+                        <p class="mb-1">{{ event.description }}</p>
+                        <small>
+                            <i class="fas fa-map-marker-alt"></i> {{ event.location or 'No location specified' }}
+                            {% if event.case %}
+                            | <i class="fas fa-gavel"></i> {{ event.case.title }}
+                            {% endif %}
+                        </small>
+                    </a>
+                    {% else %}
+                    <div class="list-group-item">
+                        <p class="mb-0 text-center">No upcoming events.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Documents -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Documents</h5>
+                <a href="{{ url_for('documents.index') }}" class="btn btn-sm btn-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for document in recent_documents %}
+                    <a href="{{ url_for('documents.view', document_id=document.id) }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ document.title }}</h6>
+                            <small>{{ document.created_at.strftime('%d %b %Y') }}</small>
+                        </div>
+                        <p class="mb-1">{{ document.document_type }}</p>
+                        <small>
+                            <i class="fas fa-file-alt"></i> v{{ document.version }}
+                            | <span class="badge bg-{{ 'success' if document.status == 'Final' else 'warning' }}">{{ document.status }}</span>
+                        </small>
+                    </a>
+                    {% else %}
+                    <div class="list-group-item">
+                        <p class="mb-0 text-center">No documents found.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

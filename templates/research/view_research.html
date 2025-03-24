@@ -1,0 +1,314 @@
+{% extends "layout.html" %}
+
+{% block title %}Research: {{ research.title }} - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}Research Details{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2>{{ research.title }}</h2>
+        <p>
+            <span class="badge bg-{{ 'primary' if research.source == 'kenyalaw.org' else 'success' if research.source == 'ai_research' else 'info' if research.source == 'ai_analysis' else 'secondary' }}">
+                {{ research.source }}
+            </span>
+            <span class="text-muted">{{ research.created_at.strftime('%d %b %Y, %H:%M') }}</span>
+        </p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <div class="btn-group">
+            {% if research.case %}
+            <a href="{{ url_for('cases.view', case_id=research.case.id) }}" class="btn btn-primary">
+                <i class="fas fa-gavel"></i> View Case
+            </a>
+            {% endif %}
+            <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                <span class="visually-hidden">Toggle Dropdown</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                    <a class="dropdown-item" href="{{ url_for('research.search') }}?q={{ research.query }}">
+                        <i class="fas fa-search"></i> Search Again
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{{ url_for('research.research_issue') }}?query={{ research.query }}">
+                        <i class="fas fa-brain"></i> Research with AI
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{{ url_for('documents.create') }}">
+                        <i class="fas fa-file-alt"></i> Create Document
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <button class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="fas fa-trash"></i> Delete Research
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Research Query</h4>
+            </div>
+            <div class="card-body">
+                <p>{{ research.query }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        {% if research.source == 'kenyalaw.org' %}
+            <!-- Kenya Law Search Results -->
+            {% if results.cases %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Case Law Results</h4>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for case in results.cases %}
+                        <a href="{{ case.link }}" target="_blank" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ case.title }}</h6>
+                            </div>
+                            {% if case.excerpt %}
+                            <p class="mb-1 small text-muted">{{ case.excerpt }}</p>
+                            {% endif %}
+                            <small>
+                                {% if case.metadata %}
+                                    {% for key, value in case.metadata.items() %}
+                                    <span class="badge bg-secondary me-1">{{ key }}: {{ value }}</span>
+                                    {% endfor %}
+                                {% endif %}
+                            </small>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if results.legislation %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Legislation Results</h4>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for legislation in results.legislation %}
+                        <a href="{{ legislation.link }}" target="_blank" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ legislation.title }}</h6>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+        {% elif research.source == 'ai_research' %}
+            <!-- AI Research Results -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Summary</h4>
+                </div>
+                <div class="card-body">
+                    <div class="research-results">
+                        {{ results.summary|safe|nl2br }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Key Legal Principles</h4>
+                </div>
+                <div class="card-body">
+                    <div class="research-results">
+                        {{ results.principles|safe|nl2br }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Recommendations</h4>
+                </div>
+                <div class="card-body">
+                    <div class="research-results">
+                        {{ results.recommendations|safe|nl2br }}
+                    </div>
+                </div>
+            </div>
+            
+            {% if results.cases %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Relevant Cases</h4>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for case in results.cases %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">{{ case.title }}</h5>
+                                <small>{{ case.citation }}</small>
+                            </div>
+                            <p class="mb-1">
+                                <strong>Court:</strong> {{ case.court }}
+                            </p>
+                            {% if case.url %}
+                            <a href="{{ case.url }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                                View on Kenya Law
+                            </a>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+        {% elif research.source == 'ai_analysis' %}
+            <!-- Document Analysis Results -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Document Analysis</h4>
+                    <p class="mb-0">Document type: {{ results.document_type }}</p>
+                </div>
+                <div class="card-body">
+                    <div class="research-results">
+                        {% if results.analysis.analysis %}
+                        {{ results.analysis.analysis|safe|nl2br }}
+                        {% else %}
+                        {{ results.analysis|safe|nl2br }}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+        {% elif research.source == 'precedent_search' %}
+            <!-- Precedent Search Results -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Analysis of Precedents</h4>
+                </div>
+                <div class="card-body">
+                    <div class="research-results">
+                        {{ results.analysis|safe|nl2br }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h4 class="mb-0">Binding Precedents</h4>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="list-group list-group-flush">
+                                {% for precedent in results.binding_precedents %}
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">{{ precedent.title }}</h5>
+                                        <small>{{ precedent.citation }}</small>
+                                    </div>
+                                    <p class="mb-1">
+                                        <strong>Court:</strong> {{ precedent.court }}
+                                    </p>
+                                    {% if precedent.url %}
+                                    <a href="{{ precedent.url }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                                        View on Kenya Law
+                                    </a>
+                                    {% endif %}
+                                </div>
+                                {% else %}
+                                <div class="list-group-item">
+                                    <p class="mb-0">No binding precedents found.</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header bg-secondary text-white">
+                            <h4 class="mb-0">Persuasive Precedents</h4>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="list-group list-group-flush">
+                                {% for precedent in results.persuasive_precedents %}
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">{{ precedent.title }}</h5>
+                                        <small>{{ precedent.citation }}</small>
+                                    </div>
+                                    <p class="mb-1">
+                                        <strong>Court:</strong> {{ precedent.court }}
+                                    </p>
+                                    {% if precedent.url %}
+                                    <a href="{{ precedent.url }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                                        View on Kenya Law
+                                    </a>
+                                    {% endif %}
+                                </div>
+                                {% else %}
+                                <div class="list-group-item">
+                                    <p class="mb-0">No persuasive precedents found.</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        {% else %}
+            <!-- Generic Results -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Research Results</h4>
+                </div>
+                <div class="card-body">
+                    <pre class="research-results">{{ results|tojson(indent=2) }}</pre>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this research record? This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('research.delete_research', research_id=research.id) }}" method="POST">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,171 @@
+{% extends "layout.html" %}
+
+{% block title %}Contracts - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}Contract Management{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h2>Your Contracts</h2>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <div class="btn-group">
+            <a href="{{ url_for('contracts.create') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> New Contract
+            </a>
+            <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                <span class="visually-hidden">Toggle Dropdown</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                    <a class="dropdown-item" href="{{ url_for('contracts.generate') }}">
+                        <i class="fas fa-magic"></i> Generate Contract
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{{ url_for('contracts.analyze') }}">
+                        <i class="fas fa-search"></i> Analyze Contract
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Filters and Search -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('contracts.index') }}" class="row g-3">
+            <div class="col-md-4">
+                <label for="search" class="form-label">Search</label>
+                <input type="text" class="form-control" id="search" name="search" placeholder="Search contracts..." value="{{ request.args.get('search', '') }}">
+            </div>
+            <div class="col-md-3">
+                <label for="contract_type" class="form-label">Contract Type</label>
+                <select class="form-select" id="contract_type" name="contract_type">
+                    <option value="">All Types</option>
+                    {% for contract_type in config.CONTRACT_TYPES %}
+                    <option value="{{ contract_type }}" {% if request.args.get('contract_type') == contract_type %}selected{% endif %}>{{ contract_type }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">All Statuses</option>
+                    <option value="Draft" {% if request.args.get('status') == 'Draft' %}selected{% endif %}>Draft</option>
+                    <option value="Review" {% if request.args.get('status') == 'Review' %}selected{% endif %}>Review</option>
+                    <option value="Negotiation" {% if request.args.get('status') == 'Negotiation' %}selected{% endif %}>Negotiation</option>
+                    <option value="Executed" {% if request.args.get('status') == 'Executed' %}selected{% endif %}>Executed</option>
+                    <option value="Active" {% if request.args.get('status') == 'Active' %}selected{% endif %}>Active</option>
+                    <option value="Expired" {% if request.args.get('status') == 'Expired' %}selected{% endif %}>Expired</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Contracts Table -->
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Client</th>
+                        <th>Status</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for contract in contracts %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('contracts.view', contract_id=contract.id) }}">{{ contract.title }}</a>
+                        </td>
+                        <td>{{ contract.contract_type }}</td>
+                        <td>
+                            {% if contract.client %}
+                                {{ contract.client.name }}
+                            {% else %}
+                                <span class="text-muted">None</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if contract.status == 'Active' else 'warning' if contract.status == 'Draft' or contract.status == 'Review' or contract.status == 'Negotiation' else 'primary' if contract.status == 'Executed' else 'secondary' if contract.status == 'Expired' else 'info' }}">
+                                {{ contract.status }}
+                            </span>
+                        </td>
+                        <td>{{ contract.start_date.strftime('%d %b %Y') if contract.start_date else 'Not set' }}</td>
+                        <td>{{ contract.end_date.strftime('%d %b %Y') if contract.end_date else 'Not set' }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('contracts.view', contract_id=contract.id) }}" class="btn btn-outline-primary" data-bs-toggle="tooltip" title="View Contract">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ url_for('contracts.edit', contract_id=contract.id) }}" class="btn btn-outline-secondary" data-bs-toggle="tooltip" title="Edit Contract">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{{ url_for('contracts.analyze') }}?contract_id={{ contract.id }}" class="btn btn-outline-info" data-bs-toggle="tooltip" title="Analyze Contract">
+                                    <i class="fas fa-search"></i>
+                                </a>
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ contract.id }}" title="Delete Contract">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Delete Confirmation Modal -->
+                            <div class="modal fade" id="deleteModal{{ contract.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ contract.id }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="deleteModalLabel{{ contract.id }}">Confirm Deletion</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Are you sure you want to delete the contract "{{ contract.title }}"? This action cannot be undone.
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <form action="{{ url_for('contracts.delete', contract_id=contract.id) }}" method="POST" id="delete-form-{{ contract.id }}">
+                                                <button type="submit" class="btn btn-danger">Delete</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <p class="mb-0">No contracts found. <a href="{{ url_for('contracts.create') }}">Create your first contract</a>.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Enable all tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    });
+</script>
+{% endblock %}

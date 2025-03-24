@@ -1,0 +1,153 @@
+{% extends "layout.html" %}
+
+{% block title %}Cases - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}Case Management{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h2>Your Cases</h2>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <a href="{{ url_for('cases.create') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> New Case
+        </a>
+        <a href="{{ url_for('cases.clients') }}" class="btn btn-secondary">
+            <i class="fas fa-users"></i> Manage Clients
+        </a>
+    </div>
+</div>
+
+<!-- Filters and Search -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('cases.index') }}" class="row g-3">
+            <div class="col-md-4">
+                <label for="search" class="form-label">Search</label>
+                <input type="text" class="form-control" id="search" name="search" placeholder="Search cases..." value="{{ request.args.get('search', '') }}">
+            </div>
+            <div class="col-md-3">
+                <label for="court_level" class="form-label">Court Level</label>
+                <select class="form-select" id="court_level" name="court_level">
+                    <option value="">All Courts</option>
+                    {% for court_name in config.COURT_LEVELS %}
+                    <option value="{{ court_name }}" {% if request.args.get('court_level') == court_name %}selected{% endif %}>{{ court_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">All Statuses</option>
+                    <option value="Active" {% if request.args.get('status') == 'Active' %}selected{% endif %}>Active</option>
+                    <option value="Pending" {% if request.args.get('status') == 'Pending' %}selected{% endif %}>Pending</option>
+                    <option value="Closed" {% if request.args.get('status') == 'Closed' %}selected{% endif %}>Closed</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Cases Table -->
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Case Number</th>
+                        <th>Title</th>
+                        <th>Court</th>
+                        <th>Status</th>
+                        <th>Filing Date</th>
+                        <th>Next Court Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for case in cases %}
+                    <tr>
+                        <td>{{ case.case_number }}</td>
+                        <td>
+                            <a href="{{ url_for('cases.view', case_id=case.id) }}">{{ case.title }}</a>
+                            <div class="small text-muted">{{ case.practice_area }}</div>
+                        </td>
+                        <td>
+                            <span class="badge court-badge">{{ case.court_level }}</span>
+                            <div class="small text-muted">{{ case.court_stage }}</div>
+                        </td>
+                        <td>
+                            <span class="case-status status-{{ case.status.lower() }}">{{ case.status }}</span>
+                        </td>
+                        <td>{{ case.filing_date.strftime('%d %b %Y') if case.filing_date else 'Not set' }}</td>
+                        <td>{{ case.next_court_date.strftime('%d %b %Y, %H:%M') if case.next_court_date else 'None' }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('cases.view', case_id=case.id) }}" class="btn btn-outline-primary" data-bs-toggle="tooltip" title="View Case">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ url_for('cases.edit', case_id=case.id) }}" class="btn btn-outline-secondary" data-bs-toggle="tooltip" title="Edit Case">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{{ url_for('cases.add_document', case_id=case.id) }}" class="btn btn-outline-info" data-bs-toggle="tooltip" title="Add Document">
+                                    <i class="fas fa-file-alt"></i>
+                                </a>
+                                <a href="{{ url_for('cases.add_event', case_id=case.id) }}" class="btn btn-outline-success" data-bs-toggle="tooltip" title="Add Event">
+                                    <i class="fas fa-calendar-plus"></i>
+                                </a>
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ case.id }}" title="Delete Case">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Delete Confirmation Modal -->
+                            <div class="modal fade" id="deleteModal{{ case.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ case.id }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="deleteModalLabel{{ case.id }}">Confirm Deletion</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Are you sure you want to delete the case "{{ case.title }}"? This action cannot be undone.
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <form action="{{ url_for('cases.delete', case_id=case.id) }}" method="POST" id="delete-form-{{ case.id }}">
+                                                <button type="submit" class="btn btn-danger">Delete</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <p class="mb-0">No cases found. <a href="{{ url_for('cases.create') }}">Create your first case</a>.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Enable all tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    });
+</script>
+{% endblock %}

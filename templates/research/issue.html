@@ -1,0 +1,257 @@
+{% extends "layout.html" %}
+
+{% block title %}Research Legal Issue - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}AI Research Assistant{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h4>Research a Legal Issue</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('research.research_issue') }}" id="research-form">
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="query" class="form-label">Legal Issue or Question <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-lg" id="query" name="query" required placeholder="E.g., 'Requirements for adverse possession in Kenya'">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="case_id" class="form-label">Associate with Case (Optional)</label>
+                            <select class="form-select form-select-lg" id="case_id" name="case_id">
+                                <option value="">No Case</option>
+                                {% for case in cases %}
+                                <option value="{{ case.id }}">{{ case.case_number }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Court Levels to Search</label>
+                        <div class="row">
+                            {% for court_name, court_code in court_levels.items() %}
+                            <div class="col-md-4 mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input court-filter" type="checkbox" name="courts" value="{{ court_code }}" id="court-{{ court_code }}" checked>
+                                    <label class="form-check-label" for="court-{{ court_code }}">
+                                        {{ court_name }}
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="mt-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="select-all-courts">Select All</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="clear-all-courts">Clear All</button>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-primary" id="research-btn">
+                            <i class="fas fa-brain"></i> Research Issue
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if results %}
+<!-- Research Results -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h3>Research Results: {{ results.query }}</h3>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Main Research Results -->
+    <div class="col-lg-8">
+        <!-- Summary -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Summary</h4>
+            </div>
+            <div class="card-body">
+                <div class="research-results">
+                    {{ results.summary|safe|nl2br }}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Legal Principles -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Key Legal Principles</h4>
+            </div>
+            <div class="card-body">
+                <div class="research-results">
+                    {{ results.principles|safe|nl2br }}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recommendations -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Recommendations</h4>
+            </div>
+            <div class="card-body">
+                <div class="research-results">
+                    {{ results.recommendations|safe|nl2br }}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Relevant Cases -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Relevant Cases</h4>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for case in results.cases %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ case.title }}</h5>
+                            <small>{{ case.citation }}</small>
+                        </div>
+                        <p class="mb-1">
+                            <strong>Court:</strong> {{ case.court }}
+                        </p>
+                        {% if case.analysis and case.analysis.summary %}
+                        <p class="mb-1">{{ case.analysis.summary }}</p>
+                        {% endif %}
+                        {% if case.url %}
+                        <a href="{{ case.url }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                            View on Kenya Law
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="list-group-item">
+                        <p class="mb-0">No specific cases found for this issue.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Relevant Statutes -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Relevant Legislation</h4>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for statute in results.statutes %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ statute.title }}</h5>
+                        </div>
+                        {% if statute.url %}
+                        <a href="{{ statute.url }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                            View on Kenya Law
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="list-group-item">
+                        <p class="mb-0">No specific legislation found for this issue.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Research Actions -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Actions</h4>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('research.precedents') }}?issue={{ results.query }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-balance-scale"></i> Find More Precedents
+                    </a>
+                    <a href="{{ url_for('research.search') }}?q={{ results.query }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-search"></i> Search Kenya Law
+                    </a>
+                    <a href="{{ url_for('documents.generate') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-file-alt"></i> Generate Document
+                    </a>
+                    <a href="{{ url_for('research.history') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-history"></i> View Research History
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Vector Database Results -->
+        {% if results.vector_results and results.vector_results.cases %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Additional Relevant Cases</h4>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for case in results.vector_results.cases %}
+                    <div class="list-group-item">
+                        <h6 class="mb-1">{{ case.title }}</h6>
+                        <p class="mb-1 small">{{ case.citation }}</p>
+                        {% if case.content %}
+                        <p class="mb-1 small text-muted">{{ case.content|truncate(150) }}</p>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="list-group-item">
+                        <p class="mb-0">No additional cases found.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const researchForm = document.getElementById('research-form');
+        const researchBtn = document.getElementById('research-btn');
+        
+        // Show loading spinner when submitting form
+        researchForm.addEventListener('submit', function() {
+            researchBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Researching...';
+            researchBtn.disabled = true;
+        });
+        
+        // Handle court filter checkboxes
+        const selectAllBtn = document.getElementById('select-all-courts');
+        const clearAllBtn = document.getElementById('clear-all-courts');
+        const courtFilters = document.querySelectorAll('.court-filter');
+        
+        selectAllBtn.addEventListener('click', function() {
+            courtFilters.forEach(checkbox => {
+                checkbox.checked = true;
+            });
+        });
+        
+        clearAllBtn.addEventListener('click', function() {
+            courtFilters.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+        });
+    });
+</script>
+{% endblock %}

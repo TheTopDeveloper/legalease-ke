@@ -1,0 +1,257 @@
+{% extends "layout.html" %}
+
+{% block title %}Find Precedents - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}Precedent Finder{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h4>Find Relevant Precedents</h4>
+                <p class="mb-0">Identify binding and persuasive precedents for your legal issue based on court hierarchy</p>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('research.precedents') }}" id="precedents-form">
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="issue" class="form-label">Legal Issue <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="issue" name="issue" required placeholder="E.g., 'Standard of proof in defamation cases'">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="court_level" class="form-label">Your Court Level <span class="text-danger">*</span></label>
+                            <select class="form-select" id="court_level" name="court_level" required>
+                                <option value="">Select Court Level</option>
+                                {% for court_name in court_levels %}
+                                <option value="{{ court_name }}">{{ court_name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">This determines which precedents are binding vs. persuasive</div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-primary" id="precedents-btn">
+                            <i class="fas fa-balance-scale"></i> Find Precedents
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if results %}
+<!-- Precedent Results -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h3>Precedents for: {{ results.issue }}</h3>
+        <p class="lead">Court Level: {{ results.court_level }}</p>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Binding Precedents -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Binding Precedents</h4>
+                <p class="mb-0">Must be followed by {{ results.court_level }}</p>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for precedent in results.binding_precedents %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ precedent.title }}</h5>
+                            <small>{{ precedent.citation }}</small>
+                        </div>
+                        <p class="mb-1">
+                            <strong>Court:</strong> {{ precedent.court }}
+                        </p>
+                        {% if precedent.analysis and precedent.analysis.summary %}
+                        <p class="mb-1 small">{{ precedent.analysis.summary }}</p>
+                        {% endif %}
+                        
+                        {% if precedent.analysis and precedent.analysis.legal_principles %}
+                        <div class="mt-2">
+                            <strong>Key Principles:</strong>
+                            <p class="legal-principle">{{ precedent.analysis.legal_principles|truncate(150) }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        {% if precedent.url %}
+                        <a href="{{ precedent.url }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                            View on Kenya Law
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="list-group-item">
+                        <p class="mb-0">No binding precedents found for this issue.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Persuasive Precedents -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h4 class="mb-0">Persuasive Precedents</h4>
+                <p class="mb-0">May be considered by {{ results.court_level }}</p>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for precedent in results.persuasive_precedents %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ precedent.title }}</h5>
+                            <small>{{ precedent.citation }}</small>
+                        </div>
+                        <p class="mb-1">
+                            <strong>Court:</strong> {{ precedent.court }}
+                        </p>
+                        {% if precedent.analysis and precedent.analysis.summary %}
+                        <p class="mb-1 small">{{ precedent.analysis.summary }}</p>
+                        {% endif %}
+                        
+                        {% if precedent.analysis and precedent.analysis.legal_principles %}
+                        <div class="mt-2">
+                            <strong>Key Principles:</strong>
+                            <p class="legal-principle">{{ precedent.analysis.legal_principles|truncate(150) }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        {% if precedent.url %}
+                        <a href="{{ precedent.url }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                            View on Kenya Law
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="list-group-item">
+                        <p class="mb-0">No persuasive precedents found for this issue.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Analysis of Precedents -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Analysis of Precedents</h4>
+            </div>
+            <div class="card-body">
+                <div class="research-results">
+                    {{ results.analysis|safe|nl2br }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Vector DB Results -->
+{% if results.vector_results %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Additional Related Cases</h4>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Case Title</th>
+                                <th>Citation</th>
+                                <th>Court</th>
+                                <th>Relevance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for case in results.vector_results %}
+                            <tr>
+                                <td>{{ case.title }}</td>
+                                <td>{{ case.citation }}</td>
+                                <td>{{ case.court }}</td>
+                                <td>
+                                    {% if case.score %}
+                                    <div class="progress">
+                                        {% set score_percent = (1 - case.score) * 100 %}
+                                        <div class="progress-bar" role="progressbar" style="width: {{ score_percent }}%;" aria-valuenow="{{ score_percent }}" aria-valuemin="0" aria-valuemax="100">{{ score_percent|round }}%</div>
+                                    </div>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Not scored</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center">No additional cases found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Actions -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Next Steps</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <a href="{{ url_for('research.research_issue') }}?query={{ results.issue }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-brain"></i> Research This Issue
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a href="{{ url_for('documents.generate') }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-file-alt"></i> Generate Document
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a href="{{ url_for('research.search') }}?q={{ results.issue }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-search"></i> Search Kenya Law
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const precedentsForm = document.getElementById('precedents-form');
+        const precedentsBtn = document.getElementById('precedents-btn');
+        
+        // Show loading spinner when submitting form
+        precedentsForm.addEventListener('submit', function() {
+            precedentsBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Finding Precedents...';
+            precedentsBtn.disabled = true;
+        });
+    });
+</script>
+{% endblock %}

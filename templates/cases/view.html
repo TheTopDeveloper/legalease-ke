@@ -1,0 +1,288 @@
+{% extends "layout.html" %}
+
+{% block title %}Case: {{ case.title }} - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}Case Details{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2>{{ case.title }}</h2>
+        <h5 class="text-muted">{{ case.case_number }}</h5>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <div class="btn-group">
+            <a href="{{ url_for('cases.edit', case_id=case.id) }}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Edit Case
+            </a>
+            <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                <span class="visually-hidden">Toggle Dropdown</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                    <a class="dropdown-item" href="{{ url_for('cases.add_document', case_id=case.id) }}">
+                        <i class="fas fa-file-alt"></i> Add Document
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{{ url_for('cases.add_event', case_id=case.id) }}">
+                        <i class="fas fa-calendar-plus"></i> Add Event
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{{ url_for('research.search') }}?case_id={{ case.id }}">
+                        <i class="fas fa-search"></i> Research for this Case
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <button class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="fas fa-trash"></i> Delete Case
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Case Information -->
+<div class="row">
+    <div class="col-md-8">
+        <!-- Main Case Details -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Case Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <strong>Court Level:</strong>
+                    </div>
+                    <div class="col-md-8">
+                        {{ case.court_level }}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <strong>Case Type:</strong>
+                    </div>
+                    <div class="col-md-8">
+                        {{ case.case_type }}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <strong>Practice Area:</strong>
+                    </div>
+                    <div class="col-md-8">
+                        {{ case.practice_area }}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <strong>Status:</strong>
+                    </div>
+                    <div class="col-md-8">
+                        <span class="case-status status-{{ case.status.lower() }}">{{ case.status }}</span>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <strong>Court Stage:</strong>
+                    </div>
+                    <div class="col-md-8">
+                        {{ case.court_stage }}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <strong>Filing Date:</strong>
+                    </div>
+                    <div class="col-md-8">
+                        {{ case.filing_date.strftime('%d %B %Y') if case.filing_date else 'Not set' }}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <strong>Next Court Date:</strong>
+                    </div>
+                    <div class="col-md-8">
+                        {% if case.next_court_date %}
+                        {{ case.next_court_date.strftime('%d %B %Y, %H:%M') }}
+                        {% else %}
+                        None scheduled
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <strong>Description:</strong>
+                    </div>
+                    <div class="col-md-8">
+                        {{ case.description or 'No description provided.' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Documents -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Case Documents</h5>
+                <a href="{{ url_for('cases.add_document', case_id=case.id) }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus"></i> Add Document
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for document in documents %}
+                    <a href="{{ url_for('documents.view', document_id=document.id) }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ document.title }}</h6>
+                            <small>{{ document.created_at.strftime('%d %b %Y') }}</small>
+                        </div>
+                        <p class="mb-1">{{ document.document_type }}</p>
+                        <small>
+                            <i class="fas fa-file-alt"></i> v{{ document.version }}
+                            | <span class="badge bg-{{ 'success' if document.status == 'Final' else 'warning' }}">{{ document.status }}</span>
+                        </small>
+                    </a>
+                    {% else %}
+                    <div class="list-group-item">
+                        <p class="mb-0 text-center">No documents found for this case.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Events -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Case Timeline</h5>
+                <a href="{{ url_for('cases.add_event', case_id=case.id) }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus"></i> Add Event
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for event in events %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ event.title }}</h6>
+                            <small>{{ event.start_time.strftime('%d %b %Y, %H:%M') }}</small>
+                        </div>
+                        <p class="mb-1">{{ event.description }}</p>
+                        <small>
+                            <i class="fas fa-map-marker-alt"></i> {{ event.location or 'No location specified' }}
+                            {% if event.event_type %}
+                            | <span class="badge bg-info">{{ event.event_type }}</span>
+                            {% endif %}
+                        </small>
+                    </div>
+                    {% else %}
+                    <div class="list-group-item">
+                        <p class="mb-0 text-center">No events found for this case.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="col-md-4">
+        <!-- Clients -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Clients</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for client in case.clients %}
+                    <div class="list-group-item">
+                        <h6 class="mb-1">{{ client.name }}</h6>
+                        <small>
+                            {% if client.email %}
+                            <i class="fas fa-envelope"></i> {{ client.email }}<br>
+                            {% endif %}
+                            {% if client.phone %}
+                            <i class="fas fa-phone"></i> {{ client.phone }}<br>
+                            {% endif %}
+                            <i class="fas fa-user-tag"></i> {{ client.client_type or 'Not specified' }}
+                        </small>
+                    </div>
+                    {% else %}
+                    <div class="list-group-item">
+                        <p class="mb-0 text-center">No clients associated with this case.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Research for this Case -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Legal Research</h5>
+                <a href="{{ url_for('research.search') }}?case_id={{ case.id }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-search"></i> Research
+                </a>
+            </div>
+            <div class="card-body">
+                <p>Conduct legal research specific to this case:</p>
+                <div class="list-group">
+                    <a href="{{ url_for('research.search') }}?case_id={{ case.id }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-search"></i> Search Kenya Law
+                    </a>
+                    <a href="{{ url_for('research.research_issue') }}?case_id={{ case.id }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-brain"></i> AI Research Assistant
+                    </a>
+                    <a href="{{ url_for('research.precedents') }}?case_id={{ case.id }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-balance-scale"></i> Find Relevant Precedents
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Case Creation Info -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Case Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <strong>Created:</strong> {{ case.created_at.strftime('%d %B %Y') }}
+                </div>
+                <div class="mb-2">
+                    <strong>Last Updated:</strong> {{ case.updated_at.strftime('%d %B %Y') }}
+                </div>
+                <div>
+                    <strong>Assigned To:</strong> {{ case.assigned_user.username }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete the case "{{ case.title }}"? This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('cases.delete', case_id=case.id) }}" method="POST">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

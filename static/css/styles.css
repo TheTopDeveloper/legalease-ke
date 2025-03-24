@@ -1,0 +1,317 @@
+/* 
+ * Kenyan Legal Assistant System
+ * Custom styles to complement Bootstrap Dark Theme
+ */
+
+:root {
+    /* KenyaLaw color scheme based on screenshot */
+    --brand-primary: #9b2c2c;
+    --brand-secondary: #e26c09;
+    --brand-accent: #f0c040;
+    --brand-dark: #333;
+    --brand-light: #f8f9fa;
+}
+
+/* Main Layout */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+/* Header & Navigation */
+.navbar-brand img {
+    height: 40px;
+    margin-right: 10px;
+}
+
+.main-header {
+    background-color: var(--brand-primary);
+    padding: 20px 0;
+    margin-bottom: 30px;
+}
+
+.main-header h1 {
+    color: var(--brand-light);
+    margin-bottom: 0;
+}
+
+/* Sidebar */
+.sidebar {
+    background-color: rgba(40, 40, 40, 0.2);
+    padding: 20px;
+    border-radius: 5px;
+}
+
+.sidebar .nav-link {
+    color: var(--bs-light);
+    padding: 8px 15px;
+    margin: 2px 0;
+    border-radius: 4px;
+}
+
+.sidebar .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar .nav-link.active {
+    background-color: var(--brand-primary);
+    color: white;
+}
+
+.sidebar .nav-link i {
+    width: 24px;
+    text-align: center;
+    margin-right: 8px;
+}
+
+/* Cards */
+.card {
+    margin-bottom: 20px;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    font-weight: 600;
+}
+
+.card-hover:hover {
+    transform: translateY(-3px);
+    transition: transform 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Dashboard Widgets */
+.stats-card {
+    text-align: center;
+    padding: 20px;
+}
+
+.stats-card .stats-icon {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+    color: var(--brand-secondary);
+}
+
+.stats-card .stats-number {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.stats-card .stats-label {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.8;
+}
+
+/* Case Management */
+.case-status {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status-active {
+    background-color: rgba(25, 135, 84, 0.2);
+    color: #28a745;
+}
+
+.status-closed {
+    background-color: rgba(108, 117, 125, 0.2);
+    color: #6c757d;
+}
+
+.status-pending {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+}
+
+.court-badge {
+    background-color: var(--brand-primary);
+    color: white;
+}
+
+/* Documents */
+.document-preview {
+    max-height: 500px;
+    overflow-y: auto;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 5px;
+    white-space: pre-wrap;
+    font-family: 'Courier New', monospace;
+    margin-bottom: 20px;
+}
+
+.document-preview.legal-document {
+    font-family: 'Georgia', serif;
+    line-height: 1.6;
+}
+
+/* Research */
+.research-results {
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.citation {
+    font-style: italic;
+    color: var(--bs-info);
+}
+
+.legal-principle {
+    font-weight: bold;
+    color: var(--brand-secondary);
+}
+
+/* Calendar */
+.calendar-container {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.calendar-header {
+    background-color: var(--brand-primary);
+    color: white;
+    padding: 15px;
+    text-align: center;
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    padding: 10px 0;
+    font-weight: bold;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-auto-rows: minmax(100px, auto);
+    gap: 1px;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.calendar-day {
+    padding: 5px;
+    min-height: 100px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+}
+
+.calendar-day .date {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    height: 25px;
+    width: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.calendar-day.today .date {
+    background-color: var(--brand-secondary);
+    color: white;
+}
+
+.calendar-day .events {
+    margin-top: 30px;
+}
+
+.calendar-day .event {
+    margin-bottom: 5px;
+    padding: 3px 5px;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.event-court {
+    background-color: rgba(25, 135, 84, 0.2);
+    color: #28a745;
+}
+
+.event-meeting {
+    background-color: rgba(13, 110, 253, 0.2);
+    color: #0d6efd;
+}
+
+.event-deadline {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: #dc3545;
+}
+
+/* Forms */
+.form-label {
+    font-weight: 600;
+}
+
+textarea.form-control {
+    min-height: 100px;
+}
+
+textarea.form-control.document-editor {
+    min-height: 300px;
+    font-family: 'Courier New', monospace;
+}
+
+/* Utilities */
+.text-primary-kl {
+    color: var(--brand-primary);
+}
+
+.text-secondary-kl {
+    color: var(--brand-secondary);
+}
+
+.bg-primary-kl {
+    background-color: var(--brand-primary);
+}
+
+.bg-secondary-kl {
+    background-color: var(--brand-secondary);
+}
+
+/* Loading spinner */
+.loading-spinner {
+    display: inline-block;
+    width: 2rem;
+    height: 2rem;
+    vertical-align: text-bottom;
+    border: 0.25em solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spinner-border .75s linear infinite;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .sidebar {
+        margin-bottom: 20px;
+    }
+    
+    .calendar-days {
+        grid-auto-rows: minmax(80px, auto);
+    }
+    
+    .calendar-day {
+        min-height: 80px;
+    }
+}

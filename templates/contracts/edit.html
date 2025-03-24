@@ -1,0 +1,88 @@
+{% extends "layout.html" %}
+
+{% block title %}Edit Contract - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}Edit Contract{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header">
+                <h4>Edit Contract</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('contracts.edit', contract_id=contract.id) }}">
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label for="title" class="form-label">Contract Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="title" name="title" value="{{ contract.title }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="contract_type" class="form-label">Contract Type <span class="text-danger">*</span></label>
+                            <select class="form-select" id="contract_type" name="contract_type" required>
+                                <option value="">Select Contract Type</option>
+                                {% for contract_type in contract_types %}
+                                <option value="{{ contract_type }}" {% if contract.contract_type == contract_type %}selected{% endif %}>{{ contract_type }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="client_id" class="form-label">Client</label>
+                            <select class="form-select" id="client_id" name="client_id">
+                                <option value="">No Client (Internal Contract)</option>
+                                {% for client in clients %}
+                                <option value="{{ client.id }}" {% if contract.client_id == client.id %}selected{% endif %}>{{ client.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="Draft" {% if contract.status == 'Draft' %}selected{% endif %}>Draft</option>
+                                <option value="Review" {% if contract.status == 'Review' %}selected{% endif %}>Review</option>
+                                <option value="Negotiation" {% if contract.status == 'Negotiation' %}selected{% endif %}>Negotiation</option>
+                                <option value="Executed" {% if contract.status == 'Executed' %}selected{% endif %}>Executed</option>
+                                <option value="Active" {% if contract.status == 'Active' %}selected{% endif %}>Active</option>
+                                <option value="Expired" {% if contract.status == 'Expired' %}selected{% endif %}>Expired</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="start_date" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" value="{{ contract.start_date.strftime('%Y-%m-%d') if contract.start_date else '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="end_date" class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" value="{{ contract.end_date.strftime('%Y-%m-%d') if contract.end_date else '' }}">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="key_terms" class="form-label">Key Terms</label>
+                        <textarea class="form-control" id="key_terms" name="key_terms" rows="3" placeholder="Enter key terms and conditions of the contract">{{ contract.key_terms }}</textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="content" class="form-label">Contract Content</label>
+                        <textarea class="form-control document-editor rich-editor" id="content" name="content" rows="15">{{ contract.content }}</textarea>
+                        <div class="form-text">
+                            Format your contract according to Kenyan contract law standards. Include all necessary clauses and provisions.
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('contracts.view', contract_id=contract.id) }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

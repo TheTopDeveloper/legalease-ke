@@ -1,0 +1,192 @@
+{% extends "layout.html" %}
+
+{% block title %}Generate Contract - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}Contract Generator{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header">
+                <h4>Generate Contract</h4>
+                <p class="mb-0">Create a new contract using templates or AI assistance</p>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="generation_method" id="method-template" value="template" checked>
+                        <label class="form-check-label" for="method-template">Use Template</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="generation_method" id="method-ai" value="ai">
+                        <label class="form-check-label" for="method-ai">Use AI Assistant</label>
+                    </div>
+                </div>
+                
+                <form method="POST" action="{{ url_for('contracts.generate') }}">
+                    <!-- Template-based generation form -->
+                    <div id="template-generation-form" class="generation-form">
+                        <input type="hidden" name="generation_method" value="template">
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label for="contract_title" class="form-label">Contract Title <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="contract_title" name="contract_title" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="contract_type" class="form-label">Contract Type</label>
+                                <select class="form-select" id="contract_type" name="contract_type">
+                                    {% for contract_type in contract_types %}
+                                    <option value="{{ contract_type }}">{{ contract_type }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="party1_name" class="form-label">First Party Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="party1_name" name="party1_name" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="party1_address" class="form-label">First Party Address</label>
+                                <input type="text" class="form-control" id="party1_address" name="party1_address">
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="party1_reference" class="form-label">First Party Reference</label>
+                                <input type="text" class="form-control" id="party1_reference" name="party1_reference" placeholder="e.g., 'Seller', 'Employer', etc.">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="client_id" class="form-label">Select Client</label>
+                                <select class="form-select" id="client_id" name="client_id">
+                                    <option value="">No Client</option>
+                                    {% for client in clients %}
+                                    <option value="{{ client.id }}">{{ client.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="party2_name" class="form-label">Second Party Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="party2_name" name="party2_name" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="party2_address" class="form-label">Second Party Address</label>
+                                <input type="text" class="form-control" id="party2_address" name="party2_address">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="party2_reference" class="form-label">Second Party Reference</label>
+                            <input type="text" class="form-control" id="party2_reference" name="party2_reference" placeholder="e.g., 'Buyer', 'Employee', etc.">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="recitals" class="form-label">Recitals</label>
+                            <textarea class="form-control" id="recitals" name="recitals" rows="3" placeholder="Enter the background and context for the contract"></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="contract_clauses" class="form-label">Contract Clauses</label>
+                            <textarea class="form-control rich-editor" id="contract_clauses" name="contract_clauses" rows="10" placeholder="Enter the contract clauses and terms"></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- AI-based generation form -->
+                    <div id="ai-generation-form" class="generation-form d-none">
+                        <input type="hidden" name="generation_method" value="ai">
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label for="ai_contract_title" class="form-label">Contract Title <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="ai_contract_title" name="ai_contract_title" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="ai_contract_type" class="form-label">Contract Type <span class="text-danger">*</span></label>
+                                <select class="form-select" id="ai_contract_type" name="ai_contract_type" required>
+                                    {% for contract_type in contract_types %}
+                                    <option value="{{ contract_type }}">{{ contract_type }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="ai_contract_purpose" class="form-label">Contract Purpose <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="ai_contract_purpose" name="ai_contract_purpose" rows="2" required placeholder="Describe the purpose of this contract"></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="ai_parties_info" class="form-label">Parties Information</label>
+                            <textarea class="form-control" id="ai_parties_info" name="ai_parties_info" rows="3" placeholder="Provide information about the parties involved in this contract"></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="ai_key_terms" class="form-label">Key Terms</label>
+                            <textarea class="form-control" id="ai_key_terms" name="ai_key_terms" rows="3" placeholder="List key terms that should be included (compensation, duration, deliverables, etc.)"></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="ai_special_clauses" class="form-label">Special Clauses</label>
+                            <textarea class="form-control" id="ai_special_clauses" name="ai_special_clauses" rows="3" placeholder="Any special clauses you want to include (non-compete, confidentiality, etc.)"></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="client_id" class="form-label">Associated Client</label>
+                            <select class="form-select" id="client_id" name="client_id">
+                                <option value="">No Client</option>
+                                {% for client in clients %}
+                                <option value="{{ client.id }}">{{ client.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> Our AI will generate a contract based on your inputs, following Kenyan contract law standards and best practices. Please review the generated contract carefully before finalizing.
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{{ url_for('contracts.index') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Generate Contract</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle generation method selection
+        const methodRadios = document.querySelectorAll('input[name="generation_method"]');
+        methodRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                const method = this.value;
+                
+                // Hide all generation forms
+                document.querySelectorAll('.generation-form').forEach(form => {
+                    form.classList.add('d-none');
+                });
+                
+                // Show selected generation form
+                const selectedForm = document.getElementById(`${method}-generation-form`);
+                if (selectedForm) {
+                    selectedForm.classList.remove('d-none');
+                    
+                    // Update the hidden input value in the shown form
+                    selectedForm.querySelector('input[name="generation_method"]').value = method;
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

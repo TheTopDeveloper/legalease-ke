@@ -1,0 +1,151 @@
+{% extends "layout.html" %}
+
+{% block title %}Contract Analysis Results - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}Contract Analysis Results{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="btn-group">
+            <a href="{{ url_for('contracts.analyze') }}" class="btn btn-primary">
+                <i class="fas fa-search"></i> Analyze Another Contract
+            </a>
+            <a href="{{ url_for('contracts.index') }}" class="btn btn-secondary">
+                <i class="fas fa-list"></i> Back to Contracts
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Analysis Results -->
+    <div class="col-md-7">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Analysis Results</h4>
+                <p class="mb-0 text-muted">
+                    <i class="fas fa-info-circle"></i> 
+                    Document identified as: <strong>{{ analysis.document_type }}</strong>
+                </p>
+            </div>
+            <div class="card-body">
+                {% if analysis.error %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i> 
+                    Error analyzing contract: {{ analysis.error }}
+                </div>
+                {% else %}
+                    {% if analysis.document_type == 'Contract' %}
+                        {% if analysis.analysis.full_analysis %}
+                        <div class="research-results">
+                            {{ analysis.analysis.full_analysis|safe|nl2br }}
+                        </div>
+                        {% else %}
+                        <div class="mb-4">
+                            {% if analysis.analysis.title %}
+                            <h5>Contract Title</h5>
+                            <div class="mb-3">{{ analysis.analysis.title }}</div>
+                            {% endif %}
+                            
+                            {% if analysis.analysis.purpose %}
+                            <h5>Purpose and Scope</h5>
+                            <div class="mb-3">{{ analysis.analysis.purpose }}</div>
+                            {% endif %}
+                            
+                            {% if analysis.analysis.key_definitions %}
+                            <h5>Key Definitions</h5>
+                            <div class="mb-3">{{ analysis.analysis.key_definitions }}</div>
+                            {% endif %}
+                            
+                            {% if analysis.analysis.main_provisions %}
+                            <h5>Main Provisions</h5>
+                            <div class="mb-3">{{ analysis.analysis.main_provisions }}</div>
+                            {% endif %}
+                            
+                            {% if analysis.analysis.obligations %}
+                            <h5>Key Obligations</h5>
+                            <div class="mb-3">{{ analysis.analysis.obligations }}</div>
+                            {% endif %}
+                            
+                            {% if analysis.analysis.penalties %}
+                            <h5>Penalties and Consequences</h5>
+                            <div class="mb-3">{{ analysis.analysis.penalties }}</div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="research-results">
+                            {{ analysis.analysis.analysis|safe|nl2br }}
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Recommendations</h4>
+            </div>
+            <div class="card-body">
+                {% if analysis.error %}
+                <p>No recommendations available due to analysis error.</p>
+                {% else %}
+                <div class="research-results">
+                    {% if analysis.recommendations %}
+                    {{ analysis.recommendations|safe|nl2br }}
+                    {% else %}
+                    <h5>Suggested Improvements:</h5>
+                    <ul>
+                        <li>Consider adding more specific language around performance obligations.</li>
+                        <li>The termination clause could be strengthened with clearer conditions.</li>
+                        <li>Consider adding a dispute resolution mechanism aligned with Kenyan law.</li>
+                        <li>Ensure compliance with Kenyan data protection regulations if personal data is involved.</li>
+                        <li>Review the liability limitations to ensure they are enforceable under Kenyan contract law.</li>
+                    </ul>
+                    
+                    <h5>Legal Compliance:</h5>
+                    <p>
+                        This contract appears to generally comply with Kenyan contract law principles, but consider consulting with a qualified Kenyan advocate to ensure full compliance with specific regulations relevant to this contract type.
+                    </p>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Original Contract -->
+    <div class="col-md-5">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Original Contract Text</h4>
+            </div>
+            <div class="card-body">
+                <div class="document-preview">
+                    {{ contract_text|safe }}
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Actions</h4>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('contracts.analyze') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-search"></i> Analyze Another Contract
+                    </a>
+                    <a href="{{ url_for('documents.create') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-file-alt"></i> Create New Document
+                    </a>
+                    <a href="{{ url_for('contracts.generate') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-magic"></i> Generate New Contract
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

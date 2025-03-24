@@ -1,0 +1,261 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ contract.title }} - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}Contract View{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2>{{ contract.title }}</h2>
+        <p>
+            <span class="badge bg-{{ 'success' if contract.status == 'Active' else 'warning' if contract.status == 'Draft' or contract.status == 'Review' or contract.status == 'Negotiation' else 'primary' if contract.status == 'Executed' else 'secondary' if contract.status == 'Expired' else 'info' }}">
+                {{ contract.status }}
+            </span>
+            <span class="badge bg-secondary">{{ contract.contract_type }}</span>
+        </p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <div class="btn-group">
+            <a href="{{ url_for('contracts.edit', contract_id=contract.id) }}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Edit Contract
+            </a>
+            <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                <span class="visually-hidden">Toggle Dropdown</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                    <a class="dropdown-item" href="#" onclick="printContract()">
+                        <i class="fas fa-print"></i> Print Contract
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="#" onclick="downloadContract()">
+                        <i class="fas fa-download"></i> Download as Text
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{{ url_for('contracts.analyze') }}?contract_id={{ contract.id }}">
+                        <i class="fas fa-search"></i> Analyze with AI
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <button class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="fas fa-trash"></i> Delete Contract
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-9">
+        <!-- Contract Content -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Contract Content</h5>
+            </div>
+            <div class="card-body">
+                <div class="document-preview legal-document" id="contract-content">
+                    {{ contract.content|safe }}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Key Terms -->
+        {% if contract.key_terms %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Key Terms</h5>
+            </div>
+            <div class="card-body">
+                <div class="document-preview">
+                    {{ contract.key_terms|safe }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-md-3">
+        <!-- Contract Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Contract Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <strong>Contract Type:</strong><br>
+                    {{ contract.contract_type }}
+                </div>
+                <div class="mb-2">
+                    <strong>Status:</strong><br>
+                    <span class="badge bg-{{ 'success' if contract.status == 'Active' else 'warning' if contract.status == 'Draft' or contract.status == 'Review' or contract.status == 'Negotiation' else 'primary' if contract.status == 'Executed' else 'secondary' if contract.status == 'Expired' else 'info' }}">
+                        {{ contract.status }}
+                    </span>
+                </div>
+                <div class="mb-2">
+                    <strong>Start Date:</strong><br>
+                    {{ contract.start_date.strftime('%d %B %Y') if contract.start_date else 'Not set' }}
+                </div>
+                <div class="mb-2">
+                    <strong>End Date:</strong><br>
+                    {{ contract.end_date.strftime('%d %B %Y') if contract.end_date else 'Not set' }}
+                </div>
+                <div class="mb-2">
+                    <strong>Created:</strong><br>
+                    {{ contract.created_at.strftime('%d %B %Y') }}
+                </div>
+                <div class="mb-2">
+                    <strong>Last Modified:</strong><br>
+                    {{ contract.updated_at.strftime('%d %B %Y') }}
+                </div>
+                <div>
+                    <strong>Author:</strong><br>
+                    {{ contract.created_by.username }}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Client Information -->
+        {% if contract.client %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Client Information</h5>
+            </div>
+            <div class="card-body">
+                <h6>{{ contract.client.name }}</h6>
+                {% if contract.client.email %}
+                <div class="mb-2">
+                    <i class="fas fa-envelope"></i> {{ contract.client.email }}
+                </div>
+                {% endif %}
+                {% if contract.client.phone %}
+                <div class="mb-2">
+                    <i class="fas fa-phone"></i> {{ contract.client.phone }}
+                </div>
+                {% endif %}
+                {% if contract.client.address %}
+                <div class="mb-2">
+                    <i class="fas fa-map-marker-alt"></i> {{ contract.client.address }}
+                </div>
+                {% endif %}
+                <div>
+                    <i class="fas fa-user-tag"></i> {{ contract.client.client_type or 'Not specified' }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Actions -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Actions</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('contracts.edit', contract_id=contract.id) }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-edit"></i> Edit Contract
+                    </a>
+                    <a href="{{ url_for('contracts.analyze') }}?contract_id={{ contract.id }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-search"></i> Analyze Contract
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" onclick="printContract()">
+                        <i class="fas fa-print"></i> Print Contract
+                    </a>
+                    <button class="list-group-item list-group-item-action text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="fas fa-trash"></i> Delete Contract
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete the contract "{{ contract.title }}"? This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('contracts.delete', contract_id=contract.id) }}" method="POST">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function printContract() {
+        const content = document.getElementById('contract-content').innerHTML;
+        const title = "{{ contract.title }}";
+        
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>${title}</title>
+                <style>
+                    body {
+                        font-family: Georgia, serif;
+                        line-height: 1.6;
+                        margin: 40px;
+                    }
+                    h1, h2, h3, h4, h5, h6 {
+                        margin-top: 20px;
+                        margin-bottom: 10px;
+                    }
+                    @media print {
+                        body {
+                            margin: 0.5in;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>${title}</h1>
+                ${content}
+            </body>
+            </html>
+        `);
+        
+        printWindow.document.close();
+        printWindow.focus();
+        
+        // Print after a short delay to ensure content is loaded
+        setTimeout(function() {
+            printWindow.print();
+            printWindow.close();
+        }, 250);
+    }
+    
+    function downloadContract() {
+        const content = document.getElementById('contract-content').innerText;
+        const filename = "{{ contract.title.replace(' ', '_') }}.txt";
+        
+        const element = document.createElement('a');
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(content));
+        element.setAttribute('download', filename);
+        
+        element.style.display = 'none';
+        document.body.appendChild(element);
+        
+        element.click();
+        
+        document.body.removeChild(element);
+    }
+</script>
+{% endblock %}
