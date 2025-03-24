@@ -1,335 +1,183 @@
-from datetime import datetime
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
-from flask_login import login_required, current_user
-from app import db
-from models import User, UserProfile, Achievement, UserAchievement, Activity, Challenge, UserChallenge, Case
-import json
-import os
+"""
+Routes for gamification features like achievements, challenges, and rewards.
+"""
 
-# Create blueprint
-gamification_bp = Blueprint('gamification', __name__, url_prefix='/gamification')
+import json
+import math
+from datetime import datetime, timedelta
+
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
+from flask_login import login_required, current_user
+from sqlalchemy import desc
+
+from app import db
+from models import User, UserProfile, Achievement, UserAchievement, Challenge, UserChallenge, Activity
+from utils.gamification import GamificationService
+
+gamification_bp = Blueprint('gamification', __name__)
+
+# Constants for gamification
+POINTS_PER_LEVEL = 100  # Points needed to advance to the next level
+DAILY_REWARD_TOKENS = 2  # Base tokens for daily rewards
+
+# Activity types and points
+ACTIVITY_POINTS = {
+    'login': 5,
+    'create_case': 15,
+    'update_case': 5,
+    'create_document': 10,
+    'research': 20,
+    'complete_challenge': 0,  # Challenge points are defined by the challenge
+    'share_achievement': 10,
+    'claim_daily_reward': 5
+}
+
+# Activity icons and colors for UI
+ACTIVITY_ICONS = {
+    'login': {'icon': 'door-open', 'color': 'primary'},
+    'create_case': {'icon': 'briefcase', 'color': 'success'},
+    'update_case': {'icon': 'pencil', 'color': 'info'},
+    'create_document': {'icon': 'file-earmark-text', 'color': 'warning'},
+    'research': {'icon': 'search', 'color': 'danger'},
+    'complete_challenge': {'icon': 'flag-fill', 'color': 'warning'},
+    'share_achievement': {'icon': 'share', 'color': 'info'},
+    'claim_daily_reward': {'icon': 'gift', 'color': 'success'}
+}
 
 @gamification_bp.route('/')
 @login_required
 def dashboard():
     """Gamification dashboard showing user progress and achievements"""
-    # Get user profile, creating one if it doesn't exist
-    profile = UserProfile.query.filter_by(user_id=current_user.id).first()
-    if not profile:
-        profile = UserProfile(user_id=current_user.id)
-        db.session.add(profile)
-        db.session.commit()
+    # Get or create user profile
+    user_profile = GamificationService.get_or_create_profile(current_user)
     
-    # Update streak if user is visiting
-    profile.update_streak()
-    db.session.commit()
+    # Calculate level progress
+    level_progress = (user_profile.total_points % POINTS_PER_LEVEL) / POINTS_PER_LEVEL * 100
+    points_to_next_level = POINTS_PER_LEVEL * (user_profile.level + 1) - user_profile.total_points
     
-    # Get user achievements
-    user_achievements = db.session.query(UserAchievement, Achievement).join(
-        Achievement, UserAchievement.achievement_id == Achievement.id
-    ).filter(UserAchievement.user_id == current_user.id).all()
+    # Get earned achievements
+    earned_achievements = [ua.achievement for ua in current_user.achievements]
+    all_achievements = Achievement.query.filter_by(is_active=True).all()
     
-    # Format user achievements for display
-    recent_achievements = []
-    for ua, achievement in user_achievements[:6]:  # Get most recent 6
-        achievement_data = {
-            'id': achievement.id,
-            'name': achievement.name,
-            'description': achievement.description,
-            'icon': achievement.icon,
-            'points': achievement.points,
-            'category': achievement.category,
-            'earned': True,
-            'earned_at': ua.earned_at
-        }
-        recent_achievements.append(achievement_data)
-    
-    # If we don't have enough earned achievements, add some unearned ones
-    earned_ids = [ua.achievement_id for ua, _ in user_achievements]
-    if len(recent_achievements) < 6:
-        unearned = Achievement.query.filter(
-            ~Achievement.id.in_(earned_ids), 
-            Achievement.is_active == True
-        ).limit(6 - len(recent_achievements)).all()
-        
-        for achievement in unearned:
-            achievement_data = {
-                'id': achievement.id,
-                'name': achievement.name,
-                'description': achievement.description,
-                'icon': achievement.icon,
-                'points': achievement.points,
-                'category': achievement.category,
-                'earned': False
-            }
-            recent_achievements.append(achievement_data)
+    # Get recent achievements (last 4)
+    recent_achievements = [ua.achievement for ua in UserAchievement.query
+                          .filter_by(user_id=current_user.id)
+                          .order_by(UserAchievement.earned_at.desc())
+                          .limit(4)]
     
     # Get active challenges
-    active_challenges = Challenge.query.filter(
-        Challenge.is_active == True,
-        Challenge.start_date <= datetime.utcnow(),
-        Challenge.end_date >= datetime.utcnow()
-    ).order_by(Challenge.end_date).limit(6).all()
-    
-    # Get user's active challenges
     user_challenges = UserChallenge.query.filter_by(
-        user_id=current_user.id,
+        user_id=current_user.id, 
         status='accepted'
     ).all()
-    user_challenge_dict = {uc.challenge_id: uc for uc in user_challenges}
     
-    # Format challenges for display
-    challenge_data = []
-    for challenge in active_challenges:
-        days_remaining = (challenge.end_date - datetime.utcnow()).days + 1
+    active_challenges = []
+    for uc in user_challenges:
+        challenge = uc.challenge
+        if not challenge.is_ongoing():
+            continue
+            
+        # Get progress data
+        progress_data = uc.get_progress()
+        requirements = challenge.get_requirements()
         
-        challenge_dict = {
+        # Calculate progress percentage
+        target = requirements.get('target', 1)
+        progress = progress_data.get('progress', 0)
+        progress_percentage = min(int(progress / target * 100), 100)
+        
+        active_challenges.append({
             'id': challenge.id,
             'title': challenge.title,
             'description': challenge.description,
-            'points': challenge.points,
             'challenge_type': challenge.challenge_type,
-            'start_date': challenge.start_date,
-            'end_date': challenge.end_date,
-            'days_remaining': days_remaining,
-            'is_active': challenge.is_active,
-            'accepted': False,
-            'status': 'available'
-        }
-        
-        # If user has accepted this challenge
-        if challenge.id in user_challenge_dict:
-            user_challenge = user_challenge_dict[challenge.id]
-            challenge_dict['accepted'] = True
-            challenge_dict['status'] = user_challenge.status
-            
-            # Get progress if available
-            if user_challenge.progress:
-                progress = user_challenge.get_progress()
-                target = 1  # Default target
-                
-                # Get target from requirements
-                requirements = challenge.get_requirements()
-                if requirements and 'target' in requirements:
-                    target = requirements['target']
-                
-                current = progress.get('progress', 0)
-                challenge_dict['current_progress'] = current
-                challenge_dict['target_progress'] = target
-                challenge_dict['progress_percentage'] = min(int((current / target) * 100), 100)
-        
-        challenge_data.append(challenge_dict)
+            'points': challenge.points,
+            'target': target,
+            'progress': progress,
+            'progress_percentage': progress_percentage,
+            'end_date': challenge.end_date
+        })
     
-    # Calculate progress to next level
-    next_level_points = (profile.level * 100)
-    current_level_points = ((profile.level - 1) * 100)
-    level_progress = round(((profile.total_points - current_level_points) / 
-                           (next_level_points - current_level_points) * 100), 1)
+    # Get recent activities
+    recent_activities = []
+    activities = Activity.query.filter_by(user_id=current_user.id).order_by(Activity.created_at.desc()).limit(10)
     
-    # User stats for dashboard
-    user_stats = {
-        'level': profile.level,
-        'title': profile.title,
-        'total_points': profile.total_points,
-        'streak_days': profile.streak_days,
-        'last_active': profile.last_active,
-        'total_cases_managed': profile.total_cases_managed,
-        'total_documents_created': profile.total_documents_created,
-        'total_research_conducted': profile.total_research_conducted,
-        'level_progress': level_progress,
-        'points_to_next_level': next_level_points - profile.total_points,
-        'achievements_earned': len(earned_ids),
-        'total_achievements': Achievement.query.filter_by(is_active=True).count()
-    }
+    for activity in activities:
+        icon_info = ACTIVITY_ICONS.get(activity.activity_type, {'icon': 'circle', 'color': 'secondary'})
+        recent_activities.append({
+            'id': activity.id,
+            'activity_type': activity.activity_type,
+            'description': activity.description,
+            'points': activity.points,
+            'created_at': activity.created_at,
+            'icon': icon_info['icon'],
+            'color': icon_info['color']
+        })
     
-    return render_template(
-        'gamification/dashboard.html',
-        user_stats=user_stats,
-        recent_achievements=recent_achievements,
-        active_challenges=challenge_data
-    )
+    return render_template('gamification/dashboard.html', 
+                           user_profile=user_profile,
+                           level_progress=level_progress,
+                           points_to_next_level=points_to_next_level,
+                           earned_achievements=earned_achievements,
+                           all_achievements=all_achievements,
+                           recent_achievements=recent_achievements,
+                           active_challenges=active_challenges,
+                           recent_activities=recent_activities)
 
 @gamification_bp.route('/achievements')
 @login_required
 def achievements():
     """View all achievements in the system"""
-    # Get user achievements with full achievement data
-    user_achievements = db.session.query(UserAchievement, Achievement).join(
-        Achievement, UserAchievement.achievement_id == Achievement.id
-    ).filter(UserAchievement.user_id == current_user.id).all()
+    # Get or create user profile
+    user_profile = GamificationService.get_or_create_profile(current_user)
     
-    # Format user achievements for template
-    formatted_user_achievements = []
-    for ua, achievement in user_achievements:
-        achievement_dict = {
-            'id': achievement.id,
-            'name': achievement.name,
-            'description': achievement.description,
-            'icon': achievement.icon,
-            'points': achievement.points,
-            'category': achievement.category,
-            'earned_at': ua.earned_at
-        }
-        
-        # Add category color
-        if achievement.category == 'case':
-            achievement_dict['category_color'] = 'primary'
-        elif achievement.category == 'document':
-            achievement_dict['category_color'] = 'info'
-        elif achievement.category == 'research':
-            achievement_dict['category_color'] = 'warning'
-        else:
-            achievement_dict['category_color'] = 'secondary'
-            
-        formatted_user_achievements.append(achievement_dict)
+    # Calculate level progress
+    level_progress = (user_profile.total_points % POINTS_PER_LEVEL) / POINTS_PER_LEVEL * 100
+    points_to_next_level = POINTS_PER_LEVEL * (user_profile.level + 1) - user_profile.total_points
     
-    # Get all achievements
+    # Get earned and all achievements
+    user_achievements = UserAchievement.query.filter_by(user_id=current_user.id).all()
+    earned_achievements = [ua.achievement for ua in user_achievements]
+    earned_ids = [a.id for a in earned_achievements]
+    
     all_achievements = Achievement.query.filter_by(is_active=True).all()
-    formatted_all_achievements = []
+    locked_achievements = [a for a in all_achievements if a.id not in earned_ids]
     
-    earned_achievement_ids = [ua.achievement_id for ua, _ in user_achievements]
+    # Calculate completion percentage
+    completion_percentage = round(len(earned_achievements) / len(all_achievements) * 100) if all_achievements else 0
     
-    for achievement in all_achievements:
-        achievement_dict = {
-            'id': achievement.id,
-            'name': achievement.name,
-            'description': achievement.description,
-            'icon': achievement.icon,
-            'points': achievement.points,
-            'category': achievement.category,
-            'earned': achievement.id in earned_achievement_ids
-        }
-        
-        # Add category color
-        if achievement.category == 'case':
-            achievement_dict['category_color'] = 'primary'
-        elif achievement.category == 'document':
-            achievement_dict['category_color'] = 'info'
-        elif achievement.category == 'research':
-            achievement_dict['category_color'] = 'warning'
-        else:
-            achievement_dict['category_color'] = 'secondary'
-            
-        formatted_all_achievements.append(achievement_dict)
-    
-    return render_template(
-        'gamification/achievements.html',
-        user_achievements=formatted_user_achievements,
-        all_achievements=formatted_all_achievements
-    )
+    return render_template('gamification/achievements.html',
+                          user_profile=user_profile,
+                          level_progress=level_progress,
+                          points_to_next_level=points_to_next_level,
+                          earned_achievements=earned_achievements,
+                          locked_achievements=locked_achievements,
+                          all_achievements=all_achievements,
+                          earned_ids=earned_ids,
+                          completion_percentage=completion_percentage)
 
 @gamification_bp.route('/challenges')
 @login_required
 def challenges():
     """View all active challenges"""
-    # Get active challenges
-    active_challenges = Challenge.query.filter(
-        Challenge.is_active == True,
-        Challenge.start_date <= datetime.utcnow(),
-        Challenge.end_date >= datetime.utcnow()
-    ).all()
+    # Get active challenges for the user
+    active_challenges = GamificationService.get_active_challenges(current_user)
     
-    # Get all user challenges (including completed ones)
-    user_challenges = UserChallenge.query.filter_by(user_id=current_user.id).all()
-    user_challenge_dict = {uc.challenge_id: uc for uc in user_challenges}
-    
-    # Get some completed challenges to show history
-    completed_challenges = Challenge.query.join(
-        UserChallenge, Challenge.id == UserChallenge.challenge_id
-    ).filter(
-        UserChallenge.user_id == current_user.id,
-        UserChallenge.status == 'completed'
-    ).order_by(UserChallenge.completed_at.desc()).limit(3).all()
-    
-    # Format all challenges (active + completed)
-    all_challenges = []
-    
-    # Process active challenges
-    for challenge in active_challenges:
-        days_remaining = (challenge.end_date - datetime.utcnow()).days + 1
-        
-        challenge_dict = {
-            'id': challenge.id,
-            'title': challenge.title,
-            'description': challenge.description,
-            'points': challenge.points,
-            'challenge_type': challenge.challenge_type,
-            'start_date': challenge.start_date,
-            'end_date': challenge.end_date,
-            'days_remaining': days_remaining,
-            'is_active': challenge.is_active,
-            'status': 'available'
-        }
-        
-        # If user has accepted or completed this challenge
-        if challenge.id in user_challenge_dict:
-            user_challenge = user_challenge_dict[challenge.id]
-            challenge_dict['status'] = user_challenge.status
-            
-            # Get progress if available
-            if user_challenge.progress:
-                progress = user_challenge.get_progress()
-                target = 1  # Default target
-                
-                # Get target from requirements
-                requirements = challenge.get_requirements()
-                if requirements and 'target' in requirements:
-                    target = requirements['target']
-                
-                current = progress.get('progress', 0)
-                challenge_dict['current_progress'] = current
-                challenge_dict['target_progress'] = target
-                challenge_dict['progress_percentage'] = min(int((current / target) * 100), 100)
-                
-            # Add completion date if completed
-            if user_challenge.status == 'completed' and user_challenge.completed_at:
-                challenge_dict['completed_at'] = user_challenge.completed_at
-        
-        all_challenges.append(challenge_dict)
-    
-    # Process completed challenges (that aren't active anymore)
-    for challenge in completed_challenges:
-        # Skip if already added (it's still active)
-        if challenge.id in [c.get('id') for c in all_challenges]:
-            continue
-            
-        user_challenge = user_challenge_dict.get(challenge.id)
-        if not user_challenge:
-            continue
-            
-        challenge_dict = {
-            'id': challenge.id,
-            'title': challenge.title,
-            'description': challenge.description,
-            'points': challenge.points,
-            'challenge_type': challenge.challenge_type,
-            'start_date': challenge.start_date,
-            'end_date': challenge.end_date,
-            'is_active': False,
-            'status': 'completed',
-            'completed_at': user_challenge.completed_at
-        }
-        
-        all_challenges.append(challenge_dict)
-    
-    return render_template(
-        'gamification/challenges.html',
-        challenges=all_challenges
-    )
+    return render_template('gamification/challenges.html',
+                          active_challenges=active_challenges)
 
-@gamification_bp.route('/challenge/<int:challenge_id>/accept', methods=['POST'])
+@gamification_bp.route('/accept_challenge/<int:challenge_id>', methods=['POST'])
 @login_required
 def accept_challenge(challenge_id):
     """Accept a challenge"""
     challenge = Challenge.query.get_or_404(challenge_id)
     
-    # Check if challenge is active and within date range
-    now = datetime.utcnow()
-    if not challenge.is_active or challenge.start_date > now or challenge.end_date < now:
-        flash('This challenge is not currently available.', 'warning')
+    # Check if challenge is active
+    if not challenge.is_ongoing():
+        flash('This challenge is no longer active.', 'danger')
         return redirect(url_for('gamification.challenges'))
     
-    # Check if user has already accepted this challenge
+    # Check if already accepted
     existing = UserChallenge.query.filter_by(
         user_id=current_user.id,
         challenge_id=challenge_id
@@ -343,26 +191,12 @@ def accept_challenge(challenge_id):
             user_id=current_user.id,
             challenge_id=challenge_id,
             status='accepted',
-            progress='{}'
+            progress=json.dumps({'progress': 0})
         )
         db.session.add(user_challenge)
-        
-        # Record activity
-        activity = Activity(
-            user_id=current_user.id,
-            activity_type='accept_challenge',
-            description=f'Accepted challenge: {challenge.title}',
-            points=5
-        )
-        db.session.add(activity)
-        
-        # Add points to user profile
-        profile = UserProfile.query.filter_by(user_id=current_user.id).first()
-        if profile:
-            profile.add_points(5)
-        
         db.session.commit()
-        flash('Challenge accepted!', 'success')
+        
+        flash('Challenge accepted! Good luck!', 'success')
     
     return redirect(url_for('gamification.challenges'))
 
@@ -370,386 +204,164 @@ def accept_challenge(challenge_id):
 @login_required
 def leaderboard():
     """View user leaderboard"""
-    # Get all users with their profiles for the leaderboard
-    all_users = db.session.query(
-        UserProfile, User
-    ).join(
-        User, UserProfile.user_id == User.id
-    ).order_by(
-        UserProfile.total_points.desc()
-    ).all()
+    # Get top users by points
+    top_users = UserProfile.query.order_by(UserProfile.total_points.desc()).limit(10).all()
     
-    # Format users for the leaderboard
-    formatted_users = []
-    for profile, user in all_users:
-        # Count achievements
-        achievement_count = UserAchievement.query.filter_by(user_id=user.id).count()
-        
-        user_data = {
-            'id': user.id,
-            'username': user.username,
-            'level': profile.level,
-            'title': profile.title,
-            'total_points': profile.total_points,
-            'streak_days': profile.streak_days,
-            'achievements_count': achievement_count
-        }
-        formatted_users.append(user_data)
-    
-    # Get current user's stats
+    # Get current user's rank
     user_profile = UserProfile.query.filter_by(user_id=current_user.id).first()
-    if not user_profile:
-        # Create profile if it doesn't exist
-        user_profile = UserProfile(user_id=current_user.id)
-        db.session.add(user_profile)
-        db.session.commit()
     
-    # Get user achievements count
-    achievements_earned = UserAchievement.query.filter_by(user_id=current_user.id).count()
+    if user_profile:
+        # Count users with more points
+        user_rank = UserProfile.query.filter(UserProfile.total_points > user_profile.total_points).count() + 1
+    else:
+        user_rank = UserProfile.query.count()
     
-    # Current user stats for the profile card
-    current_user_stats = {
-        'level': user_profile.level,
-        'title': user_profile.title,
-        'total_points': user_profile.total_points,
-        'achievements_earned': achievements_earned
-    }
+    return render_template('gamification/leaderboard.html',
+                          top_users=top_users,
+                          user_profile=user_profile,
+                          user_rank=user_rank)
+
+@gamification_bp.route('/daily_rewards')
+@login_required
+def daily_rewards():
+    """Daily rewards page for claiming tokens"""
+    # Get or create user profile
+    user_profile = GamificationService.get_or_create_profile(current_user)
     
-    # Calculate user's rank
-    user_rank = 1
-    points_to_next_rank = 0
+    # Check if user can claim daily reward
+    can_claim = user_profile.can_claim_daily_reward()
     
-    if formatted_users:
-        for idx, user_data in enumerate(formatted_users):
-            if user_data['id'] == current_user.id:
-                user_rank = idx + 1
-                
-                # Calculate points needed to reach next rank
-                if idx > 0:  # Not already #1
-                    next_rank_user = formatted_users[idx - 1]
-                    points_to_next_rank = next_rank_user['total_points'] - user_data['total_points'] + 1
-                break
+    return render_template('gamification/daily_reward.html',
+                          user_profile=user_profile,
+                          can_claim=can_claim)
+
+@gamification_bp.route('/claim_daily_reward', methods=['POST'])
+@login_required
+def claim_daily_reward():
+    """Claim daily reward tokens"""
+    # Get or create user profile
+    user_profile = GamificationService.get_or_create_profile(current_user)
     
-    return render_template(
-        'gamification/leaderboard.html',
-        all_users=formatted_users,
-        top_users=formatted_users[:3] if len(formatted_users) >= 3 else formatted_users,
-        current_user_stats=current_user_stats,
-        current_user_rank=user_rank,
-        points_to_next_rank=points_to_next_rank
+    # Check if user can claim
+    if not user_profile.can_claim_daily_reward():
+        return jsonify({
+            'success': False,
+            'message': 'You have already claimed your daily reward.'
+        })
+    
+    # Claim reward
+    tokens_earned = user_profile.claim_daily_reward()
+    
+    # Add tokens to user
+    current_user.add_tokens(tokens_earned)
+    
+    # Record activity
+    activity = Activity(
+        user_id=current_user.id,
+        activity_type='claim_daily_reward',
+        description='Claimed daily reward',
+        points=ACTIVITY_POINTS['claim_daily_reward']
     )
+    db.session.add(activity)
+    
+    # Add points
+    user_profile.add_points(ACTIVITY_POINTS['claim_daily_reward'])
+    
+    # Check for streak achievement
+    achievement_earned = None
+    if user_profile.streak_days >= 7:
+        # Check if user already has the streak achievement
+        streak_achievement = Achievement.query.filter_by(name='Streak Master').first()
+        if streak_achievement:
+            existing = UserAchievement.query.filter_by(
+                user_id=current_user.id,
+                achievement_id=streak_achievement.id
+            ).first()
+            
+            if not existing:
+                # Award the achievement
+                new_achievement = UserAchievement(
+                    user_id=current_user.id,
+                    achievement_id=streak_achievement.id
+                )
+                db.session.add(new_achievement)
+                
+                # Add achievement points
+                user_profile.add_points(streak_achievement.points)
+                
+                # Set achievement for response
+                achievement_earned = {
+                    'id': streak_achievement.id,
+                    'name': streak_achievement.name,
+                    'description': streak_achievement.description,
+                    'category': streak_achievement.category,
+                    'points': streak_achievement.points,
+                    'icon': streak_achievement.icon
+                }
+    
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'tokens': tokens_earned,
+        'total_tokens': current_user.tokens_available,
+        'streak_days': user_profile.streak_days,
+        'achievement_earned': achievement_earned
+    })
+
+@gamification_bp.route('/social_share/<int:achievement_id>')
+@login_required
+def social_share(achievement_id):
+    """Generate social share links and record sharing activity"""
+    # Get achievement
+    achievement = Achievement.query.get_or_404(achievement_id)
+    
+    # Check if user has earned this achievement
+    user_achievement = UserAchievement.query.filter_by(
+        user_id=current_user.id,
+        achievement_id=achievement_id
+    ).first_or_404()
+    
+    return render_template('gamification/social_share.html',
+                          achievement=achievement,
+                          earned_at=user_achievement.earned_at)
 
 @gamification_bp.route('/record_activity', methods=['POST'])
 @login_required
 def record_activity():
     """API endpoint to record user activity and award points"""
-    # This endpoint would be called from JavaScript
+    if not request.is_json:
+        return jsonify({'success': False, 'message': 'Invalid request'})
+    
     data = request.json
-    if not data or 'activity_type' not in data:
-        return jsonify({'error': 'Missing activity data'}), 400
-    
     activity_type = data.get('activity_type')
-    description = data.get('description', '')
+    description = data.get('description')
     
-    # Points mapping for different activity types
-    points_map = {
-        'login': 5,
-        'create_case': 10,
-        'update_case': 5,
-        'create_document': 10,
-        'research': 15,
-        'create_contract': 10,
-        'add_event': 5,
-        'complete_profile': 20
-    }
-    
-    points = points_map.get(activity_type, 1)
+    if not activity_type or activity_type not in ACTIVITY_POINTS:
+        return jsonify({'success': False, 'message': 'Invalid activity type'})
     
     # Record activity
-    activity = Activity(
-        user_id=current_user.id,
-        activity_type=activity_type,
-        description=description,
-        points=points
-    )
-    db.session.add(activity)
-    
-    # Update user profile
-    profile = UserProfile.query.filter_by(user_id=current_user.id).first()
-    if not profile:
-        profile = UserProfile(user_id=current_user.id)
-        db.session.add(profile)
-    
-    # Add points
-    new_level = profile.add_points(points)
-    level_up = new_level > profile.level
-    
-    # Update activity counters
-    if activity_type == 'create_case':
-        profile.total_cases_managed += 1
-    elif activity_type == 'create_document':
-        profile.total_documents_created += 1
-    elif activity_type == 'research':
-        profile.total_research_conducted += 1
-    
-    db.session.commit()
-    
-    # Check for new achievements
-    new_achievements = check_achievements(current_user.id)
+    result = GamificationService.record_activity(current_user, activity_type, description)
     
     return jsonify({
         'success': True,
-        'points_earned': points,
-        'new_total': profile.total_points,
-        'level': profile.level,
-        'level_up': level_up,
-        'new_achievements': new_achievements
+        'points_earned': result.get('points', 0),
+        'level_up': result.get('level_up', False),
+        'level': result.get('level', 1),
+        'new_achievements': result.get('new_achievements', [])
     })
 
+@gamification_bp.route('/check_achievements/<int:user_id>')
+@login_required
 def check_achievements(user_id):
     """Check if user has earned any new achievements"""
-    # Get user profile
-    profile = UserProfile.query.filter_by(user_id=user_id).first()
-    if not profile:
-        return []
+    # Only admins or the user themselves can check
+    if current_user.id != user_id and current_user.role != 'admin':
+        return jsonify({'success': False, 'message': 'Unauthorized'})
     
-    # Get user's current achievements
-    user_achievements = UserAchievement.query.filter_by(user_id=user_id).all()
-    earned_achievement_ids = [ua.achievement_id for ua in user_achievements]
+    user = User.query.get_or_404(user_id)
     
-    # Get all active achievements
-    all_achievements = Achievement.query.filter_by(is_active=True).all()
+    # Check achievements
+    GamificationService.check_achievements(user)
     
-    new_achievements = []
-    
-    for achievement in all_achievements:
-        # Skip if already earned
-        if achievement.id in earned_achievement_ids:
-            continue
-        
-        # Get achievement requirements
-        requirements = achievement.get_requirements()
-        requirement_met = False
-        
-        # Check if requirements are met
-        if 'min_level' in requirements and profile.level >= requirements['min_level']:
-            requirement_met = True
-        elif 'min_points' in requirements and profile.total_points >= requirements['min_points']:
-            requirement_met = True
-        elif 'min_streak' in requirements and profile.streak_days >= requirements['min_streak']:
-            requirement_met = True
-        elif 'min_cases' in requirements and profile.total_cases_managed >= requirements['min_cases']:
-            requirement_met = True
-        elif 'min_documents' in requirements and profile.total_documents_created >= requirements['min_documents']:
-            requirement_met = True
-        elif 'min_research' in requirements and profile.total_research_conducted >= requirements['min_research']:
-            requirement_met = True
-        
-        if requirement_met:
-            # Award achievement
-            user_achievement = UserAchievement(
-                user_id=user_id,
-                achievement_id=achievement.id
-            )
-            db.session.add(user_achievement)
-            
-            # Award points
-            profile.add_points(achievement.points)
-            
-            # Record activity
-            activity = Activity(
-                user_id=user_id,
-                activity_type='earn_achievement',
-                description=f'Earned achievement: {achievement.name}',
-                points=achievement.points
-            )
-            db.session.add(activity)
-            
-            # Add to new achievements list
-            new_achievements.append({
-                'id': achievement.id,
-                'name': achievement.name,
-                'description': achievement.description,
-                'points': achievement.points,
-                'icon': achievement.icon
-            })
-    
-    if new_achievements:
-        db.session.commit()
-    
-    return new_achievements
-
-@gamification_bp.route('/daily-rewards')
-@login_required
-def daily_rewards():
-    """Daily rewards page for claiming tokens"""
-    # Get user profile
-    profile = UserProfile.query.filter_by(user_id=current_user.id).first()
-    if not profile:
-        profile = UserProfile(user_id=current_user.id)
-        db.session.add(profile)
-        db.session.commit()
-    
-    # Update streak if first visit of the day
-    profile.update_streak()
-    db.session.commit()
-    
-    # Calculate daily reward tokens based on streak
-    streak_day = min(profile.streak_days, 7)
-    tokens_map = {
-        1: 5,   # Day 1: 5 tokens
-        2: 5,   # Day 2: 5 tokens
-        3: 10,  # Day 3: 10 tokens
-        4: 10,  # Day 4: 10 tokens
-        5: 15,  # Day 5: 15 tokens
-        6: 15,  # Day 6: 15 tokens
-        7: 25,  # Day 7: 25 tokens (Bonus day)
-    }
-    daily_reward_tokens = tokens_map.get(streak_day, 5)
-    
-    # Check if user has already claimed today's reward
-    daily_reward_claimed = False
-    if profile.last_reward_claim and profile.last_reward_claim.date() == datetime.utcnow().date():
-        daily_reward_claimed = True
-    
-    return render_template(
-        'gamification/daily_reward.html',
-        user_profile=profile,
-        daily_reward_tokens=daily_reward_tokens,
-        daily_reward_claimed=daily_reward_claimed
-    )
-
-@gamification_bp.route('/claim-daily-reward', methods=['POST'])
-@login_required
-def claim_daily_reward():
-    """Claim daily reward tokens"""
-    # Get user profile
-    profile = UserProfile.query.filter_by(user_id=current_user.id).first()
-    if not profile:
-        flash('User profile not found.', 'danger')
-        return redirect(url_for('gamification.daily_rewards'))
-    
-    # Check if user can claim reward
-    if not profile.can_claim_daily_reward():
-        flash('You have already claimed your daily reward today.', 'warning')
-        return redirect(url_for('gamification.daily_rewards'))
-    
-    # Claim reward and get result
-    reward_result = profile.claim_daily_reward()
-    tokens = reward_result['tokens']
-    is_bonus_day = reward_result['is_bonus_day']
-    
-    # Record activity
-    activity = Activity(
-        user_id=current_user.id,
-        activity_type='daily_reward',
-        description=f'Claimed daily reward: {tokens} tokens',
-        points=5  # Bonus points for claiming daily reward
-    )
-    db.session.add(activity)
-    profile.add_points(5)
-    
-    # Special achievement for 7-day streak
-    if is_bonus_day:
-        # Check if "Streak Master" achievement exists
-        streak_master = Achievement.query.filter_by(name='Streak Master').first()
-        if streak_master:
-            # Check if user already has this achievement
-            existing = UserAchievement.query.filter_by(
-                user_id=current_user.id,
-                achievement_id=streak_master.id
-            ).first()
-            
-            if not existing:
-                # Award the achievement
-                user_achievement = UserAchievement(
-                    user_id=current_user.id,
-                    achievement_id=streak_master.id
-                )
-                db.session.add(user_achievement)
-                
-                # Record activity and points
-                activity = Activity(
-                    user_id=current_user.id,
-                    activity_type='earn_achievement',
-                    description=f'Earned achievement: {streak_master.name}',
-                    points=streak_master.points
-                )
-                db.session.add(activity)
-                profile.add_points(streak_master.points)
-                
-                flash(f'🏆 Achievement Unlocked: {streak_master.name}!', 'success')
-    
-    db.session.commit()
-    
-    flash(f'You claimed {tokens} tokens as your daily reward!', 'success')
-    return redirect(url_for('gamification.daily_rewards'))
-
-@gamification_bp.route('/social-share/<string:share_type>/<int:item_id>')
-@login_required
-def social_share(share_type, item_id):
-    """Generate social share links and record sharing activity"""
-    # Initialize default share data
-    share_title = f"I'm using the Kenyan Legal Assistant Platform!"
-    share_text = "Join me in using the best legal platform for Kenyan law professionals."
-    share_url = request.host_url
-    share_image = request.host_url + 'static/images/generated-icon.png'
-    
-    if share_type == 'achievement':
-        # Get achievement details
-        achievement = Achievement.query.get_or_404(item_id)
-        share_title = f"I earned the '{achievement.name}' achievement!"
-        share_text = f"{achievement.description} #KenyanLegalAssistant"
-        # If achievement has an icon that's an image path, use it
-        if achievement.icon and achievement.icon.endswith(('.png', '.jpg', '.svg')):
-            share_image = request.host_url + 'static/images/badges/' + achievement.icon
-    
-    elif share_type == 'level':
-        # Get user profile
-        profile = UserProfile.query.filter_by(user_id=current_user.id).first()
-        if not profile:
-            flash('User profile not found.', 'danger')
-            return redirect(url_for('gamification.dashboard'))
-        
-        share_title = f"I reached '{profile.title}' (Level {profile.level})!"
-        share_text = f"I'm making progress in my legal career with the help of Kenyan Legal Assistant. #KenyanLegalAssistant"
-    
-    elif share_type == 'case':
-        # Get case details (showing minimal info for privacy)
-        case = Case.query.get_or_404(item_id)
-        share_title = "I'm working on an important legal case!"
-        share_text = f"Using Kenyan Legal Assistant to manage my legal cases efficiently. #KenyanLegalAssistant"
-    
-    # Record sharing activity
-    profile = UserProfile.query.filter_by(user_id=current_user.id).first()
-    if profile:
-        profile.social_shares += 1
-        
-        # Record activity
-        activity = Activity(
-            user_id=current_user.id,
-            activity_type='social_share',
-            description=f'Shared {share_type} on social media',
-            points=10  # Points for social sharing
-        )
-        db.session.add(activity)
-        profile.add_points(10)
-        db.session.commit()
-    
-    # Prepare share URLs
-    twitter_url = f"https://twitter.com/intent/tweet?text={share_text}&url={share_url}"
-    facebook_url = f"https://www.facebook.com/sharer/sharer.php?u={share_url}&quote={share_text}"
-    linkedin_url = f"https://www.linkedin.com/sharing/share-offsite/?url={share_url}"
-    whatsapp_url = f"https://api.whatsapp.com/send?text={share_text} {share_url}"
-    
-    return render_template(
-        'gamification/social_share.html',
-        share_title=share_title,
-        share_text=share_text,
-        share_url=share_url,
-        share_image=share_image,
-        twitter_url=twitter_url,
-        facebook_url=facebook_url,
-        linkedin_url=linkedin_url,
-        whatsapp_url=whatsapp_url
-    )
+    return jsonify({'success': True})

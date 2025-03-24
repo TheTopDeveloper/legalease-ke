@@ -1,231 +1,216 @@
-{% extends 'layout.html' %}
+{% extends 'base.html' %}
 
-{% block title %}Gamification Dashboard{% endblock %}
+{% block title %}Gamification Dashboard - Kenyan Legal Assistant{% endblock %}
 
-{% block header %}Gamification Dashboard{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gamification.css') }}">
+{% endblock %}
 
 {% block content %}
-<div class="row">
-    <!-- User Profile Card -->
-    <div class="col-md-4 mb-4">
-        <div class="card border-primary">
-            <div class="card-header bg-primary text-white">
-                <h3 class="mb-0">
-                    <i class="fas fa-user-circle me-2"></i> {{ current_user.username }}
-                </h3>
-            </div>
-            <div class="card-body">
-                <div class="text-center mb-3">
-                    <div class="d-inline-block p-3 rounded-circle bg-primary bg-opacity-10 mb-3">
-                        <i class="fas fa-user fa-3x text-primary"></i>
-                    </div>
-                    <h4 class="fw-bold">{{ user_stats.title }}</h4>
-                </div>
-                
-                <!-- Progress Bar for Level -->
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between mb-1">
-                        <span>Level {{ user_stats.level }}</span>
-                        <span>{{ user_stats.points_to_next_level }} points to level {{ user_stats.level + 1 }}</span>
-                    </div>
-                    <div class="progress" style="height: 20px;">
-                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" 
-                             role="progressbar" 
-                             style="width: {{ user_stats.level_progress }}%;" 
-                             aria-valuenow="{{ user_stats.level_progress }}" 
-                             aria-valuemin="0" 
-                             aria-valuemax="100">
-                            {{ user_stats.level_progress }}%
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="card shadow mb-4">
+                <div class="card-body text-center p-4">
+                    <h2 class="mb-4">Your Legal Journey</h2>
+                    
+                    <div class="user-profile-info mb-4">
+                        <div class="user-level mb-2">Level {{ user_profile.level }}</div>
+                        <div class="user-title mb-3">{{ user_profile.title }}</div>
+                        
+                        <div class="level-progress mb-2">
+                            <div class="level-progress-bar">
+                                <div class="level-progress-fill" style="width: {{ level_progress }}%;"></div>
+                            </div>
+                            <div class="level-info">
+                                <span>Level {{ user_profile.level }}</span>
+                                <span>{{ user_profile.total_points }} / {{ points_to_next_level }} points</span>
+                                <span>Level {{ user_profile.level + 1 }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="small text-muted mb-3">
+                            {{ points_to_next_level - user_profile.total_points }} more points needed to reach Level {{ user_profile.level + 1 }}
                         </div>
                     </div>
-                </div>
-                
-                <!-- User Stats -->
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span><i class="fas fa-star text-warning me-2"></i> Total Points</span>
-                        <span class="badge bg-primary">{{ user_stats.total_points }}</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span><i class="fas fa-fire text-danger me-2"></i> Current Streak</span>
-                        <div>
-                            <span class="badge bg-danger me-1">{{ user_stats.streak_days }} days</span>
-                            <a href="{{ url_for('gamification.daily_rewards') }}" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-gift"></i> Daily Reward
+                    
+                    <div class="row stats-cards mb-4">
+                        <div class="col-md-3 mb-3 mb-md-0">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <i class="bi bi-star-fill text-warning fs-3 mb-2"></i>
+                                    <h6 class="mb-1">Points</h6>
+                                    <div class="fs-4 fw-bold">{{ user_profile.total_points }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3 mb-md-0">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <i class="bi bi-trophy-fill text-success fs-3 mb-2"></i>
+                                    <h6 class="mb-1">Achievements</h6>
+                                    <div class="fs-4 fw-bold">{{ earned_achievements|length }} / {{ all_achievements|length }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3 mb-md-0">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <i class="bi bi-calendar-check text-primary fs-3 mb-2"></i>
+                                    <h6 class="mb-1">Streak</h6>
+                                    <div class="fs-4 fw-bold">{{ user_profile.streak_days }} days</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3 mb-md-0">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <i class="bi bi-coin text-info fs-3 mb-2"></i>
+                                    <h6 class="mb-1">Tokens</h6>
+                                    <div class="fs-4 fw-bold">{{ current_user.tokens_available }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row quick-actions mb-4">
+                        <div class="col-6 col-md-3 mb-3">
+                            <a href="{{ url_for('gamification.daily_rewards') }}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                                <i class="bi bi-gift fs-3 mb-2"></i>
+                                <span>Daily Rewards</span>
                             </a>
                         </div>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span><i class="fas fa-trophy text-success me-2"></i> Achievements</span>
-                        <span class="badge bg-success">{{ user_stats.achievements_earned }}/{{ user_stats.total_achievements }}</span>
-                    </li>
-                </ul>
-            </div>
-            <div class="card-footer">
-                <div class="d-flex justify-content-between">
-                    <span><i class="fas fa-calendar-alt me-1"></i> Last active: {{ user_stats.last_active.strftime('%Y-%m-%d') }}</span>
-                    <a href="{{ url_for('gamification.leaderboard') }}" class="btn btn-sm btn-outline-primary">
-                        <i class="fas fa-trophy me-1"></i> Leaderboard
-                    </a>
+                        <div class="col-6 col-md-3 mb-3">
+                            <a href="{{ url_for('gamification.achievements') }}" class="btn btn-outline-success w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                                <i class="bi bi-award fs-3 mb-2"></i>
+                                <span>Achievements</span>
+                            </a>
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <a href="{{ url_for('gamification.challenges') }}" class="btn btn-outline-warning w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                                <i class="bi bi-flag fs-3 mb-2"></i>
+                                <span>Challenges</span>
+                            </a>
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <a href="{{ url_for('gamification.leaderboard') }}" class="btn btn-outline-info w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                                <i class="bi bi-trophy fs-3 mb-2"></i>
+                                <span>Leaderboard</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-        
-        <!-- Activity Statistics -->
-        <div class="card mt-4">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i> Activity Statistics</h5>
-            </div>
-            <div class="card-body">
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span><i class="fas fa-gavel me-2"></i> Cases Managed</span>
-                        <span class="badge bg-info">{{ user_stats.total_cases_managed }}</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span><i class="fas fa-file-alt me-2"></i> Documents Created</span>
-                        <span class="badge bg-info">{{ user_stats.total_documents_created }}</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span><i class="fas fa-search me-2"></i> Research Conducted</span>
-                        <span class="badge bg-info">{{ user_stats.total_research_conducted }}</span>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Recent Achievements -->
-    <div class="col-md-8">
-        <div class="card mb-4">
-            <div class="card-header bg-success text-white">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="fas fa-award me-2"></i> Recent Achievements</h5>
-                    <a href="{{ url_for('gamification.achievements') }}" class="btn btn-sm btn-light">
-                        View All <i class="fas fa-arrow-right ms-1"></i>
-                    </a>
+            
+            <!-- Recent Achievements -->
+            <div class="card shadow mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent Achievements</h5>
+                    <a href="{{ url_for('gamification.achievements') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_achievements %}
+                        <div class="row">
+                            {% for achievement in recent_achievements %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="achievement-card">
+                                        <div class="row align-items-center">
+                                            <div class="col-4 text-center">
+                                                <div class="achievement-badge">
+                                                    {% if achievement.icon.endswith('.svg') %}
+                                                        <img src="{{ url_for('static', filename='images/badges/' + achievement.icon) }}" alt="{{ achievement.name }}">
+                                                    {% else %}
+                                                        <i class="{{ achievement.icon }}"></i>
+                                                    {% endif %}
+                                                    <div class="achievement-points">+{{ achievement.points }}</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-8">
+                                                <h5 class="achievement-name">{{ achievement.name }}</h5>
+                                                <p class="achievement-description">{{ achievement.description }}</p>
+                                                <div class="badge bg-primary">{{ achievement.category|capitalize }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-emoji-smile text-muted" style="font-size: 2rem;"></i>
+                            <p class="mt-3">You haven't earned any achievements yet.</p>
+                            <p>Keep using the platform to unlock them!</p>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
-            <div class="card-body">
-                {% if recent_achievements %}
-                <div class="row">
-                    {% for achievement in recent_achievements %}
-                    <div class="col-md-6 mb-3">
-                        <div class="card h-100 {% if achievement.earned %}border-success{% else %}border-secondary{% endif %}">
-                            <div class="card-header {% if achievement.earned %}bg-success text-white{% else %}bg-secondary text-white{% endif %}">
+            
+            <!-- Active Challenges -->
+            <div class="card shadow mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Active Challenges</h5>
+                    <a href="{{ url_for('gamification.challenges') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if active_challenges %}
+                        {% for challenge in active_challenges %}
+                            <div class="challenge-card {{ challenge.challenge_type }}">
+                                <div class="challenge-header">
+                                    <h5 class="challenge-title">{{ challenge.title }}</h5>
+                                    <span class="challenge-type {{ challenge.challenge_type }}">{{ challenge.challenge_type|capitalize }}</span>
+                                </div>
+                                <p class="challenge-description">{{ challenge.description }}</p>
+                                <div class="challenge-progress">
+                                    <div class="challenge-progress-fill" style="width: {{ challenge.progress_percentage }}%;"></div>
+                                </div>
+                                <div class="challenge-progress-info mb-2">
+                                    <span>{{ challenge.progress }} / {{ challenge.target }}</span>
+                                    <span>{{ challenge.progress_percentage }}%</span>
+                                </div>
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <h6 class="mb-0">{{ achievement.name }}</h6>
-                                    <span class="badge bg-light text-dark">{{ achievement.points }} pts</span>
+                                    <span class="challenge-reward">+{{ challenge.points }} Points</span>
+                                    <span class="challenge-time">Ends: {{ challenge.end_date|date }}</span>
                                 </div>
                             </div>
-                            <div class="card-body">
-                                <div class="d-flex">
-                                    <div class="me-3">
-                                        <i class="{{ achievement.icon if achievement.icon else 'fas fa-trophy' }} fa-2x {% if achievement.earned %}text-success{% else %}text-secondary{% endif %}"></i>
-                                    </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-flag text-muted" style="font-size: 2rem;"></i>
+                            <p class="mt-3">You don't have any active challenges.</p>
+                            <p>Check back for new challenges!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Activity History -->
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_activities %}
+                        <ul class="list-group list-group-flush">
+                            {% for activity in recent_activities %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
                                     <div>
-                                        <p class="card-text">{{ achievement.description }}</p>
-                                        {% if achievement.earned %}
-                                        <div class="text-success"><i class="fas fa-check-circle me-1"></i> Earned {{ achievement.earned_at.strftime('%Y-%m-%d') }}</div>
-                                        {% else %}
-                                        <div class="text-muted"><i class="fas fa-lock me-1"></i> Not yet earned</div>
-                                        {% endif %}
+                                        <i class="bi bi-{{ activity.icon }} me-2 text-{{ activity.color }}"></i>
+                                        {{ activity.description }}
                                     </div>
-                                </div>
-                            </div>
+                                    <div class="text-end">
+                                        <span class="badge bg-success">+{{ activity.points }} points</span>
+                                        <div class="small text-muted">{{ activity.created_at|datetime }}</div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-clock-history text-muted" style="font-size: 2rem;"></i>
+                            <p class="mt-3">No recent activity.</p>
                         </div>
-                    </div>
-                    {% endfor %}
+                    {% endif %}
                 </div>
-                {% else %}
-                <div class="text-center p-4">
-                    <i class="fas fa-trophy fa-3x text-muted mb-3"></i>
-                    <h5>No achievements yet</h5>
-                    <p>Complete activities to earn achievements and rewards.</p>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-        
-        <!-- Active Challenges -->
-        <div class="card">
-            <div class="card-header bg-warning text-dark">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="fas fa-tasks me-2"></i> Active Challenges</h5>
-                    <a href="{{ url_for('gamification.challenges') }}" class="btn btn-sm btn-dark">
-                        View All <i class="fas fa-arrow-right ms-1"></i>
-                    </a>
-                </div>
-            </div>
-            <div class="card-body">
-                {% if active_challenges %}
-                <div class="row">
-                    {% for challenge in active_challenges %}
-                    <div class="col-md-6 mb-3">
-                        <div class="card h-100 border-warning">
-                            <div class="card-header bg-warning text-dark">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <h6 class="mb-0">{{ challenge.title }}</h6>
-                                    <span class="badge bg-dark">{{ challenge.points }} pts</span>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <p class="card-text">{{ challenge.description }}</p>
-                                
-                                <!-- Challenge Progress -->
-                                <div class="mb-2">
-                                    {% if challenge is mapping and 'current_progress' in challenge and 'target_progress' in challenge %}
-                                        {% set progress_percent = (challenge.current_progress / challenge.target_progress) * 100 %}
-                                        <div class="d-flex justify-content-between mb-1">
-                                            <span>Progress</span>
-                                            <span>{{ challenge.current_progress }}/{{ challenge.target_progress }}</span>
-                                        </div>
-                                        <div class="progress" style="height: 10px;">
-                                            <div class="progress-bar bg-warning" 
-                                                role="progressbar" 
-                                                style="width: {{ progress_percent }}%;" 
-                                                aria-valuenow="{{ progress_percent }}" 
-                                                aria-valuemin="0" 
-                                                aria-valuemax="100">
-                                            </div>
-                                        </div>
-                                    {% else %}
-                                        <div class="d-flex justify-content-between mb-1">
-                                            <span>Progress</span>
-                                            <span>0/1</span>
-                                        </div>
-                                        <div class="progress" style="height: 10px;">
-                                            <div class="progress-bar bg-warning" 
-                                                role="progressbar" 
-                                                style="width: 0%;" 
-                                                aria-valuenow="0" 
-                                                aria-valuemin="0" 
-                                                aria-valuemax="100">
-                                            </div>
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                
-                                <div class="d-flex justify-content-between align-items-center text-muted">
-                                    <small><i class="fas fa-clock me-1"></i> {{ challenge.days_remaining }} days left</small>
-                                    {% if not challenge.accepted %}
-                                    <a href="{{ url_for('gamification.accept_challenge', challenge_id=challenge.id) }}" class="btn btn-sm btn-outline-warning">
-                                        Accept Challenge
-                                    </a>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <div class="text-center p-4">
-                    <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
-                    <h5>No active challenges</h5>
-                    <p>Check back later for new challenges to earn bonus points.</p>
-                </div>
-                {% endif %}
             </div>
         </div>
     </div>
@@ -233,12 +218,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Record dashboard visit
-        if (window.gamification) {
-            window.gamification.recordActivity('view_gamification', 'Viewed gamification dashboard');
-        }
-    });
-</script>
+<script src="{{ url_for('static', filename='js/gamification.js') }}"></script>
 {% endblock %}
