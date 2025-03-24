@@ -2,12 +2,20 @@
 Routes for admin functionality, including role and permission management.
 """
 import logging
+import os
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify
 from flask_login import current_user, login_required
 from sqlalchemy import desc
+from wtforms import SelectField
+from wtforms.validators import Optional
 
 from models import db, User, Role, Permission, Organization
 from utils.permissions import admin_required, Permissions
+from forms.admin import (
+    CreateUserForm, EditUserForm, 
+    CreateRoleForm, EditRoleForm,
+    CreateOrganizationForm, EditOrganizationForm
+)
 
 logger = logging.getLogger(__name__)
 
@@ -106,48 +114,40 @@ def edit_user(user_id):
 def create_user():
     """Create a new user"""
     roles = Role.query.all()
+    form = CreateUserForm()
     
-    if request.method == 'POST':
-        username = request.form.get('username')
-        email = request.form.get('email')
-        password = request.form.get('password')
-        first_name = request.form.get('first_name')
-        last_name = request.form.get('last_name')
-        role = request.form.get('role', 'individual')
-        account_type = request.form.get('account_type', 'free')
-        is_active = 'is_active' in request.form
-        
-        # Validate required fields
-        if not username or not email or not password:
-            flash("Username, email, and password are required", "error")
-            return render_template('admin/create_user.html', roles=roles)
-            
+    # Set custom role choices
+    custom_roles = [(str(role.id), role.name) for role in roles if role.is_custom]
+    custom_roles.insert(0, ('', 'No Custom Role'))
+    form.custom_role_id = SelectField('Custom Role (Optional)', choices=custom_roles, validators=[Optional()])
+    
+    if form.validate_on_submit():
         # Check if user already exists
-        if User.query.filter_by(username=username).first():
+        if User.query.filter_by(username=form.username.data).first():
             flash("Username already exists", "error")
-            return render_template('admin/create_user.html', roles=roles)
+            return render_template('admin/create_user.html', form=form, roles=roles)
             
-        if User.query.filter_by(email=email).first():
+        if User.query.filter_by(email=form.email.data).first():
             flash("Email already exists", "error")
-            return render_template('admin/create_user.html', roles=roles)
+            return render_template('admin/create_user.html', form=form, roles=roles)
             
         # Create new user
         user = User(
-            username=username,
-            email=email,
-            first_name=first_name,
-            last_name=last_name,
-            role=role,
-            account_type=account_type,
-            is_active=is_active
+            username=form.username.data,
+            email=form.email.data,
+            first_name=form.first_name.data,
+            last_name=form.last_name.data,
+            role=form.role.data,
+            account_type=form.account_type.data,
+            tokens_available=form.tokens_available.data,
+            is_active=form.is_active.data
         )
-        user.set_password(password)
+        user.set_password(form.password.data)
         
         # Set custom role if provided
-        custom_role_id = request.form.get('custom_role_id')
-        if custom_role_id:
+        if form.custom_role_id.data:
             try:
-                user.custom_role_id = int(custom_role_id)
+                user.custom_role_id = int(form.custom_role_id.data)
             except ValueError:
                 pass
         
@@ -155,14 +155,14 @@ def create_user():
         db.session.add(user)
         try:
             db.session.commit()
-            flash(f"User {username} created successfully", "success")
+            flash(f"User {user.username} created successfully", "success")
             return redirect(url_for('admin.users'))
         except Exception as e:
             db.session.rollback()
             logger.error(f"Error creating user: {str(e)}")
             flash(f"Error creating user: {str(e)}", "error")
     
-    return render_template('admin/create_user.html', roles=roles)
+    return render_template('admin/create_user.html', form=form, roles=roles)
 
 @admin_bp.route('/users/<int:user_id>/delete', methods=['POST'])
 @login_required
