@@ -114,23 +114,22 @@ def calendar():
         
         # We need to include the days from the previous and next months to fill the calendar grid
         # In Python, weekday() returns 0 for Monday, 6 for Sunday
-        # For calendar display, we want to show Sunday as first day (0)
-        first_day_weekday = start_date.weekday()
-        # Adjust for Sunday-first calendar 
-        first_day_weekday = (first_day_weekday + 1) % 7  # Convert Monday=0 to Sunday=0
+        # For calendar display with Sunday as first day (US/local format)
+        weekday_mapping = {0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 0}  # Map Monday(0)→1, Tuesday(1)→2, ..., Sunday(6)→0
+        first_day_weekday = weekday_mapping[start_date.weekday()]  # Sunday-first
         
         # Calculate days needed from previous month to fill first row
         days_to_previous_month = first_day_weekday
         start_range = start_date - timedelta(days=days_to_previous_month)
         
         # Calculate days needed from next month to fill last row
-        last_day_weekday = end_date.weekday()
-        last_day_weekday = (last_day_weekday + 1) % 7  # Convert to Sunday-first
+        last_day_weekday = weekday_mapping[end_date.weekday()]  # Sunday-first
         days_to_next_month = 6 - last_day_weekday
         end_range = end_date + timedelta(days=days_to_next_month)
         
         # Log for debugging
         logger.debug(f"Month view: start_date={start_date}, end_date={end_date}")
+        logger.debug(f"Current date: {current_date}, today: {date.today()}")
         logger.debug(f"First day weekday: {first_day_weekday}, Last day weekday: {last_day_weekday}")
         logger.debug(f"Calendar range: {start_range} to {end_range}")
         
