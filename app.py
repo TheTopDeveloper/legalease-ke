@@ -43,7 +43,9 @@ with app.app_context():
         LegalCitation, Subscription, TokenPackage, Payment, TokenUsage,
         UserProfile, Achievement, UserAchievement, Activity, Challenge, UserChallenge,
         # Ruling database models
-        Ruling, Judge, Tag, RulingReference, RulingAnnotation, RulingAnalysis
+        Ruling, Judge, Tag, RulingReference, RulingAnnotation, RulingAnalysis,
+        # Client portal models
+        ClientPortalUser
     )
     db.create_all()
     logger.info("Database tables created")
@@ -63,6 +65,8 @@ from routes.events import events_bp
 from routes.writing_assistant import writing_bp
 from routes.admin import admin_bp
 from routes.rulings import rulings_bp
+from routes.client_portal import client_portal_bp
+from routes.document_sharing import document_sharing_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(cases_bp)
@@ -78,13 +82,22 @@ app.register_blueprint(events_bp)
 app.register_blueprint(writing_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(rulings_bp, url_prefix='/rulings')
+app.register_blueprint(client_portal_bp)
+app.register_blueprint(document_sharing_bp)
 
 # Load user loader callback
-from models import User
+from models import User, ClientPortalUser
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    """Load user by ID - works for both User and ClientPortalUser"""
+    # Try loading as regular user first
+    user = User.query.get(int(user_id))
+    if user:
+        return user
+    
+    # If not found, try as client portal user
+    return ClientPortalUser.query.get(int(user_id))
 
 # Error handlers
 @app.errorhandler(404)
