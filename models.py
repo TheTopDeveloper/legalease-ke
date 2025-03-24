@@ -203,7 +203,16 @@ class Event(db.Model):
     start_time = db.Column(db.DateTime, nullable=False)
     end_time = db.Column(db.DateTime)
     location = db.Column(db.String(200))
+    priority = db.Column(db.Integer, default=2)  # 1=High, 2=Medium, 3=Low
+    is_all_day = db.Column(db.Boolean, default=False)
+    is_recurring = db.Column(db.Boolean, default=False)
+    recurrence_pattern = db.Column(db.String(50))  # daily, weekly, monthly, custom
+    recurrence_end_date = db.Column(db.DateTime)
+    reminder_sent = db.Column(db.Boolean, default=False)
+    reminder_time = db.Column(db.Integer, default=24)  # Hours before event to send reminder
+    conflict_status = db.Column(db.String(20))  # potential, confirmed, resolved, none
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Foreign keys
     case_id = db.Column(db.Integer, db.ForeignKey('case.id'))
@@ -211,6 +220,28 @@ class Event(db.Model):
     
     def __repr__(self):
         return f'<Event {self.id}: {self.title}>'
+    
+    def get_duration_minutes(self):
+        """Get event duration in minutes"""
+        if not self.end_time:
+            return 60  # Default to 1 hour if no end time
+        delta = self.end_time - self.start_time
+        return delta.total_seconds() / 60
+    
+    def overlaps_with(self, other_event):
+        """Check if this event overlaps with another event"""
+        # If either event is all-day, they overlap if on the same day
+        if self.is_all_day or other_event.is_all_day:
+            return self.start_time.date() == other_event.start_time.date()
+        
+        # Regular events overlap if one starts before the other ends
+        return (self.start_time < other_event.end_time or not other_event.end_time) and \
+               (other_event.start_time < self.end_time or not self.end_time)
+               
+    def is_court_related(self):
+        """Check if this event is related to court proceedings"""
+        court_event_types = ['Court Appearance', 'Hearing', 'Mention', 'Filing']
+        return self.event_type in court_event_types
 
 class LegalResearch(db.Model):
     """Legal research model for tracking research history and saved research"""
