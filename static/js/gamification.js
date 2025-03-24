@@ -2,6 +2,13 @@
  * Gamification JavaScript module for handling gamification features
  */
 
+// Store gamification state
+const gamificationState = {
+    dailyRewardClaimed: false,
+    lastStreak: 0,
+    achievements: []
+};
+
 // Toast container to display achievement notifications
 document.addEventListener('DOMContentLoaded', function() {
     // Create toast container if it doesn't exist
@@ -16,6 +23,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (document.body.dataset.authenticated === 'true') {
         recordActivity('login', 'User logged in');
     }
+    
+    // Initialize reward box animations if on daily rewards page
+    initDailyRewards();
+    
+    // Initialize achievement sharing
+    initAchievementSharing();
 });
 
 /**
@@ -180,10 +193,158 @@ function showAchievementNotification(achievement) {
     });
 }
 
+/**
+ * Initialize daily rewards functionality
+ */
+function initDailyRewards() {
+    const rewardBox = document.getElementById('daily-reward-box');
+    if (!rewardBox) return;
+    
+    // Add click handler to reward box
+    rewardBox.addEventListener('click', function() {
+        if (gamificationState.dailyRewardClaimed) return;
+        
+        // Visual effect before claiming
+        rewardBox.classList.add('pulse');
+        
+        setTimeout(() => {
+            // Claim reward via AJAX
+            fetch('/gamification/claim_daily_reward', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show reward animation
+                    rewardBox.classList.remove('pulse');
+                    rewardBox.classList.add('claimed');
+                    
+                    // Update state
+                    gamificationState.dailyRewardClaimed = true;
+                    
+                    // Show token reward
+                    const rewardAmount = document.createElement('div');
+                    rewardAmount.className = 'reward-amount';
+                    rewardAmount.innerHTML = `<span class="tokens">+${data.tokens} tokens</span>`;
+                    rewardBox.appendChild(rewardAmount);
+                    
+                    // Update UI elements
+                    const tokenDisplay = document.getElementById('user-tokens');
+                    if (tokenDisplay) {
+                        tokenDisplay.textContent = data.total_tokens;
+                    }
+                    
+                    // Show streak status
+                    if (data.streak_days > 0) {
+                        const streakInfo = document.getElementById('streak-info');
+                        if (streakInfo) {
+                            streakInfo.textContent = `Current streak: ${data.streak_days} days`;
+                            
+                            // Highlight if longest streak was achieved
+                            if (data.streak_days > gamificationState.lastStreak && data.streak_days > 1) {
+                                streakInfo.classList.add('text-success');
+                                streakInfo.innerHTML += ' <span class="badge bg-success">New record!</span>';
+                            }
+                        }
+                    }
+                    
+                    // Achievement earned for streak
+                    if (data.achievement_earned) {
+                        showAchievementNotification(data.achievement_earned);
+                    }
+                    
+                    // Update streak state
+                    gamificationState.lastStreak = data.streak_days;
+                    
+                    // Update UI message
+                    const rewardMessage = document.getElementById('reward-message');
+                    if (rewardMessage) {
+                        rewardMessage.textContent = 'Reward claimed! Come back tomorrow for more.';
+                    }
+                    
+                    // Play sound effect if available
+                    const rewardSound = document.getElementById('reward-sound');
+                    if (rewardSound) {
+                        rewardSound.play().catch(e => console.log('Could not play reward sound'));
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error claiming reward:', error);
+                rewardBox.classList.remove('pulse');
+            });
+        }, 800);
+    });
+}
+
+/**
+ * Initialize achievement sharing functionality
+ */
+function initAchievementSharing() {
+    // Set up share buttons for achievements
+    const shareButtons = document.querySelectorAll('.achievement-share-btn');
+    shareButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const achievementId = this.dataset.achievementId;
+            const shareType = this.dataset.shareType || 'twitter';
+            
+            // Record sharing activity
+            recordActivity('share_achievement', `Shared achievement ${achievementId} on ${shareType}`);
+            
+            // Generate share URL based on type
+            let shareUrl = '';
+            const achievementName = this.dataset.achievementName || 'an achievement';
+            const shareText = encodeURIComponent(`I just earned the ${achievementName} badge on the Kenyan Legal Assistant platform! #LegalTech #Achievement`);
+            const appUrl = encodeURIComponent(window.location.origin);
+            
+            switch(shareType) {
+                case 'twitter':
+                    shareUrl = `https://twitter.com/intent/tweet?text=${shareText}&url=${appUrl}`;
+                    break;
+                case 'linkedin':
+                    shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${appUrl}&title=${shareText}`;
+                    break;
+                case 'facebook':
+                    shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${appUrl}&quote=${shareText}`;
+                    break;
+                case 'whatsapp':
+                    shareUrl = `https://wa.me/?text=${shareText} ${appUrl}`;
+                    break;
+            }
+            
+            // Open share window
+            if (shareUrl) {
+                window.open(shareUrl, '_blank', 'width=600,height=400');
+            }
+        });
+    });
+}
+
+/**
+ * Format a date for streak display
+ * @param {Date} date - Date to format
+ * @returns {string} Formatted date string
+ */
+function formatStreakDate(date) {
+    return date.toLocaleDateString('en-US', { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric' 
+    });
+}
+
 // Expose functions globally
 window.gamification = {
     recordActivity,
     showPointsNotification,
     showLevelUpNotification,
-    showAchievementNotification
+    showAchievementNotification,
+    initDailyRewards,
+    initAchievementSharing
 };

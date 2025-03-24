@@ -1,61 +1,112 @@
-{% extends 'layout.html' %}
+{% extends 'base.html' %}
 
-{% block title %}Share Your Achievement - Kenyan Legal Assistant{% endblock %}
+{% block title %}Share Achievement - Kenyan Legal Assistant{% endblock %}
 
-{% block header %}Share Your Achievement{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gamification.css') }}">
+<meta property="og:title" content="I earned the {{ achievement.name }} badge on Kenyan Legal Assistant!">
+<meta property="og:description" content="{{ achievement.description }}">
+<meta property="og:image" content="{{ url_for('static', filename='images/badges/' + achievement.icon, _external=True) if achievement.icon.endswith('.svg') else url_for('static', filename='images/logo.png', _external=True) }}">
+<meta property="og:url" content="{{ request.url }}">
+<meta name="twitter:card" content="summary_large_image">
+{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-8 offset-md-2">
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
-                <h3 class="mb-0"><i class="fas fa-share-alt me-2"></i> Share on Social Media</h3>
-            </div>
-            <div class="card-body">
-                <div class="alert alert-info mb-4">
-                    <h5 class="alert-heading">Thank you for sharing!</h5>
-                    <p>You've earned 10 points for sharing your progress. Spread the word about your achievements with friends and colleagues.</p>
-                </div>
-
-                <div class="card mb-4">
-                    <div class="card-body text-center">
-                        <h4 class="card-title mb-3">{{ share_title }}</h4>
-                        <p class="card-text">{{ share_text }}</p>
-
-                        <div class="share-preview mt-4 mb-3">
-                            <div class="card preview-card">
-                                <div class="preview-image">
-                                    <img src="{{ share_image }}" alt="Share preview" class="img-fluid">
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow">
+                <div class="card-body text-center">
+                    <h2 class="mb-4">Share Your Achievement</h2>
+                    
+                    <div class="achievement-card p-4 mb-4">
+                        <div class="row align-items-center">
+                            <div class="col-md-4 text-center mb-3 mb-md-0">
+                                <div class="achievement-badge">
+                                    {% if achievement.icon.endswith('.svg') %}
+                                        <img src="{{ url_for('static', filename='images/badges/' + achievement.icon) }}" alt="{{ achievement.name }}">
+                                    {% else %}
+                                        <i class="{{ achievement.icon }}"></i>
+                                    {% endif %}
+                                    <div class="achievement-points">+{{ achievement.points }}</div>
                                 </div>
-                                <div class="card-body">
-                                    <h5 class="card-title">Kenyan Legal Assistant</h5>
-                                    <p class="card-text text-muted">{{ share_url }}</p>
+                            </div>
+                            <div class="col-md-8 text-md-start text-center">
+                                <h3 class="achievement-name">{{ achievement.name }}</h3>
+                                <p class="achievement-description">{{ achievement.description }}</p>
+                                <div class="badge bg-primary mb-2">{{ achievement.category|capitalize }}</div>
+                                <p>Earned on {{ earned_at.strftime('%B %d, %Y') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="share-message mt-4 mb-4">
+                        <p class="lead">Share your achievement with friends and colleagues!</p>
+                    </div>
+                    
+                    <div class="share-buttons mb-5">
+                        <a href="#" class="achievement-share-btn twitter me-2" 
+                           data-achievement-id="{{ achievement.id }}"
+                           data-achievement-name="{{ achievement.name }}"
+                           data-share-type="twitter">
+                            <i class="bi bi-twitter"></i> Twitter
+                        </a>
+                        <a href="#" class="achievement-share-btn facebook me-2" 
+                           data-achievement-id="{{ achievement.id }}"
+                           data-achievement-name="{{ achievement.name }}"
+                           data-share-type="facebook">
+                            <i class="bi bi-facebook"></i> Facebook
+                        </a>
+                        <a href="#" class="achievement-share-btn linkedin me-2" 
+                           data-achievement-id="{{ achievement.id }}"
+                           data-achievement-name="{{ achievement.name }}"
+                           data-share-type="linkedin">
+                            <i class="bi bi-linkedin"></i> LinkedIn
+                        </a>
+                        <a href="#" class="achievement-share-btn whatsapp" 
+                           data-achievement-id="{{ achievement.id }}"
+                           data-achievement-name="{{ achievement.name }}"
+                           data-share-type="whatsapp">
+                            <i class="bi bi-whatsapp"></i> WhatsApp
+                        </a>
+                    </div>
+                    
+                    <div class="social-benefits mt-5">
+                        <h4>Benefits of Sharing</h4>
+                        <div class="row mt-3">
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-trophy text-success fs-2 mb-3"></i>
+                                        <h5>Recognition</h5>
+                                        <p>Show off your legal expertise achievements</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-people text-primary fs-2 mb-3"></i>
+                                        <h5>Community</h5>
+                                        <p>Connect with other legal professionals</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-coin text-warning fs-2 mb-3"></i>
+                                        <h5>Rewards</h5>
+                                        <p>Earn extra tokens for each successful share</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <h4 class="mb-3 text-center">Share on:</h4>
-                <div class="d-flex justify-content-center social-buttons mb-4">
-                    <a href="{{ twitter_url }}" target="_blank" class="btn btn-twitter btn-lg mx-2" title="Share on Twitter">
-                        <i class="fab fa-twitter"></i>
-                    </a>
-                    <a href="{{ facebook_url }}" target="_blank" class="btn btn-facebook btn-lg mx-2" title="Share on Facebook">
-                        <i class="fab fa-facebook-f"></i>
-                    </a>
-                    <a href="{{ linkedin_url }}" target="_blank" class="btn btn-linkedin btn-lg mx-2" title="Share on LinkedIn">
-                        <i class="fab fa-linkedin-in"></i>
-                    </a>
-                    <a href="{{ whatsapp_url }}" target="_blank" class="btn btn-whatsapp btn-lg mx-2" title="Share on WhatsApp">
-                        <i class="fab fa-whatsapp"></i>
-                    </a>
-                </div>
-
-                <div class="text-center">
-                    <a href="{{ url_for('gamification.dashboard') }}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
-                    </a>
+                    
+                    <div class="mt-4">
+                        <a href="{{ url_for('gamification.achievements') }}" class="btn btn-primary">Back to Achievements</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -63,69 +114,12 @@
 </div>
 {% endblock %}
 
-{% block styles %}
-{{ super() }}
-<style>
-    .share-preview {
-        max-width: 500px;
-        margin: 0 auto;
-    }
-    
-    .preview-card {
-        border: 1px solid rgba(0,0,0,0.125);
-        border-radius: 0.25rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        overflow: hidden;
-    }
-    
-    .preview-image {
-        height: 250px;
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #f8f9fa;
-    }
-    
-    .preview-image img {
-        max-height: 100%;
-        max-width: 100%;
-        object-fit: contain;
-    }
-    
-    .social-buttons .btn {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .btn-twitter {
-        background-color: #1DA1F2;
-        color: white;
-    }
-    
-    .btn-facebook {
-        background-color: #4267B2;
-        color: white;
-    }
-    
-    .btn-linkedin {
-        background-color: #0077B5;
-        color: white;
-    }
-    
-    .btn-whatsapp {
-        background-color: #25D366;
-        color: white;
-    }
-    
-    .social-buttons .btn:hover {
-        opacity: 0.9;
-        transform: scale(1.05);
-        transition: all 0.2s;
-    }
-</style>
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/gamification.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize achievement sharing
+        window.gamification.initAchievementSharing();
+    });
+</script>
 {% endblock %}
