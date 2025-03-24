@@ -33,6 +33,7 @@ class User(UserMixin, db.Model):
     max_cases = db.Column(db.Integer, default=5)  # Maximum number of cases allowed
     is_active = db.Column(db.Boolean, default=True)  # Account active status
     subscription_end = db.Column(db.DateTime)  # When subscription expires
+    phone = db.Column(db.String(20))  # Phone number for SMS notifications
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login = db.Column(db.DateTime)
     
