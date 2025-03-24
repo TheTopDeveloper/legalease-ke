@@ -2,137 +2,192 @@
 
 {% block title %}Leaderboard{% endblock %}
 
+{% block header %}Leaderboard{% endblock %}
+
 {% block content %}
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Leaderboard</h1>
-        <a href="{{ url_for('gamification.dashboard') }}" class="btn btn-outline-primary">
-            <i class="bi bi-arrow-left"></i> Back to Dashboard
-        </a>
-    </div>
-    
-    <div class="row">
-        <div class="col-md-4 mb-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Your Ranking</h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="text-center w-100">
-                            <div class="display-1 mb-0">{{ user_rank }}</div>
-                            <p class="lead">Your current rank</p>
-                        </div>
-                    </div>
-                </div>
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <!-- Top 3 Users -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-trophy me-2"></i> Top Performers</h5>
             </div>
-            
-            <!-- Top 3 Users Podium -->
-            {% if top_users and top_users|length >= 3 %}
-                <div class="card border-0 shadow-sm mt-4">
-                    <div class="card-header bg-warning text-dark">
-                        <h5 class="mb-0">Top 3 Legal Professionals</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="podium d-flex justify-content-between align-items-end my-4">
-                            <!-- 2nd Place -->
-                            <div class="podium-item text-center" style="width: 30%;">
-                                <div class="avatar mb-2 mx-auto rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                                    <h3 class="text-white">{{ top_users[1].level }}</h3>
-                                </div>
-                                <h5 class="mb-0">{{ top_users[1].user.username }}</h5>
-                                <div class="podium-block bg-secondary" style="height: 80px;">
-                                    <span class="badge bg-silver mt-2">2</span>
-                                </div>
-                                <p class="mt-2 mb-0">{{ top_users[1].total_points }} pts</p>
+            <div class="card-body p-0">
+                {% if top_users %}
+                <div class="row g-0">
+                    {% for user in top_users[:3] %}
+                    <div class="col-md-12">
+                        <div class="p-3 text-center border-bottom position-relative" 
+                             style="{% if loop.index == 1 %}background-color: rgba(255, 215, 0, 0.15);{% elif loop.index == 2 %}background-color: rgba(192, 192, 192, 0.15);{% elif loop.index == 3 %}background-color: rgba(205, 127, 50, 0.15);{% endif %}">
+                            
+                            <!-- Position Badge -->
+                            <div class="position-absolute top-0 start-0 p-2">
+                                <span class="badge rounded-pill {% if loop.index == 1 %}bg-warning text-dark{% elif loop.index == 2 %}bg-secondary{% elif loop.index == 3 %}bg-danger{% endif %}">
+                                    {{ loop.index }}
+                                </span>
                             </div>
                             
-                            <!-- 1st Place -->
-                            <div class="podium-item text-center" style="width: 40%;">
-                                <div class="avatar mb-2 mx-auto rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
-                                    <h2 class="text-white">{{ top_users[0].level }}</h2>
-                                </div>
-                                <h4 class="mb-0">{{ top_users[0].user.username }}</h4>
-                                <div class="podium-block bg-warning" style="height: 120px;">
-                                    <span class="badge bg-gold mt-2">1</span>
-                                </div>
-                                <p class="mt-2 mb-0">{{ top_users[0].total_points }} pts</p>
+                            <!-- Points Badge -->
+                            <div class="position-absolute top-0 end-0 p-2">
+                                <span class="badge bg-primary">{{ user.total_points }} pts</span>
                             </div>
                             
-                            <!-- 3rd Place -->
-                            <div class="podium-item text-center" style="width: 30%;">
-                                <div class="avatar mb-2 mx-auto rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                    <h4 class="text-white">{{ top_users[2].level }}</h4>
+                            <!-- User Icon -->
+                            <div class="mb-2 mt-3">
+                                <div class="d-inline-flex justify-content-center align-items-center rounded-circle p-3 mb-2 
+                                            {% if loop.index == 1 %}bg-warning bg-opacity-25{% elif loop.index == 2 %}bg-secondary bg-opacity-25{% elif loop.index == 3 %}bg-danger bg-opacity-25{% endif %}">
+                                    <i class="fas fa-user fa-3x {% if loop.index == 1 %}text-warning{% elif loop.index == 2 %}text-secondary{% elif loop.index == 3 %}text-danger{% endif %}"></i>
                                 </div>
-                                <h5 class="mb-0">{{ top_users[2].user.username }}</h5>
-                                <div class="podium-block bg-danger" style="height: 50px;">
-                                    <span class="badge bg-bronze mt-2">3</span>
+                                <h5 class="mt-2 mb-0">{{ user.username }}</h5>
+                                <small class="text-muted">{{ user.title }}</small>
+                            </div>
+                            
+                            <!-- User Stats -->
+                            <div class="d-flex justify-content-between mt-3">
+                                <div class="text-center px-2">
+                                    <h6>Level</h6>
+                                    <span class="badge bg-info rounded-pill">{{ user.level }}</span>
                                 </div>
-                                <p class="mt-2 mb-0">{{ top_users[2].total_points }} pts</p>
+                                <div class="text-center px-2">
+                                    <h6>Streak</h6>
+                                    <span class="badge bg-danger rounded-pill">{{ user.streak_days }} days</span>
+                                </div>
+                                <div class="text-center px-2">
+                                    <h6>Achievements</h6>
+                                    <span class="badge bg-success rounded-pill">{{ user.achievements_count }}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
+                    {% endfor %}
                 </div>
-            {% endif %}
+                {% else %}
+                <div class="text-center p-4">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <h5>No users on the leaderboard yet</h5>
+                    <p>Start earning points to claim your spot!</p>
+                </div>
+                {% endif %}
+            </div>
         </div>
         
-        <div class="col-md-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">Top Legal Professionals</h5>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th scope="col" width="70">Rank</th>
-                                    <th scope="col">User</th>
-                                    <th scope="col">Level</th>
-                                    <th scope="col">Title</th>
-                                    <th scope="col" class="text-end">Points</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for profile in top_users %}
-                                    <tr class="{{ 'table-success' if profile.user_id == current_user.id }}">
-                                        <td class="text-center">
-                                            {% if loop.index == 1 %}
-                                                <span class="badge rounded-pill bg-warning text-dark">1</span>
-                                            {% elif loop.index == 2 %}
-                                                <span class="badge rounded-pill bg-secondary">2</span>
-                                            {% elif loop.index == 3 %}
-                                                <span class="badge rounded-pill bg-danger">3</span>
-                                            {% else %}
-                                                {{ loop.index }}
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="avatar me-2 rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
-                                                    <span class="text-white">{{ profile.user.username[0]|upper }}</span>
-                                                </div>
-                                                {{ profile.user.username }}
-                                                
-                                                {% if profile.user_id == current_user.id %}
-                                                    <span class="badge bg-info ms-2">You</span>
-                                                {% endif %}
-                                            </div>
-                                        </td>
-                                        <td>{{ profile.level }}</td>
-                                        <td>{{ profile.title }}</td>
-                                        <td class="text-end">{{ profile.total_points }}</td>
-                                    </tr>
-                                {% endfor %}
-                                
-                                {% if not top_users %}
-                                    <tr>
-                                        <td colspan="5" class="text-center py-3">No users found.</td>
-                                    </tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
+        <!-- Your Rank Card -->
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i> Your Ranking</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <div class="d-inline-flex justify-content-center align-items-center rounded-circle bg-info bg-opacity-10 p-3 mb-3">
+                        <i class="fas fa-user fa-3x text-info"></i>
                     </div>
+                    <h4 class="mb-1">{{ current_user.username }}</h4>
+                    <p class="text-muted mb-3">{{ current_user_stats.title }}</p>
+                    
+                    <div class="position-relative my-4">
+                        <div style="height: 1px; background-color: #dee2e6; position: absolute; top: 50%; left: 0; right: 0; z-index: 1;"></div>
+                        <div class="position-relative z-index-2" style="z-index: 2;">
+                            <span class="badge bg-primary fs-5 px-4 py-2">
+                                Rank #{{ current_user_rank }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="row text-center mt-4">
+                        <div class="col-4">
+                            <h5>{{ current_user_stats.total_points }}</h5>
+                            <small class="text-muted">Points</small>
+                        </div>
+                        <div class="col-4">
+                            <h5>{{ current_user_stats.level }}</h5>
+                            <small class="text-muted">Level</small>
+                        </div>
+                        <div class="col-4">
+                            <h5>{{ current_user_stats.achievements_earned }}</h5>
+                            <small class="text-muted">Achievements</small>
+                        </div>
+                    </div>
+                    
+                    {% if points_to_next_rank > 0 %}
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle me-2"></i> You need {{ points_to_next_rank }} more points to reach rank #{{ current_user_rank - 1 }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <!-- Full Leaderboard -->
+        <div class="card">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-list-ol me-2"></i> Full Leaderboard</h5>
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-light active" data-period="all">All Time</button>
+                    <button type="button" class="btn btn-outline-light" data-period="month">This Month</button>
+                    <button type="button" class="btn btn-outline-light" data-period="week">This Week</button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 10%">Rank</th>
+                                <th style="width: 40%">User</th>
+                                <th style="width: 15%" class="text-center">Level</th>
+                                <th style="width: 15%" class="text-center">Streak</th>
+                                <th style="width: 20%" class="text-center">Points</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if all_users %}
+                            {% for user in all_users %}
+                            <tr class="{% if user.id == current_user.id %}table-primary{% endif %}">
+                                <td class="align-middle">
+                                    {% if loop.index <= 3 %}
+                                    <span class="badge rounded-pill {% if loop.index == 1 %}bg-warning text-dark{% elif loop.index == 2 %}bg-secondary{% elif loop.index == 3 %}bg-danger{% endif %} fs-6">
+                                        {{ loop.index }}
+                                    </span>
+                                    {% else %}
+                                    <span class="badge rounded-pill bg-light text-dark fs-6">{{ loop.index }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="align-middle">
+                                    <div class="d-flex align-items-center">
+                                        <div class="d-inline-flex justify-content-center align-items-center rounded-circle p-2 me-3
+                                                    {% if user.id == current_user.id %}bg-primary bg-opacity-10{% else %}bg-secondary bg-opacity-10{% endif %}">
+                                            <i class="fas fa-user fa-lg {% if user.id == current_user.id %}text-primary{% else %}text-secondary{% endif %}"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0">{{ user.username }}</h6>
+                                            <small class="text-muted">{{ user.title }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center align-middle">
+                                    <span class="badge bg-info">{{ user.level }}</span>
+                                </td>
+                                <td class="text-center align-middle">
+                                    <span class="badge bg-danger">{{ user.streak_days }} days</span>
+                                </td>
+                                <td class="text-center align-middle">
+                                    <span class="badge bg-primary fs-6">{{ user.total_points }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center p-4">
+                                    <i class="fas fa-trophy fa-2x text-muted mb-2"></i>
+                                    <h5>No leaderboard data available</h5>
+                                    <p>Be the first to earn points and appear on the leaderboard!</p>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -140,26 +195,28 @@
 </div>
 {% endblock %}
 
-{% block styles %}
-<style>
-    .bg-gold {
-        background-color: #FFD700;
-        color: #212529;
-    }
-    
-    .bg-silver {
-        background-color: #C0C0C0;
-        color: #212529;
-    }
-    
-    .bg-bronze {
-        background-color: #CD7F32;
-        color: white;
-    }
-    
-    .podium-block {
-        border-radius: 6px 6px 0 0;
-        position: relative;
-    }
-</style>
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Record leaderboard view activity
+        if (window.gamification) {
+            window.gamification.recordActivity('view_leaderboard', 'Viewed leaderboard');
+        }
+        
+        // Period filter buttons
+        const periodButtons = document.querySelectorAll('[data-period]');
+        periodButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Set active state
+                periodButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                
+                // In a real implementation, this would filter the leaderboard
+                // For now, we'll just show a notification
+                const period = this.getAttribute('data-period');
+                alert('Filtering for period: ' + period + ' is not implemented yet.');
+            });
+        });
+    });
+</script>
 {% endblock %}

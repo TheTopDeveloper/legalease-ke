@@ -23,75 +23,197 @@ def dashboard():
     db.session.commit()
     
     # Get user achievements
-    user_achievements = UserAchievement.query.filter_by(user_id=current_user.id).all()
-    earned_achievement_ids = [ua.achievement_id for ua in user_achievements]
+    user_achievements = db.session.query(UserAchievement, Achievement).join(
+        Achievement, UserAchievement.achievement_id == Achievement.id
+    ).filter(UserAchievement.user_id == current_user.id).all()
     
-    # Get all achievements, marking which ones the user has earned
-    all_achievements = Achievement.query.filter_by(is_active=True).all()
-    for achievement in all_achievements:
-        achievement.earned = achievement.id in earned_achievement_ids
+    # Format user achievements for display
+    recent_achievements = []
+    for ua, achievement in user_achievements[:6]:  # Get most recent 6
+        achievement_data = {
+            'id': achievement.id,
+            'name': achievement.name,
+            'description': achievement.description,
+            'icon': achievement.icon,
+            'points': achievement.points,
+            'category': achievement.category,
+            'earned': True,
+            'earned_at': ua.earned_at
+        }
+        recent_achievements.append(achievement_data)
+    
+    # If we don't have enough earned achievements, add some unearned ones
+    earned_ids = [ua.achievement_id for ua, _ in user_achievements]
+    if len(recent_achievements) < 6:
+        unearned = Achievement.query.filter(
+            ~Achievement.id.in_(earned_ids), 
+            Achievement.is_active == True
+        ).limit(6 - len(recent_achievements)).all()
+        
+        for achievement in unearned:
+            achievement_data = {
+                'id': achievement.id,
+                'name': achievement.name,
+                'description': achievement.description,
+                'icon': achievement.icon,
+                'points': achievement.points,
+                'category': achievement.category,
+                'earned': False
+            }
+            recent_achievements.append(achievement_data)
     
     # Get active challenges
     active_challenges = Challenge.query.filter(
         Challenge.is_active == True,
         Challenge.start_date <= datetime.utcnow(),
         Challenge.end_date >= datetime.utcnow()
-    ).all()
+    ).order_by(Challenge.end_date).limit(6).all()
     
     # Get user's active challenges
     user_challenges = UserChallenge.query.filter_by(
         user_id=current_user.id,
         status='accepted'
     ).all()
+    user_challenge_dict = {uc.challenge_id: uc for uc in user_challenges}
     
-    # Get recent activities
-    recent_activities = Activity.query.filter_by(
-        user_id=current_user.id
-    ).order_by(Activity.created_at.desc()).limit(10).all()
+    # Format challenges for display
+    challenge_data = []
+    for challenge in active_challenges:
+        days_remaining = (challenge.end_date - datetime.utcnow()).days + 1
+        
+        challenge_dict = {
+            'id': challenge.id,
+            'title': challenge.title,
+            'description': challenge.description,
+            'points': challenge.points,
+            'challenge_type': challenge.challenge_type,
+            'start_date': challenge.start_date,
+            'end_date': challenge.end_date,
+            'days_remaining': days_remaining,
+            'is_active': challenge.is_active,
+            'accepted': False,
+            'status': 'available'
+        }
+        
+        # If user has accepted this challenge
+        if challenge.id in user_challenge_dict:
+            user_challenge = user_challenge_dict[challenge.id]
+            challenge_dict['accepted'] = True
+            challenge_dict['status'] = user_challenge.status
+            
+            # Get progress if available
+            if user_challenge.progress:
+                progress = user_challenge.get_progress()
+                target = 1  # Default target
+                
+                # Get target from requirements
+                requirements = challenge.get_requirements()
+                if requirements and 'target' in requirements:
+                    target = requirements['target']
+                
+                current = progress.get('progress', 0)
+                challenge_dict['current_progress'] = current
+                challenge_dict['target_progress'] = target
+                challenge_dict['progress_percentage'] = min(int((current / target) * 100), 100)
+        
+        challenge_data.append(challenge_dict)
     
     # Calculate progress to next level
     next_level_points = (profile.level * 100)
     current_level_points = ((profile.level - 1) * 100)
-    level_progress = ((profile.total_points - current_level_points) / 
-                      (next_level_points - current_level_points) * 100)
+    level_progress = round(((profile.total_points - current_level_points) / 
+                           (next_level_points - current_level_points) * 100), 1)
+    
+    # User stats for dashboard
+    user_stats = {
+        'level': profile.level,
+        'title': profile.title,
+        'total_points': profile.total_points,
+        'streak_days': profile.streak_days,
+        'last_active': profile.last_active,
+        'total_cases_managed': profile.total_cases_managed,
+        'total_documents_created': profile.total_documents_created,
+        'total_research_conducted': profile.total_research_conducted,
+        'level_progress': level_progress,
+        'points_to_next_level': next_level_points - profile.total_points,
+        'achievements_earned': len(earned_ids),
+        'total_achievements': Achievement.query.filter_by(is_active=True).count()
+    }
     
     return render_template(
         'gamification/dashboard.html',
-        profile=profile,
-        achievements=all_achievements,
-        active_challenges=active_challenges,
-        user_challenges=user_challenges,
-        recent_activities=recent_activities,
-        level_progress=level_progress
+        user_stats=user_stats,
+        recent_achievements=recent_achievements,
+        active_challenges=challenge_data
     )
 
 @gamification_bp.route('/achievements')
 @login_required
 def achievements():
     """View all achievements in the system"""
-    # Get user achievements
-    user_achievements = UserAchievement.query.filter_by(user_id=current_user.id).all()
-    earned_achievement_ids = [ua.achievement_id for ua in user_achievements]
+    # Get user achievements with full achievement data
+    user_achievements = db.session.query(UserAchievement, Achievement).join(
+        Achievement, UserAchievement.achievement_id == Achievement.id
+    ).filter(UserAchievement.user_id == current_user.id).all()
     
-    # Get achievements by category
-    achievement_categories = {}
-    for category in ['case', 'document', 'research', 'general']:
-        achievements = Achievement.query.filter_by(
-            category=category, 
-            is_active=True
-        ).all()
+    # Format user achievements for template
+    formatted_user_achievements = []
+    for ua, achievement in user_achievements:
+        achievement_dict = {
+            'id': achievement.id,
+            'name': achievement.name,
+            'description': achievement.description,
+            'icon': achievement.icon,
+            'points': achievement.points,
+            'category': achievement.category,
+            'earned_at': ua.earned_at
+        }
         
-        # Mark achievements as earned or not
-        for achievement in achievements:
-            achievement.earned = achievement.id in earned_achievement_ids
+        # Add category color
+        if achievement.category == 'case':
+            achievement_dict['category_color'] = 'primary'
+        elif achievement.category == 'document':
+            achievement_dict['category_color'] = 'info'
+        elif achievement.category == 'research':
+            achievement_dict['category_color'] = 'warning'
+        else:
+            achievement_dict['category_color'] = 'secondary'
             
-        achievement_categories[category] = achievements
+        formatted_user_achievements.append(achievement_dict)
+    
+    # Get all achievements
+    all_achievements = Achievement.query.filter_by(is_active=True).all()
+    formatted_all_achievements = []
+    
+    earned_achievement_ids = [ua.achievement_id for ua, _ in user_achievements]
+    
+    for achievement in all_achievements:
+        achievement_dict = {
+            'id': achievement.id,
+            'name': achievement.name,
+            'description': achievement.description,
+            'icon': achievement.icon,
+            'points': achievement.points,
+            'category': achievement.category,
+            'earned': achievement.id in earned_achievement_ids
+        }
+        
+        # Add category color
+        if achievement.category == 'case':
+            achievement_dict['category_color'] = 'primary'
+        elif achievement.category == 'document':
+            achievement_dict['category_color'] = 'info'
+        elif achievement.category == 'research':
+            achievement_dict['category_color'] = 'warning'
+        else:
+            achievement_dict['category_color'] = 'secondary'
+            
+        formatted_all_achievements.append(achievement_dict)
     
     return render_template(
         'gamification/achievements.html',
-        achievement_categories=achievement_categories,
-        earned_count=len(earned_achievement_ids),
-        total_count=Achievement.query.filter_by(is_active=True).count()
+        user_achievements=formatted_user_achievements,
+        all_achievements=formatted_all_achievements
     )
 
 @gamification_bp.route('/challenges')
@@ -105,30 +227,92 @@ def challenges():
         Challenge.end_date >= datetime.utcnow()
     ).all()
     
-    # Get user's accepted challenges
+    # Get all user challenges (including completed ones)
     user_challenges = UserChallenge.query.filter_by(user_id=current_user.id).all()
-    user_challenge_ids = {uc.challenge_id: uc for uc in user_challenges}
+    user_challenge_dict = {uc.challenge_id: uc for uc in user_challenges}
     
-    # Mark challenges as accepted, completed, or available
+    # Get some completed challenges to show history
+    completed_challenges = Challenge.query.join(
+        UserChallenge, Challenge.id == UserChallenge.challenge_id
+    ).filter(
+        UserChallenge.user_id == current_user.id,
+        UserChallenge.status == 'completed'
+    ).order_by(UserChallenge.completed_at.desc()).limit(3).all()
+    
+    # Format all challenges (active + completed)
+    all_challenges = []
+    
+    # Process active challenges
     for challenge in active_challenges:
-        if challenge.id in user_challenge_ids:
-            user_challenge = user_challenge_ids[challenge.id]
-            challenge.status = user_challenge.status
-            challenge.progress = user_challenge.get_progress() if user_challenge.progress else {}
-        else:
-            challenge.status = 'available'
-            challenge.progress = {}
+        days_remaining = (challenge.end_date - datetime.utcnow()).days + 1
+        
+        challenge_dict = {
+            'id': challenge.id,
+            'title': challenge.title,
+            'description': challenge.description,
+            'points': challenge.points,
+            'challenge_type': challenge.challenge_type,
+            'start_date': challenge.start_date,
+            'end_date': challenge.end_date,
+            'days_remaining': days_remaining,
+            'is_active': challenge.is_active,
+            'status': 'available'
+        }
+        
+        # If user has accepted or completed this challenge
+        if challenge.id in user_challenge_dict:
+            user_challenge = user_challenge_dict[challenge.id]
+            challenge_dict['status'] = user_challenge.status
+            
+            # Get progress if available
+            if user_challenge.progress:
+                progress = user_challenge.get_progress()
+                target = 1  # Default target
+                
+                # Get target from requirements
+                requirements = challenge.get_requirements()
+                if requirements and 'target' in requirements:
+                    target = requirements['target']
+                
+                current = progress.get('progress', 0)
+                challenge_dict['current_progress'] = current
+                challenge_dict['target_progress'] = target
+                challenge_dict['progress_percentage'] = min(int((current / target) * 100), 100)
+                
+            # Add completion date if completed
+            if user_challenge.status == 'completed' and user_challenge.completed_at:
+                challenge_dict['completed_at'] = user_challenge.completed_at
+        
+        all_challenges.append(challenge_dict)
     
-    # Split challenges by type
-    daily_challenges = [c for c in active_challenges if c.challenge_type == 'daily']
-    weekly_challenges = [c for c in active_challenges if c.challenge_type == 'weekly']
-    special_challenges = [c for c in active_challenges if c.challenge_type not in ['daily', 'weekly']]
+    # Process completed challenges (that aren't active anymore)
+    for challenge in completed_challenges:
+        # Skip if already added (it's still active)
+        if challenge.id in [c.get('id') for c in all_challenges]:
+            continue
+            
+        user_challenge = user_challenge_dict.get(challenge.id)
+        if not user_challenge:
+            continue
+            
+        challenge_dict = {
+            'id': challenge.id,
+            'title': challenge.title,
+            'description': challenge.description,
+            'points': challenge.points,
+            'challenge_type': challenge.challenge_type,
+            'start_date': challenge.start_date,
+            'end_date': challenge.end_date,
+            'is_active': False,
+            'status': 'completed',
+            'completed_at': user_challenge.completed_at
+        }
+        
+        all_challenges.append(challenge_dict)
     
     return render_template(
         'gamification/challenges.html',
-        daily_challenges=daily_challenges,
-        weekly_challenges=weekly_challenges,
-        special_challenges=special_challenges
+        challenges=all_challenges
     )
 
 @gamification_bp.route('/challenge/<int:challenge_id>/accept', methods=['POST'])
@@ -184,23 +368,73 @@ def accept_challenge(challenge_id):
 @login_required
 def leaderboard():
     """View user leaderboard"""
-    # Get top users by total points
-    top_users = UserProfile.query.order_by(UserProfile.total_points.desc()).limit(20).all()
+    # Get all users with their profiles for the leaderboard
+    all_users = db.session.query(
+        UserProfile, User
+    ).join(
+        User, UserProfile.user_id == User.id
+    ).order_by(
+        UserProfile.total_points.desc()
+    ).all()
     
-    # Get user's rank
+    # Format users for the leaderboard
+    formatted_users = []
+    for profile, user in all_users:
+        # Count achievements
+        achievement_count = UserAchievement.query.filter_by(user_id=user.id).count()
+        
+        user_data = {
+            'id': user.id,
+            'username': user.username,
+            'level': profile.level,
+            'title': profile.title,
+            'total_points': profile.total_points,
+            'streak_days': profile.streak_days,
+            'achievements_count': achievement_count
+        }
+        formatted_users.append(user_data)
+    
+    # Get current user's stats
     user_profile = UserProfile.query.filter_by(user_id=current_user.id).first()
-    if user_profile:
-        # Count users with more points
-        user_rank = UserProfile.query.filter(
-            UserProfile.total_points > user_profile.total_points
-        ).count() + 1
-    else:
-        user_rank = "N/A"
+    if not user_profile:
+        # Create profile if it doesn't exist
+        user_profile = UserProfile(user_id=current_user.id)
+        db.session.add(user_profile)
+        db.session.commit()
+    
+    # Get user achievements count
+    achievements_earned = UserAchievement.query.filter_by(user_id=current_user.id).count()
+    
+    # Current user stats for the profile card
+    current_user_stats = {
+        'level': user_profile.level,
+        'title': user_profile.title,
+        'total_points': user_profile.total_points,
+        'achievements_earned': achievements_earned
+    }
+    
+    # Calculate user's rank
+    user_rank = 1
+    points_to_next_rank = 0
+    
+    if formatted_users:
+        for idx, user_data in enumerate(formatted_users):
+            if user_data['id'] == current_user.id:
+                user_rank = idx + 1
+                
+                # Calculate points needed to reach next rank
+                if idx > 0:  # Not already #1
+                    next_rank_user = formatted_users[idx - 1]
+                    points_to_next_rank = next_rank_user['total_points'] - user_data['total_points'] + 1
+                break
     
     return render_template(
         'gamification/leaderboard.html',
-        top_users=top_users,
-        user_rank=user_rank
+        all_users=formatted_users,
+        top_users=formatted_users[:3] if len(formatted_users) >= 3 else formatted_users,
+        current_user_stats=current_user_stats,
+        current_user_rank=user_rank,
+        points_to_next_rank=points_to_next_rank
     )
 
 @gamification_bp.route('/record_activity', methods=['POST'])
