@@ -2,283 +2,176 @@
 Initialize database with default gamification achievements and challenges.
 Run this script after setting up the database to add initial data.
 """
+
 import json
+import os
 from datetime import datetime, timedelta
-import logging
 from app import app, db
 from models import Achievement, Challenge
-
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 def create_achievements():
     """Create default achievements"""
     achievements = [
-        # General achievements
         {
             'name': 'First Login',
-            'description': 'Log into the system for the first time',
+            'description': 'Logged in for the first time.',
             'category': 'general',
-            'points': 5,
-            'icon': 'bi bi-door-open',
-            'requirement': json.dumps({})
+            'points': 10,
+            'icon': 'fas fa-door-open',
+            'requirement': json.dumps({'login_count': 1})
         },
         {
-            'name': 'Profile Completer',
-            'description': 'Complete your user profile with all information',
-            'category': 'general',
-            'points': 15,
-            'icon': 'bi bi-person-check',
-            'requirement': json.dumps({})
-        },
-        {
-            'name': 'Consistent Professional',
-            'description': 'Maintain a login streak of 5 days',
+            'name': 'Legal Beginner',
+            'description': 'Reached level 2.',
             'category': 'general',
             'points': 20,
-            'icon': 'bi bi-calendar-check',
-            'requirement': json.dumps({'min_streak': 5})
+            'icon': 'fas fa-graduation-cap',
+            'requirement': json.dumps({'min_level': 2})
         },
-        {
-            'name': 'Legal Expert',
-            'description': 'Reach level 5',
-            'category': 'general',
-            'points': 30,
-            'icon': 'bi bi-award',
-            'requirement': json.dumps({'min_level': 5})
-        },
-        
-        # Case achievements
-        {
-            'name': 'Case Novice',
-            'description': 'Create your first legal case',
-            'category': 'case',
-            'points': 10,
-            'icon': 'bi bi-folder-plus',
-            'requirement': json.dumps({'min_cases': 1})
-        },
-        {
-            'name': 'Case Manager',
-            'description': 'Manage 5 different legal cases',
-            'category': 'case',
-            'points': 25,
-            'icon': 'bi bi-folder2-open',
-            'requirement': json.dumps({'min_cases': 5})
-        },
-        {
-            'name': 'Case Expert',
-            'description': 'Manage 20 different legal cases',
-            'category': 'case',
-            'points': 50,
-            'icon': 'bi bi-briefcase',
-            'requirement': json.dumps({'min_cases': 20})
-        },
-        
-        # Document achievements
-        {
-            'name': 'Document Author',
-            'description': 'Create your first legal document',
-            'category': 'document',
-            'points': 10,
-            'icon': 'bi bi-file-earmark-text',
-            'requirement': json.dumps({'min_documents': 1})
-        },
-        {
-            'name': 'Prolific Writer',
-            'description': 'Create 10 different legal documents',
-            'category': 'document',
-            'points': 25,
-            'icon': 'bi bi-file-earmark-richtext',
-            'requirement': json.dumps({'min_documents': 10})
-        },
-        {
-            'name': 'Document Master',
-            'description': 'Create 30 different legal documents',
-            'category': 'document',
-            'points': 50,
-            'icon': 'bi bi-file-earmark-check',
-            'requirement': json.dumps({'min_documents': 30})
-        },
-        
-        # Research achievements
-        {
-            'name': 'Legal Researcher',
-            'description': 'Conduct your first legal research',
-            'category': 'research',
-            'points': 10,
-            'icon': 'bi bi-search',
-            'requirement': json.dumps({'min_research': 1})
-        },
-        {
-            'name': 'Research Explorer',
-            'description': 'Conduct 5 different legal research queries',
-            'category': 'research',
-            'points': 25,
-            'icon': 'bi bi-book',
-            'requirement': json.dumps({'min_research': 5})
-        },
-        {
-            'name': 'Research Scholar',
-            'description': 'Conduct 15 different legal research queries',
-            'category': 'research',
-            'points': 50,
-            'icon': 'bi bi-journal-check',
-            'requirement': json.dumps({'min_research': 15})
-        },
-        
-        # Point-based achievements
         {
             'name': 'Point Collector',
-            'description': 'Earn 100 points',
+            'description': 'Earned 500 points.',
             'category': 'general',
-            'points': 20,
-            'icon': 'bi bi-graph-up',
-            'requirement': json.dumps({'min_points': 100})
-        },
-        {
-            'name': 'Point Gatherer',
-            'description': 'Earn 500 points',
-            'category': 'general',
-            'points': 30,
-            'icon': 'bi bi-graph-up-arrow',
+            'points': 25,
+            'icon': 'fas fa-star',
             'requirement': json.dumps({'min_points': 500})
         },
         {
-            'name': 'Point Master',
-            'description': 'Earn 1000 points',
+            'name': 'Case Handler',
+            'description': 'Created your first case.',
+            'category': 'case',
+            'points': 15,
+            'icon': 'fas fa-gavel',
+            'requirement': json.dumps({'min_cases': 1})
+        },
+        {
+            'name': 'Case Master',
+            'description': 'Managed 10 cases.',
+            'category': 'case',
+            'points': 30,
+            'icon': 'case_master.svg',
+            'requirement': json.dumps({'min_cases': 10})
+        },
+        {
+            'name': 'Documentalist',
+            'description': 'Created your first document.',
+            'category': 'document',
+            'points': 15,
+            'icon': 'fas fa-file-alt',
+            'requirement': json.dumps({'min_documents': 1})
+        },
+        {
+            'name': 'Legal Researcher',
+            'description': 'Conducted your first research.',
+            'category': 'research',
+            'points': 15,
+            'icon': 'fas fa-search',
+            'requirement': json.dumps({'min_research': 1})
+        },
+        {
+            'name': 'Legal Eagle',
+            'description': 'Conducted 10 research sessions.',
+            'category': 'research',
+            'points': 30,
+            'icon': 'legal_eagle.svg',
+            'requirement': json.dumps({'min_research': 10})
+        },
+        {
+            'name': 'Streak Master',
+            'description': 'Maintained a 7-day login streak.',
             'category': 'general',
             'points': 50,
-            'icon': 'bi bi-trophy',
-            'requirement': json.dumps({'min_points': 1000})
-        },
+            'icon': 'streak_master.svg',
+            'requirement': json.dumps({'min_streak': 7})
+        }
     ]
     
-    # Check if achievements already exist
-    if Achievement.query.count() > 0:
-        logger.info("Achievements already exist in the database. Skipping creation.")
-        return
+    existing_achievements = {a.name: a for a in Achievement.query.all()}
     
-    # Create achievements
     for achievement_data in achievements:
-        achievement = Achievement(**achievement_data)
-        db.session.add(achievement)
+        name = achievement_data['name']
+        if name not in existing_achievements:
+            achievement = Achievement(**achievement_data)
+            db.session.add(achievement)
+            print(f"Added achievement: {name}")
+        else:
+            # Update existing achievement
+            for key, value in achievement_data.items():
+                setattr(existing_achievements[name], key, value)
+            print(f"Updated achievement: {name}")
     
     db.session.commit()
-    logger.info(f"Created {len(achievements)} achievements")
 
 def create_challenges():
     """Create default challenges"""
-    # Set dates for challenges
     now = datetime.utcnow()
     tomorrow = now + timedelta(days=1)
-    tomorrow_end = datetime(tomorrow.year, tomorrow.month, tomorrow.day, 23, 59, 59)
     next_week = now + timedelta(days=7)
-    next_week_end = datetime(next_week.year, next_week.month, next_week.day, 23, 59, 59)
     
     challenges = [
-        # Daily challenges
-        {
-            'title': 'Login Streak',
-            'description': 'Login to the system today to maintain your streak',
-            'challenge_type': 'daily',
-            'points': 5,
-            'requirements': json.dumps({'activity_type': 'login', 'count': 1}),
-            'start_date': now,
-            'end_date': tomorrow_end,
-            'is_active': True
-        },
-        {
-            'title': 'Create a Document',
-            'description': 'Create at least one new legal document today',
-            'challenge_type': 'daily',
-            'points': 10,
-            'requirements': json.dumps({'activity_type': 'create_document', 'count': 1}),
-            'start_date': now,
-            'end_date': tomorrow_end,
-            'is_active': True
-        },
-        {
-            'title': 'Update a Case',
-            'description': 'Update at least one case with new information',
-            'challenge_type': 'daily',
-            'points': 8,
-            'requirements': json.dumps({'activity_type': 'update_case', 'count': 1}),
-            'start_date': now,
-            'end_date': tomorrow_end,
-            'is_active': True
-        },
-        
-        # Weekly challenges
         {
             'title': 'Research Champion',
-            'description': 'Conduct at least 3 legal research queries this week',
+            'description': 'Conduct 3 legal research sessions in a week.',
             'challenge_type': 'weekly',
-            'points': 25,
-            'requirements': json.dumps({'activity_type': 'research', 'count': 3}),
+            'points': 50,
+            'requirements': json.dumps({'type': 'research', 'target': 3}),
             'start_date': now,
-            'end_date': next_week_end,
+            'end_date': next_week,
             'is_active': True
         },
         {
-            'title': 'Document Expert',
-            'description': 'Create 5 different legal documents this week',
+            'title': 'Document Master',
+            'description': 'Create 2 legal documents in a week.',
             'challenge_type': 'weekly',
-            'points': 30,
-            'requirements': json.dumps({'activity_type': 'create_document', 'count': 5}),
+            'points': 40,
+            'requirements': json.dumps({'type': 'document', 'target': 2}),
             'start_date': now,
-            'end_date': next_week_end,
+            'end_date': next_week,
             'is_active': True
         },
         {
-            'title': 'Case Manager',
-            'description': 'Create or update at least 3 different cases this week',
-            'challenge_type': 'weekly',
-            'points': 30,
-            'requirements': json.dumps({'activity_types': ['create_case', 'update_case'], 'count': 3}),
+            'title': 'Daily Login',
+            'description': 'Log in to the platform today.',
+            'challenge_type': 'daily',
+            'points': 10,
+            'requirements': json.dumps({'type': 'login', 'target': 1}),
             'start_date': now,
-            'end_date': next_week_end,
+            'end_date': tomorrow,
             'is_active': True
-        },
-        
-        # Special challenge
-        {
-            'title': 'Complete Your Profile',
-            'description': 'Update your profile with all required information',
-            'challenge_type': 'special',
-            'points': 20,
-            'requirements': json.dumps({'activity_type': 'complete_profile', 'count': 1}),
-            'start_date': now,
-            'end_date': now + timedelta(days=30),
-            'is_active': True
-        },
+        }
     ]
     
-    # Check if challenges already exist for today
-    today_start = datetime(now.year, now.month, now.day, 0, 0, 0)
-    existing_challenges = Challenge.query.filter(
-        Challenge.challenge_type == 'daily',
-        Challenge.start_date >= today_start
-    ).count()
+    # Clear expired challenges
+    expired = Challenge.query.filter(Challenge.end_date < now).all()
+    for challenge in expired:
+        db.session.delete(challenge)
     
-    if existing_challenges > 0:
-        logger.info("Challenges already exist for today. Skipping creation.")
-        return
+    # Add or update challenges
+    existing_challenges = {c.title: c for c in Challenge.query.filter(Challenge.end_date >= now).all()}
     
-    # Create challenges
     for challenge_data in challenges:
-        challenge = Challenge(**challenge_data)
-        db.session.add(challenge)
+        title = challenge_data['title']
+        if title not in existing_challenges:
+            challenge = Challenge(**challenge_data)
+            db.session.add(challenge)
+            print(f"Added challenge: {title}")
+        else:
+            # Update existing challenge if needed
+            existing = existing_challenges[title]
+            if existing.challenge_type == 'daily' and existing.end_date < tomorrow:
+                # Update daily challenge
+                existing.start_date = now
+                existing.end_date = tomorrow
+                print(f"Updated daily challenge: {title}")
     
     db.session.commit()
-    logger.info(f"Created {len(challenges)} challenges")
 
 def main():
     """Main function to initialize gamification data"""
     with app.app_context():
         create_achievements()
         create_challenges()
-        logger.info("Gamification data initialized successfully")
+        print("Gamification data initialized successfully!")
 
 if __name__ == "__main__":
     main()

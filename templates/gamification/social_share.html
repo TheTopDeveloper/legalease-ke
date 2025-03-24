@@ -1,0 +1,131 @@
+{% extends 'layout.html' %}
+
+{% block title %}Share Your Achievement - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}Share Your Achievement{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0"><i class="fas fa-share-alt me-2"></i> Share on Social Media</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-4">
+                    <h5 class="alert-heading">Thank you for sharing!</h5>
+                    <p>You've earned 10 points for sharing your progress. Spread the word about your achievements with friends and colleagues.</p>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-body text-center">
+                        <h4 class="card-title mb-3">{{ share_title }}</h4>
+                        <p class="card-text">{{ share_text }}</p>
+
+                        <div class="share-preview mt-4 mb-3">
+                            <div class="card preview-card">
+                                <div class="preview-image">
+                                    <img src="{{ share_image }}" alt="Share preview" class="img-fluid">
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title">Kenyan Legal Assistant</h5>
+                                    <p class="card-text text-muted">{{ share_url }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h4 class="mb-3 text-center">Share on:</h4>
+                <div class="d-flex justify-content-center social-buttons mb-4">
+                    <a href="{{ twitter_url }}" target="_blank" class="btn btn-twitter btn-lg mx-2" title="Share on Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="{{ facebook_url }}" target="_blank" class="btn btn-facebook btn-lg mx-2" title="Share on Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="{{ linkedin_url }}" target="_blank" class="btn btn-linkedin btn-lg mx-2" title="Share on LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="{{ whatsapp_url }}" target="_blank" class="btn btn-whatsapp btn-lg mx-2" title="Share on WhatsApp">
+                        <i class="fab fa-whatsapp"></i>
+                    </a>
+                </div>
+
+                <div class="text-center">
+                    <a href="{{ url_for('gamification.dashboard') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    .share-preview {
+        max-width: 500px;
+        margin: 0 auto;
+    }
+    
+    .preview-card {
+        border: 1px solid rgba(0,0,0,0.125);
+        border-radius: 0.25rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .preview-image {
+        height: 250px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+    }
+    
+    .preview-image img {
+        max-height: 100%;
+        max-width: 100%;
+        object-fit: contain;
+    }
+    
+    .social-buttons .btn {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .btn-twitter {
+        background-color: #1DA1F2;
+        color: white;
+    }
+    
+    .btn-facebook {
+        background-color: #4267B2;
+        color: white;
+    }
+    
+    .btn-linkedin {
+        background-color: #0077B5;
+        color: white;
+    }
+    
+    .btn-whatsapp {
+        background-color: #25D366;
+        color: white;
+    }
+    
+    .social-buttons .btn:hover {
+        opacity: 0.9;
+        transform: scale(1.05);
+        transition: all 0.2s;
+    }
+</style>
+{% endblock %}

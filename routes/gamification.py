@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from app import db
-from models import User, UserProfile, Achievement, UserAchievement, Activity, Challenge, UserChallenge
+from models import User, UserProfile, Achievement, UserAchievement, Activity, Challenge, UserChallenge, Case
 import json
 import os
 
@@ -578,3 +578,178 @@ def check_achievements(user_id):
         db.session.commit()
     
     return new_achievements
+
+@gamification_bp.route('/daily-rewards')
+@login_required
+def daily_rewards():
+    """Daily rewards page for claiming tokens"""
+    # Get user profile
+    profile = UserProfile.query.filter_by(user_id=current_user.id).first()
+    if not profile:
+        profile = UserProfile(user_id=current_user.id)
+        db.session.add(profile)
+        db.session.commit()
+    
+    # Update streak if first visit of the day
+    profile.update_streak()
+    db.session.commit()
+    
+    # Calculate daily reward tokens based on streak
+    streak_day = min(profile.streak_days, 7)
+    tokens_map = {
+        1: 5,   # Day 1: 5 tokens
+        2: 5,   # Day 2: 5 tokens
+        3: 10,  # Day 3: 10 tokens
+        4: 10,  # Day 4: 10 tokens
+        5: 15,  # Day 5: 15 tokens
+        6: 15,  # Day 6: 15 tokens
+        7: 25,  # Day 7: 25 tokens (Bonus day)
+    }
+    daily_reward_tokens = tokens_map.get(streak_day, 5)
+    
+    # Check if user has already claimed today's reward
+    daily_reward_claimed = False
+    if profile.last_reward_claim and profile.last_reward_claim.date() == datetime.utcnow().date():
+        daily_reward_claimed = True
+    
+    return render_template(
+        'gamification/daily_reward.html',
+        user_profile=profile,
+        daily_reward_tokens=daily_reward_tokens,
+        daily_reward_claimed=daily_reward_claimed
+    )
+
+@gamification_bp.route('/claim-daily-reward', methods=['POST'])
+@login_required
+def claim_daily_reward():
+    """Claim daily reward tokens"""
+    # Get user profile
+    profile = UserProfile.query.filter_by(user_id=current_user.id).first()
+    if not profile:
+        flash('User profile not found.', 'danger')
+        return redirect(url_for('gamification.daily_rewards'))
+    
+    # Check if user can claim reward
+    if not profile.can_claim_daily_reward():
+        flash('You have already claimed your daily reward today.', 'warning')
+        return redirect(url_for('gamification.daily_rewards'))
+    
+    # Claim reward and get result
+    reward_result = profile.claim_daily_reward()
+    tokens = reward_result['tokens']
+    is_bonus_day = reward_result['is_bonus_day']
+    
+    # Record activity
+    activity = Activity(
+        user_id=current_user.id,
+        activity_type='daily_reward',
+        description=f'Claimed daily reward: {tokens} tokens',
+        points=5  # Bonus points for claiming daily reward
+    )
+    db.session.add(activity)
+    profile.add_points(5)
+    
+    # Special achievement for 7-day streak
+    if is_bonus_day:
+        # Check if "Streak Master" achievement exists
+        streak_master = Achievement.query.filter_by(name='Streak Master').first()
+        if streak_master:
+            # Check if user already has this achievement
+            existing = UserAchievement.query.filter_by(
+                user_id=current_user.id,
+                achievement_id=streak_master.id
+            ).first()
+            
+            if not existing:
+                # Award the achievement
+                user_achievement = UserAchievement(
+                    user_id=current_user.id,
+                    achievement_id=streak_master.id
+                )
+                db.session.add(user_achievement)
+                
+                # Record activity and points
+                activity = Activity(
+                    user_id=current_user.id,
+                    activity_type='earn_achievement',
+                    description=f'Earned achievement: {streak_master.name}',
+                    points=streak_master.points
+                )
+                db.session.add(activity)
+                profile.add_points(streak_master.points)
+                
+                flash(f'🏆 Achievement Unlocked: {streak_master.name}!', 'success')
+    
+    db.session.commit()
+    
+    flash(f'You claimed {tokens} tokens as your daily reward!', 'success')
+    return redirect(url_for('gamification.daily_rewards'))
+
+@gamification_bp.route('/social-share/<string:share_type>/<int:item_id>')
+@login_required
+def social_share(share_type, item_id):
+    """Generate social share links and record sharing activity"""
+    # Initialize default share data
+    share_title = f"I'm using the Kenyan Legal Assistant Platform!"
+    share_text = "Join me in using the best legal platform for Kenyan law professionals."
+    share_url = request.host_url
+    share_image = request.host_url + 'static/images/generated-icon.png'
+    
+    if share_type == 'achievement':
+        # Get achievement details
+        achievement = Achievement.query.get_or_404(item_id)
+        share_title = f"I earned the '{achievement.name}' achievement!"
+        share_text = f"{achievement.description} #KenyanLegalAssistant"
+        # If achievement has an icon that's an image path, use it
+        if achievement.icon and achievement.icon.endswith(('.png', '.jpg', '.svg')):
+            share_image = request.host_url + 'static/images/badges/' + achievement.icon
+    
+    elif share_type == 'level':
+        # Get user profile
+        profile = UserProfile.query.filter_by(user_id=current_user.id).first()
+        if not profile:
+            flash('User profile not found.', 'danger')
+            return redirect(url_for('gamification.dashboard'))
+        
+        share_title = f"I reached '{profile.title}' (Level {profile.level})!"
+        share_text = f"I'm making progress in my legal career with the help of Kenyan Legal Assistant. #KenyanLegalAssistant"
+    
+    elif share_type == 'case':
+        # Get case details (showing minimal info for privacy)
+        case = Case.query.get_or_404(item_id)
+        share_title = "I'm working on an important legal case!"
+        share_text = f"Using Kenyan Legal Assistant to manage my legal cases efficiently. #KenyanLegalAssistant"
+    
+    # Record sharing activity
+    profile = UserProfile.query.filter_by(user_id=current_user.id).first()
+    if profile:
+        profile.social_shares += 1
+        
+        # Record activity
+        activity = Activity(
+            user_id=current_user.id,
+            activity_type='social_share',
+            description=f'Shared {share_type} on social media',
+            points=10  # Points for social sharing
+        )
+        db.session.add(activity)
+        profile.add_points(10)
+        db.session.commit()
+    
+    # Prepare share URLs
+    twitter_url = f"https://twitter.com/intent/tweet?text={share_text}&url={share_url}"
+    facebook_url = f"https://www.facebook.com/sharer/sharer.php?u={share_url}&quote={share_text}"
+    linkedin_url = f"https://www.linkedin.com/sharing/share-offsite/?url={share_url}"
+    whatsapp_url = f"https://api.whatsapp.com/send?text={share_text} {share_url}"
+    
+    return render_template(
+        'gamification/social_share.html',
+        share_title=share_title,
+        share_text=share_text,
+        share_url=share_url,
+        share_image=share_image,
+        twitter_url=twitter_url,
+        facebook_url=facebook_url,
+        linkedin_url=linkedin_url,
+        whatsapp_url=whatsapp_url
+    )
