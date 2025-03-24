@@ -55,11 +55,31 @@
 <div class="row">
     <div class="col-md-12">
         <div class="card mb-4">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between">
                 <h4>Research Query</h4>
+                <span class="badge bg-primary">{{ research.result_count }} results</span>
             </div>
             <div class="card-body">
                 <p>{{ research.query }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Summary</h4>
+            </div>
+            <div class="card-body">
+                <p>{{ research.get_summary() }}</p>
+                
+                {% if research.court_filter %}
+                <div class="mt-2">
+                    <span class="badge bg-info">Court filter: {{ research.court_filter }}</span>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>

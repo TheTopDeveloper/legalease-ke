@@ -61,7 +61,7 @@
                 <thead>
                     <tr>
                         <th>Title</th>
-                        <th>Query</th>
+                        <th>Summary</th>
                         <th>Source</th>
                         <th>Related Case</th>
                         <th>Date</th>
@@ -74,7 +74,13 @@
                         <td>
                             <a href="{{ url_for('research.view_research', research_id=research.id) }}">{{ research.title }}</a>
                         </td>
-                        <td>{{ research.query|truncate(50) }}</td>
+                        <td>
+                            <!-- Use our new summary function to show a better description -->
+                            {% if research.result_count %}
+                                <span class="badge bg-primary">{{ research.result_count }} results</span>
+                            {% endif %}
+                            {{ research.get_summary()|truncate(80) }}
+                        </td>
                         <td>
                             <span class="badge bg-{{ 'primary' if research.source == 'kenyalaw.org' else 'success' if research.source == 'ai_research' else 'info' if research.source == 'ai_analysis' else 'secondary' }}">
                                 {{ research.source }}

@@ -205,6 +205,58 @@ class LegalResearch(db.Model):
             return json.loads(self.results)
         except:
             return []
+            
+    def get_summary(self):
+        """Generate a summary of the research results"""
+        if not self.results:
+            return "No results available."
+            
+        try:
+            results_data = self.get_results_list()
+            
+            # Handle different result formats based on source
+            if self.source == "kenyalaw.org":
+                cases = results_data.get('cases', [])
+                legislation = results_data.get('legislation', [])
+                
+                case_count = len(cases)
+                legislation_count = len(legislation)
+                
+                summary = f"Found {case_count} cases and {legislation_count} legislation items"
+                
+                if self.court_filter:
+                    summary += f" filtered by court: {self.court_filter}"
+                    
+                return summary
+                
+            elif self.source == "ai_research":
+                analysis = results_data.get('analysis', '')
+                result_count = len(results_data.get('results', []))
+                
+                if analysis and len(analysis) > 200:
+                    # Truncate long analysis
+                    analysis_summary = analysis[:200] + "..."
+                else:
+                    analysis_summary = analysis
+                
+                return f"AI Research with {result_count} results. Analysis: {analysis_summary}"
+                
+            elif self.source == "ai_analysis":
+                doc_type = results_data.get('document_type', 'Unknown document')
+                return f"Analysis of {doc_type} document"
+                
+            elif self.source == "precedent_search":
+                binding = results_data.get('binding_precedents', [])
+                persuasive = results_data.get('persuasive_precedents', [])
+                
+                return f"Found {len(binding)} binding and {len(persuasive)} persuasive precedents"
+                
+            else:
+                # Generic fallback
+                return f"Research with {self.result_count} results from {self.source}"
+                
+        except Exception as e:
+            return f"Error generating summary: {str(e)}"
     
     def __repr__(self):
         return f'<LegalResearch {self.id}: {self.title}>'
