@@ -187,7 +187,11 @@ class LegalResearch(db.Model):
     source = db.Column(db.String(100))  # kenyalaw.org, vector_db, llm, etc.
     court_filter = db.Column(db.String(50))  # Court code filter (e.g. KESC, KECA)
     result_count = db.Column(db.Integer, default=0)  # Number of results found
+    has_arguments = db.Column(db.Boolean, default=False)  # Whether this research includes arguments
+    has_rebuttals = db.Column(db.Boolean, default=False)  # Whether this research includes rebuttals
+    tokens_used = db.Column(db.Integer, default=0)  # Number of tokens used for this research
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Foreign keys
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -232,6 +236,10 @@ class LegalResearch(db.Model):
             elif self.source == "ai_research":
                 analysis = results_data.get('analysis', '')
                 result_count = len(results_data.get('results', []))
+                arguments = results_data.get('arguments', [])
+                rebuttals = results_data.get('rebuttals', [])
+                
+                summary_parts = []
                 
                 if analysis and len(analysis) > 200:
                     # Truncate long analysis
@@ -239,17 +247,61 @@ class LegalResearch(db.Model):
                 else:
                     analysis_summary = analysis
                 
-                return f"AI Research with {result_count} results. Analysis: {analysis_summary}"
+                summary_parts.append(f"AI Research with {result_count} results")
+                
+                if analysis_summary:
+                    summary_parts.append(f"Analysis: {analysis_summary}")
+                
+                if arguments and len(arguments) > 0:
+                    summary_parts.append(f"{len(arguments)} legal arguments")
+                    
+                if rebuttals and len(rebuttals) > 0:
+                    summary_parts.append(f"{len(rebuttals)} rebuttals to opposition")
+                
+                return ". ".join(summary_parts)
                 
             elif self.source == "ai_analysis":
                 doc_type = results_data.get('document_type', 'Unknown document')
-                return f"Analysis of {doc_type} document"
+                has_arguments = "arguments" in results_data and len(results_data.get('arguments', [])) > 0
+                
+                summary = f"Analysis of {doc_type} document"
+                if has_arguments:
+                    summary += f" with {len(results_data.get('arguments', []))} potential arguments"
+                    
+                return summary
                 
             elif self.source == "precedent_search":
                 binding = results_data.get('binding_precedents', [])
                 persuasive = results_data.get('persuasive_precedents', [])
+                arguments = results_data.get('arguments', [])
                 
-                return f"Found {len(binding)} binding and {len(persuasive)} persuasive precedents"
+                summary_parts = [f"Found {len(binding)} binding and {len(persuasive)} persuasive precedents"]
+                
+                if arguments and len(arguments) > 0:
+                    summary_parts.append(f"{len(arguments)} potential arguments based on precedents")
+                    
+                return ". ".join(summary_parts)
+                
+            elif self.source == "legal_arguments":
+                arguments = results_data.get('arguments', [])
+                rebuttals = results_data.get('rebuttals', [])
+                evidence = results_data.get('evidence', [])
+                
+                summary_parts = []
+                
+                if arguments and len(arguments) > 0:
+                    summary_parts.append(f"{len(arguments)} legal arguments")
+                    
+                if rebuttals and len(rebuttals) > 0:
+                    summary_parts.append(f"{len(rebuttals)} rebuttals")
+                    
+                if evidence and len(evidence) > 0:
+                    summary_parts.append(f"{len(evidence)} pieces of evidence")
+                    
+                if not summary_parts:
+                    return "Legal argument analysis"
+                    
+                return ". ".join(summary_parts)
                 
             else:
                 # Generic fallback
