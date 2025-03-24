@@ -7,7 +7,7 @@ from sqlalchemy import desc
 
 from app import db
 from models import User, Subscription, TokenPackage, Payment, TokenUsage
-from utils.pesapal import PesaPalPayment
+from utils.pesapal import payment_gateway
 
 billing_bp = Blueprint('billing', __name__)
 
@@ -65,18 +65,21 @@ def subscribe(subscription_id):
         return redirect(url_for('billing.subscriptions'))
     
     # Store selected subscription in session for later
-    current_user.selected_subscription_id = subscription.id
+    payment = Payment(
+        user_id=current_user.id,
+        amount=subscription.price,
+        payment_type='subscription',
+        subscription_id=subscription.id,
+    )
+    db.session.add(payment)
     db.session.commit()
-    
-    # Initialize PesaPal payment
-    pesapal = PesaPalPayment()
     
     try:
         # Prepare the callback URL for after payment
         callback_url = url_for('billing.payment_callback', _external=True)
         
-        # Submit order to PesaPal
-        payment_url, payment = pesapal.submit_order(
+        # Submit order to payment gateway
+        payment_url = payment_gateway.submit_order(
             user=current_user,
             amount=subscription.price,
             description=f"{subscription.name.capitalize()} subscription - {subscription.duration_days} days",
@@ -87,7 +90,7 @@ def subscribe(subscription_id):
         # Store payment ID in session
         session['payment_id'] = payment.id
         
-        # Redirect to PesaPal payment page
+        # Redirect to payment page
         return redirect(payment_url)
         
     except Exception as e:
@@ -105,19 +108,22 @@ def buy_tokens(package_id):
         flash('This token package is not currently available.', 'danger')
         return redirect(url_for('billing.tokens'))
     
-    # Store selected token package in session for later
-    current_user.selected_token_package_id = token_package.id
+    # Create payment record
+    payment = Payment(
+        user_id=current_user.id,
+        amount=token_package.price,
+        payment_type='tokens',
+        token_package_id=token_package.id,
+    )
+    db.session.add(payment)
     db.session.commit()
-    
-    # Initialize PesaPal payment
-    pesapal = PesaPalPayment()
     
     try:
         # Prepare the callback URL for after payment
         callback_url = url_for('billing.payment_callback', _external=True)
         
-        # Submit order to PesaPal
-        payment_url, payment = pesapal.submit_order(
+        # Submit order to payment gateway
+        payment_url = payment_gateway.submit_order(
             user=current_user,
             amount=token_package.price,
             description=f"{token_package.name} Token Package - {token_package.token_count} tokens",
@@ -128,7 +134,7 @@ def buy_tokens(package_id):
         # Store payment ID in session
         session['payment_id'] = payment.id
         
-        # Redirect to PesaPal payment page
+        # Redirect to payment page
         return redirect(payment_url)
         
     except Exception as e:
@@ -164,45 +170,37 @@ def mock_payment(transaction_id):
 @billing_bp.route('/process-payment/<transaction_id>', methods=['POST'])
 def process_payment(transaction_id):
     """Process the mock payment"""
-    action = request.form.get('action', 'cancel')
+    payment_status = request.form.get('payment_status', 'cancel')
     
-    if action not in ['complete', 'fail', 'cancel']:
+    if payment_status not in ['completed', 'failed']:
         flash('Invalid payment action.', 'danger')
         return redirect(url_for('billing.payment_status'))
     
-    payment_system = PesaPalPayment()
+    # Process the payment with our mock system
+    success = payment_gateway.process_payment(transaction_id, status=payment_status)
     
-    if action == 'complete':
-        # Process successful payment
-        success, message = payment_system.process_payment(transaction_id, status='completed')
-        if success:
-            flash('Payment completed successfully!', 'success')
-            # Clear payment ID from session
-            if 'payment_id' in session:
-                session.pop('payment_id')
-            
-            # Redirect based on payment type
-            payment = Payment.query.filter_by(transaction_id=transaction_id).first()
-            if payment:
-                if payment.payment_type == 'subscription':
-                    return redirect(url_for('billing.subscriptions'))
-                elif payment.payment_type == 'tokens':
-                    return redirect(url_for('billing.tokens'))
-            
-            # Default redirect
-            return redirect(url_for('dashboard.index'))
-        else:
-            flash(f'Payment processing issue: {message}', 'warning')
+    if success and payment_status == 'completed':
+        flash('Payment completed successfully!', 'success')
+        # Clear payment ID from session
+        if 'payment_id' in session:
+            session.pop('payment_id')
+        
+        # Redirect based on payment type
+        payment = Payment.query.filter_by(transaction_id=transaction_id).first()
+        if payment:
+            if payment.payment_type == 'subscription':
+                return redirect(url_for('billing.subscriptions'))
+            elif payment.payment_type == 'tokens':
+                return redirect(url_for('billing.tokens'))
+        
+        # Default redirect
+        return redirect(url_for('dashboard.index'))
     
-    elif action == 'fail':
-        # Process failed payment
-        payment_system.process_payment(transaction_id, status='failed')
+    elif success and payment_status == 'failed':
         flash('Payment failed.', 'danger')
     
-    else:  # cancel
-        # Cancel payment
-        payment_system.process_payment(transaction_id, status='cancelled')
-        flash('Payment cancelled.', 'warning')
+    else: 
+        flash('Payment processing error.', 'danger')
     
     return redirect(url_for('billing.payment_status'))
 
@@ -218,6 +216,14 @@ def payment_callback():
 @login_required
 def payment_status():
     """Check payment status"""
+    # Check for transaction ID in query string first
+    transaction_id = request.args.get('transaction_id')
+    if transaction_id:
+        payment = Payment.query.filter_by(transaction_id=transaction_id).first()
+        if payment:
+            session['payment_id'] = payment.id
+    
+    # Otherwise, use payment ID from session
     payment_id = session.get('payment_id')
     
     if not payment_id:
@@ -232,18 +238,69 @@ def payment_status():
             session.pop('payment_id')
         return redirect(url_for('dashboard.index'))
     
-    # For our mock payment system, we just show the payment status
-    # This will be replaced with actual status checks when using a real payment gateway
+    # Get related subscription or token package
+    subscription = None
+    token_package = None
     
-    return render_template('billing/payment_status.html', payment=payment)
+    if payment.subscription_id:
+        subscription = Subscription.query.get(payment.subscription_id)
+    
+    if payment.token_package_id:
+        token_package = TokenPackage.query.get(payment.token_package_id)
+    
+    return render_template('billing/payment_status.html', 
+                           payment=payment,
+                           subscription=subscription,
+                           token_package=token_package)
 
 @billing_bp.route('/billing/history')
 @login_required
 def payment_history():
     """View payment history"""
-    payments = Payment.query.filter_by(user_id=current_user.id).order_by(desc(Payment.created_at)).all()
+    page = request.args.get('page', 1, type=int)
+    payment_type = request.args.get('payment_type')
+    status = request.args.get('status')
     
-    return render_template('billing/history.html', payments=payments)
+    # Filter query based on parameters
+    query = Payment.query.filter_by(user_id=current_user.id)
+    
+    if payment_type:
+        query = query.filter_by(payment_type=payment_type)
+    
+    if status:
+        query = query.filter_by(status=status)
+    
+    # Paginate results
+    per_page = 10
+    pagination = query.order_by(desc(Payment.created_at)).paginate(page=page, per_page=per_page)
+    payments = pagination.items
+    
+    # Calculate payment statistics
+    total_spent = db.session.query(db.func.sum(Payment.amount)).filter_by(
+        user_id=current_user.id, status='completed').scalar() or 0
+    
+    # Get total tokens purchased
+    token_payments = Payment.query.filter_by(
+        user_id=current_user.id, payment_type='tokens', status='completed'
+    ).join(TokenPackage).all()
+    
+    total_tokens = sum(p.token_package.token_count for p in token_payments if p.token_package)
+    
+    # Count subscription renewals
+    subscription_count = Payment.query.filter_by(
+        user_id=current_user.id, payment_type='subscription', status='completed'
+    ).count()
+    
+    payment_stats = {
+        'total_spent': total_spent,
+        'total_tokens': total_tokens,
+        'subscription_count': subscription_count
+    }
+    
+    return render_template('billing/history.html', 
+                           payments=payments, 
+                           pagination=pagination,
+                           payment_stats=payment_stats)
 
 @billing_bp.route('/ipn/notification', methods=['GET', 'POST'])
 def ipn_notification():
@@ -277,15 +334,18 @@ def create_subscription():
     
     if request.method == 'POST':
         # Create a new subscription plan
+        is_org = request.form.get('is_organization') == 'true'
+        is_active = request.form.get('is_active') == 'true'
+        
         subscription = Subscription(
             name=request.form.get('name'),
             price=float(request.form.get('price')),
             duration_days=int(request.form.get('duration_days')),
             max_cases=int(request.form.get('max_cases')),
             tokens_included=int(request.form.get('tokens_included')),
-            is_organization=bool(request.form.get('is_organization')),
+            is_organization=is_org,
             max_users=int(request.form.get('max_users', 1)),
-            is_active=bool(request.form.get('is_active')),
+            is_active=is_active,
             features=request.form.get('features')
         )
         
@@ -310,14 +370,17 @@ def edit_subscription(subscription_id):
     
     if request.method == 'POST':
         # Update subscription plan
+        is_org = request.form.get('is_organization') == 'true'
+        is_active = request.form.get('is_active') == 'true'
+        
         subscription.name = request.form.get('name')
         subscription.price = float(request.form.get('price'))
         subscription.duration_days = int(request.form.get('duration_days'))
         subscription.max_cases = int(request.form.get('max_cases'))
         subscription.tokens_included = int(request.form.get('tokens_included'))
-        subscription.is_organization = bool(request.form.get('is_organization'))
+        subscription.is_organization = is_org
         subscription.max_users = int(request.form.get('max_users', 1))
-        subscription.is_active = bool(request.form.get('is_active'))
+        subscription.is_active = is_active
         subscription.features = request.form.get('features')
         
         db.session.commit()
@@ -350,11 +413,13 @@ def create_token_package():
     
     if request.method == 'POST':
         # Create a new token package
+        is_active = request.form.get('is_active') == 'true'
+        
         token_package = TokenPackage(
             name=request.form.get('name'),
             token_count=int(request.form.get('token_count')),
             price=float(request.form.get('price')),
-            is_active=bool(request.form.get('is_active'))
+            is_active=is_active
         )
         
         db.session.add(token_package)
@@ -374,23 +439,39 @@ def edit_token_package(package_id):
         flash('You do not have permission to access this page.', 'danger')
         return redirect(url_for('dashboard.index'))
     
-    token_package = TokenPackage.query.get_or_404(package_id)
+    package = TokenPackage.query.get_or_404(package_id)
     
     if request.method == 'POST':
         # Update token package
-        token_package.name = request.form.get('name')
-        token_package.token_count = int(request.form.get('token_count'))
-        token_package.price = float(request.form.get('price'))
-        token_package.is_active = bool(request.form.get('is_active'))
+        is_active = request.form.get('is_active') == 'true'
+        
+        package.name = request.form.get('name')
+        package.token_count = int(request.form.get('token_count'))
+        package.price = float(request.form.get('price'))
+        package.is_active = is_active
         
         db.session.commit()
         
         flash('Token package updated successfully.', 'success')
         return redirect(url_for('billing.admin_tokens'))
     
-    return render_template('admin/edit_token_package.html', token_package=token_package)
+    # Get package statistics for display
+    purchase_count = Payment.query.filter_by(
+        token_package_id=package.id, status='completed').count()
+    
+    total_revenue = db.session.query(db.func.sum(Payment.amount)).filter_by(
+        token_package_id=package.id, status='completed').scalar() or 0
+    
+    package_stats = {
+        'purchase_count': purchase_count,
+        'total_revenue': total_revenue
+    }
+    
+    return render_template('admin/edit_token_package.html', 
+                           package=package,
+                           package_stats=package_stats)
 
-@billing_bp.route('/admin/give-tokens', methods=['GET', 'POST'])
+@billing_bp.route('/admin/give-tokens', methods=['POST'])
 @login_required
 def give_tokens():
     """Admin function to give tokens to a user"""
@@ -399,42 +480,39 @@ def give_tokens():
         flash('You do not have permission to access this page.', 'danger')
         return redirect(url_for('dashboard.index'))
     
-    if request.method == 'POST':
-        # Get user and token count
-        user_id = request.form.get('user_id')
-        token_count = int(request.form.get('token_count'))
-        
-        user = User.query.get(user_id)
-        if not user:
-            flash('User not found.', 'danger')
-            return redirect(url_for('billing.give_tokens'))
-        
-        # Add tokens to user
-        user.tokens_available += token_count
-        
-        # Create a payment record for tracking
-        payment = Payment(
-            amount=0,  # Free tokens
-            payment_type='tokens',
-            payment_method='manual',
-            transaction_id=f"ADMIN-TOKENS-{datetime.now().strftime('%Y%m%d%H%M%S')}",
-            status='completed',
-            payment_data=json.dumps({
-                'admin_user_id': current_user.id,
-                'token_count': token_count,
-                'reason': request.form.get('reason', 'Admin allocation')
-            }),
-            user_id=user.id,
-            completed_at=datetime.now()
-        )
-        
-        db.session.add(payment)
-        db.session.commit()
-        
-        flash(f'Successfully added {token_count} tokens to {user.username}.', 'success')
-        return redirect(url_for('billing.give_tokens'))
+    # Get user email and token count
+    email = request.form.get('email')
+    token_count = int(request.form.get('token_amount'))
+    reason = request.form.get('reason', 'bonus')
     
-    # Get all users for the form
-    users = User.query.all()
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        flash(f'User with email {email} not found.', 'danger')
+        return redirect(url_for('billing.admin_tokens'))
     
-    return render_template('admin/give_tokens.html', users=users)
+    # Add tokens to user
+    user.tokens_available += token_count
+    
+    # Create a payment record for tracking
+    transaction_id = f"ADMIN-{reason.upper()}-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+    payment = Payment(
+        user_id=user.id,
+        amount=0,  # Free tokens
+        payment_type='tokens',
+        payment_method='manual',
+        transaction_id=transaction_id,
+        status='completed',
+        completed_at=datetime.now(),
+        payment_data=json.dumps({
+            'reason': reason,
+            'admin_id': current_user.id,
+            'admin_name': current_user.username,
+            'tokens': token_count
+        })
+    )
+    
+    db.session.add(payment)
+    db.session.commit()
+    
+    flash(f'Successfully added {token_count} tokens to {user.username}.', 'success')
+    return redirect(url_for('billing.admin_tokens'))

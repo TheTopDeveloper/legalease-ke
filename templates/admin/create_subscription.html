@@ -1,99 +1,102 @@
-{% extends "layout.html" %}
+{% extends 'layout.html' %}
 
-{% block title %}Create Subscription Plan{% endblock %}
+{% block title %}Create Subscription Plan - Admin - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}Create New Subscription Plan{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-  <div class="row justify-content-center">
+<div class="row justify-content-center">
     <div class="col-md-8">
-      <div class="card">
-        <div class="card-header bg-primary text-white">
-          <h1 class="h3 mb-0">Create Subscription Plan</h1>
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">New Subscription Plan</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('billing.create_subscription') }}" method="post">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Plan Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                                <div class="form-text">Unique identifier for the plan (e.g., basic, premium, org_basic)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="price" class="form-label">Price (KSh) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="price" name="price" min="0" step="0.01" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="duration_days" class="form-label">Duration (Days) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="duration_days" name="duration_days" min="1" value="30" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="tokens_included" class="form-label">Tokens Included <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="tokens_included" name="tokens_included" min="0" value="0" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="max_cases" class="form-label">Maximum Cases <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="max_cases" name="max_cases" min="1" value="5" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="max_users" class="form-label">Maximum Users <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="max_users" name="max_users" min="1" value="1" required>
+                                <div class="form-text">For organization plans, set this higher than 1</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label d-block">Plan Type <span class="text-danger">*</span></label>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="is_organization" id="individual" value="false" checked>
+                            <label class="form-check-label" for="individual">Individual</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="is_organization" id="organization" value="true">
+                            <label class="form-check-label" for="organization">Organization</label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label d-block">Status <span class="text-danger">*</span></label>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="is_active" id="active" value="true" checked>
+                            <label class="form-check-label" for="active">Active</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="is_active" id="inactive" value="false">
+                            <label class="form-check-label" for="inactive">Inactive</label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="features" class="form-label">Features</label>
+                        <textarea class="form-control" id="features" name="features" rows="4"></textarea>
+                        <div class="form-text">Enter features separated by pipe character (|) e.g., "Feature 1|Feature 2|Feature 3"</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('billing.admin_subscriptions') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Create Plan</button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="card-body">
-          <form method="post">
-            <div class="mb-3">
-              <label for="name" class="form-label">Plan Name</label>
-              <input type="text" class="form-control" id="name" name="name" required>
-              <div class="form-text">
-                Use lowercase without spaces (e.g., basic, premium, enterprise)
-              </div>
-            </div>
-            
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <label for="price" class="form-label">Price (KSh)</label>
-                <input type="number" class="form-control" id="price" name="price" min="0" step="0.01" required>
-              </div>
-              <div class="col-md-6">
-                <label for="duration_days" class="form-label">Duration (Days)</label>
-                <input type="number" class="form-control" id="duration_days" name="duration_days" min="1" value="30" required>
-              </div>
-            </div>
-            
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <label for="max_cases" class="form-label">Maximum Cases</label>
-                <input type="number" class="form-control" id="max_cases" name="max_cases" min="1" value="5" required>
-              </div>
-              <div class="col-md-6">
-                <label for="tokens_included" class="form-label">Tokens Included</label>
-                <input type="number" class="form-control" id="tokens_included" name="tokens_included" min="0" value="100" required>
-              </div>
-            </div>
-            
-            <div class="mb-3 form-check">
-              <input type="checkbox" class="form-check-input" id="is_organization" name="is_organization" value="true">
-              <label class="form-check-label" for="is_organization">Organization Plan</label>
-            </div>
-            
-            <div class="mb-3 organization-field" style="display:none;">
-              <label for="max_users" class="form-label">Maximum Users</label>
-              <input type="number" class="form-control" id="max_users" name="max_users" min="1" value="5">
-            </div>
-            
-            <div class="mb-3 form-check">
-              <input type="checkbox" class="form-check-input" id="is_active" name="is_active" value="true" checked>
-              <label class="form-check-label" for="is_active">Active</label>
-            </div>
-            
-            <div class="mb-3">
-              <label for="features" class="form-label">Features (One per line)</label>
-              <textarea class="form-control" id="features" name="features" rows="5"></textarea>
-              <div class="form-text">Enter each feature on a new line, e.g.:
-                <br>Access to all cases
-                <br>Unlimited legal research
-                <br>Document generation
-              </div>
-            </div>
-            
-            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-              <a href="{{ url_for('billing.admin_subscriptions') }}" class="btn btn-secondary me-md-2">Cancel</a>
-              <button type="submit" class="btn btn-primary">Create Plan</button>
-            </div>
-          </form>
-        </div>
-      </div>
     </div>
-  </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Show/hide organization fields based on checkbox
-  const isOrganizationCheckbox = document.getElementById('is_organization');
-  const organizationFields = document.querySelectorAll('.organization-field');
-  
-  function toggleOrganizationFields() {
-    organizationFields.forEach(field => {
-      field.style.display = isOrganizationCheckbox.checked ? 'block' : 'none';
-    });
-  }
-  
-  isOrganizationCheckbox.addEventListener('change', toggleOrganizationFields);
-  
-  // Initial toggle
-  toggleOrganizationFields();
-});
-</script>
 {% endblock %}

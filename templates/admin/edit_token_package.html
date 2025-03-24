@@ -1,84 +1,103 @@
-{% extends "layout.html" %}
+{% extends 'layout.html' %}
 
-{% block title %}Edit Token Package{% endblock %}
+{% block title %}Edit Token Package - Admin - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}Edit Token Package{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-  <div class="row justify-content-center">
+<div class="row justify-content-center">
     <div class="col-md-8">
-      <div class="card">
-        <div class="card-header bg-success text-white">
-          <h1 class="h3 mb-0">Edit Token Package</h1>
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Edit Token Package</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('billing.edit_token_package', package_id=package.id) }}" method="post">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Package Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" name="name" value="{{ package.name }}" required>
+                                <div class="form-text">Descriptive name (e.g., Small Package, Medium Package)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="token_count" class="form-label">Token Count <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="token_count" name="token_count" min="1" value="{{ package.token_count }}" required>
+                                <div class="form-text">Number of tokens in this package</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="price" class="form-label">Price (KSh) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="price" name="price" min="0" step="0.01" value="{{ package.price }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label d-block">Status <span class="text-danger">*</span></label>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="is_active" id="active" value="true" {% if package.is_active %}checked{% endif %}>
+                                    <label class="form-check-label" for="active">Active</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="is_active" id="inactive" value="false" {% if not package.is_active %}checked{% endif %}>
+                                    <label class="form-check-label" for="inactive">Inactive</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('billing.admin_tokens') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Update Package</button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="card-body">
-          <form method="post">
-            <div class="mb-3">
-              <label for="name" class="form-label">Package Name</label>
-              <input type="text" class="form-control" id="name" name="name" value="{{ token_package.name }}" required>
-              <div class="form-text">
-                Examples: Small Package, Medium Package, Premium Package
-              </div>
+        
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Package Stats</h5>
             </div>
-            
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <label for="token_count" class="form-label">Token Count</label>
-                <input type="number" class="form-control" id="token_count" name="token_count" min="10" value="{{ token_package.token_count }}" required>
-              </div>
-              <div class="col-md-6">
-                <label for="price" class="form-label">Price (KSh)</label>
-                <input type="number" class="form-control" id="price" name="price" min="0" step="0.01" value="{{ token_package.price }}" required>
-              </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="alert alert-info mb-3">
+                            <h6 class="mb-1">Price per Token</h6>
+                            <h4 class="mb-0">KSh {{ (package.price / package.token_count)|round(2) }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="alert alert-info mb-3">
+                            <h6 class="mb-1">Created On</h6>
+                            <h4 class="mb-0">{{ package.created_at.strftime('%Y-%m-%d') }}</h4>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if package_stats %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="alert alert-success mb-3">
+                            <h6 class="mb-1">Total Purchases</h6>
+                            <h4 class="mb-0">{{ package_stats.purchase_count }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="alert alert-success mb-3">
+                            <h6 class="mb-1">Total Revenue</h6>
+                            <h4 class="mb-0">KSh {{ package_stats.total_revenue|round(2) }}</h4>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
             </div>
-            
-            <div class="mb-3">
-              <label class="form-label">Price per Token</label>
-              <input type="text" class="form-control" id="price_per_token" readonly>
-              <div class="form-text">
-                This will be calculated automatically based on the token count and price.
-              </div>
-            </div>
-            
-            <div class="mb-3 form-check">
-              <input type="checkbox" class="form-check-input" id="is_active" name="is_active" value="true" {% if token_package.is_active %}checked{% endif %}>
-              <label class="form-check-label" for="is_active">Active</label>
-            </div>
-            
-            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-              <a href="{{ url_for('billing.admin_tokens') }}" class="btn btn-secondary me-md-2">Cancel</a>
-              <button type="submit" class="btn btn-success">Update Package</button>
-            </div>
-          </form>
         </div>
-      </div>
     </div>
-  </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Calculate price per token
-  const tokenCountInput = document.getElementById('token_count');
-  const priceInput = document.getElementById('price');
-  const pricePerTokenInput = document.getElementById('price_per_token');
-  
-  function calculatePricePerToken() {
-    const tokenCount = parseInt(tokenCountInput.value) || 0;
-    const price = parseFloat(priceInput.value) || 0;
-    
-    if (tokenCount > 0) {
-      const pricePerToken = price / tokenCount;
-      pricePerTokenInput.value = pricePerToken.toFixed(2) + ' KSh';
-    } else {
-      pricePerTokenInput.value = '';
-    }
-  }
-  
-  tokenCountInput.addEventListener('input', calculatePricePerToken);
-  priceInput.addEventListener('input', calculatePricePerToken);
-  
-  // Initial calculation
-  calculatePricePerToken();
-});
-</script>
 {% endblock %}

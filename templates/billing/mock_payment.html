@@ -1,123 +1,110 @@
 {% extends 'layout.html' %}
 
-{% block title %}Payment - {{ payment.payment_type|capitalize }} - Kenyan Legal Assistant{% endblock %}
+{% block title %}Mock Payment - Kenyan Legal Assistant{% endblock %}
 
 {% block header %}Mock Payment Page{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8">
-        <div class="card">
+        <div class="alert alert-warning">
+            <div class="d-flex">
+                <div class="me-3">
+                    <i class="fas fa-exclamation-triangle fa-2x"></i>
+                </div>
+                <div>
+                    <h5>Test Environment</h5>
+                    <p>This is a mock payment page for testing purposes. In production, this would redirect to a real payment gateway.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Mock Payment Gateway</h5>
-                <p class="mb-0 small text-light">This is a temporary payment page for testing. It will be replaced with actual PesaPal or DPO integration.</p>
+                <h5 class="mb-0">Payment Details</h5>
             </div>
             <div class="card-body">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i> This is a mock payment page for testing purposes only. In a production environment, you would be redirected to the actual payment gateway.
-                </div>
-
                 <div class="row mb-4">
                     <div class="col-md-6">
-                        <h5>Payment Details</h5>
-                        <table class="table">
-                            <tr>
-                                <th>Transaction ID:</th>
-                                <td>{{ payment.transaction_id }}</td>
-                            </tr>
-                            <tr>
-                                <th>Amount:</th>
-                                <td>KSh {{ payment.amount|round(2) }}</td>
-                            </tr>
-                            <tr>
-                                <th>Type:</th>
-                                <td>{{ payment.payment_type|capitalize }}</td>
-                            </tr>
-                            <tr>
-                                <th>Status:</th>
-                                <td>
-                                    <span class="badge bg-warning">Pending</span>
-                                </td>
-                            </tr>
-                        </table>
+                        <h6>Transaction ID</h6>
+                        <p class="mb-0 text-primary">{{ payment.transaction_id }}</p>
                     </div>
                     <div class="col-md-6">
-                        <h5>
+                        <h6>Amount</h6>
+                        <p class="mb-0 fs-4 fw-bold">KSh {{ payment.amount|round(2) }}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6>Payment Type</h6>
+                        <p class="mb-0">
                             {% if payment.payment_type == 'subscription' %}
-                                Subscription Details
-                            {% elif payment.payment_type == 'tokens' %}
-                                Token Package Details
+                            <span class="badge bg-info">Subscription</span>
+                            {% else %}
+                            <span class="badge bg-success">Tokens</span>
                             {% endif %}
-                        </h5>
-                        
-                        {% if subscription %}
-                        <table class="table">
-                            <tr>
-                                <th>Plan:</th>
-                                <td>{{ subscription.name|capitalize }}</td>
-                            </tr>
-                            <tr>
-                                <th>Duration:</th>
-                                <td>{{ subscription.duration_days }} days</td>
-                            </tr>
-                            <tr>
-                                <th>Max Cases:</th>
-                                <td>{{ subscription.max_cases }}</td>
-                            </tr>
-                            <tr>
-                                <th>Tokens Included:</th>
-                                <td>{{ subscription.tokens_included }}</td>
-                            </tr>
-                        </table>
-                        {% elif token_package %}
-                        <table class="table">
-                            <tr>
-                                <th>Package:</th>
-                                <td>{{ token_package.name }}</td>
-                            </tr>
-                            <tr>
-                                <th>Tokens:</th>
-                                <td>{{ token_package.token_count }}</td>
-                            </tr>
-                        </table>
-                        {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Status</h6>
+                        <p class="mb-0">
+                            {% if payment.status == 'pending' %}
+                            <span class="badge bg-warning">Pending</span>
+                            {% elif payment.status == 'completed' %}
+                            <span class="badge bg-success">Completed</span>
+                            {% else %}
+                            <span class="badge bg-danger">Failed</span>
+                            {% endif %}
+                        </p>
                     </div>
                 </div>
-
-                <div class="row">
+                
+                <div class="row mb-4">
                     <div class="col-md-12">
-                        <h5>Payment Options</h5>
-                        <p>Choose an action to simulate the payment result:</p>
-
-                        <div class="d-flex mt-4">
-                            <form action="{{ url_for('billing.process_payment', transaction_id=transaction_id) }}" method="post" class="me-2">
-                                <input type="hidden" name="action" value="complete">
-                                <button type="submit" class="btn btn-success">
-                                    <i class="fas fa-check-circle"></i> Complete Payment
-                                </button>
-                            </form>
-                            
-                            <form action="{{ url_for('billing.process_payment', transaction_id=transaction_id) }}" method="post" class="me-2">
-                                <input type="hidden" name="action" value="fail">
-                                <button type="submit" class="btn btn-danger">
-                                    <i class="fas fa-times-circle"></i> Fail Payment
-                                </button>
-                            </form>
-                            
-                            <form action="{{ url_for('billing.process_payment', transaction_id=transaction_id) }}" method="post">
-                                <input type="hidden" name="action" value="cancel">
-                                <button type="submit" class="btn btn-secondary">
-                                    <i class="fas fa-ban"></i> Cancel Payment
-                                </button>
-                            </form>
-                        </div>
+                        <h6>Description</h6>
+                        <p class="mb-0">
+                            {% if payment.subscription_id %}
+                            Subscription plan: {{ subscription.name|capitalize }} ({{ subscription.duration_days }} days)
+                            {% elif payment.token_package_id %}
+                            Token package: {{ token_package.name }} ({{ token_package.token_count }} tokens)
+                            {% endif %}
+                        </p>
                     </div>
                 </div>
+                
+                <form action="{{ url_for('billing.process_payment', transaction_id=payment.transaction_id) }}" method="post" class="mb-3">
+                    <h6>Select Payment Result (for testing)</h6>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="payment_status" id="status_completed" value="completed" checked>
+                        <label class="form-check-label" for="status_completed">
+                            Successful Payment
+                        </label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" name="payment_status" id="status_failed" value="failed">
+                        <label class="form-check-label" for="status_failed">
+                            Failed Payment
+                        </label>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Process Payment</button>
+                        <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary">Cancel Payment</a>
+                    </div>
+                </form>
             </div>
-            <div class="card-footer">
-                <a href="{{ url_for('dashboard.index') }}" class="btn btn-link">
-                    <i class="fas fa-arrow-left"></i> Return to Dashboard
-                </a>
+        </div>
+        
+        <div class="alert alert-info mt-4">
+            <div class="d-flex">
+                <div class="me-3">
+                    <i class="fas fa-info-circle fa-2x"></i>
+                </div>
+                <div>
+                    <h5>Payment Integration</h5>
+                    <p class="mb-0">In production, this system will integrate with PesaPal for secure payment processing. No payment information is stored on our servers.</p>
+                </div>
             </div>
         </div>
     </div>

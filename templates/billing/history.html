@@ -5,9 +5,41 @@
 {% block header %}Payment History{% endblock %}
 
 {% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="alert alert-info">
+            <div class="d-flex">
+                <div class="me-3">
+                    <i class="fas fa-history fa-2x"></i>
+                </div>
+                <div>
+                    <h5>Your Payment History</h5>
+                    <p>This page shows all your past payments for subscriptions and token purchases.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="card">
     <div class="card-header bg-primary text-white">
-        <h5 class="mb-0">Payment History</h5>
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Transactions</h5>
+            <div>
+                <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{{ url_for('billing.payment_history') }}">All Transactions</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('billing.payment_history', payment_type='subscription') }}">Subscriptions Only</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('billing.payment_history', payment_type='tokens') }}">Tokens Only</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="{{ url_for('billing.payment_history', status='completed') }}">Completed Payments</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('billing.payment_history', status='pending') }}">Pending Payments</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('billing.payment_history', status='failed') }}">Failed Payments</a></li>
+                </ul>
+            </div>
+        </div>
     </div>
     <div class="card-body">
         {% if payments %}
@@ -16,9 +48,10 @@
                 <thead>
                     <tr>
                         <th>Date</th>
-                        <th>Type</th>
-                        <th>Amount</th>
                         <th>Transaction ID</th>
+                        <th>Type</th>
+                        <th>Item</th>
+                        <th>Amount (KSh)</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -26,59 +59,127 @@
                 <tbody>
                     {% for payment in payments %}
                     <tr>
-                        <td>{{ payment.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                        <td>{{ payment.payment_type|capitalize }}</td>
-                        <td>KSh {{ payment.amount|round(2) }}</td>
-                        <td><small class="text-muted">{{ payment.transaction_id }}</small></td>
+                        <td>{{ payment.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            <span class="text-primary">{{ payment.transaction_id }}</span>
+                        </td>
+                        <td>
+                            {% if payment.payment_type == 'subscription' %}
+                            <span class="badge bg-info">Subscription</span>
+                            {% else %}
+                            <span class="badge bg-success">Tokens</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if payment.subscription %}
+                            {{ payment.subscription.name|capitalize }}
+                            {% elif payment.token_package %}
+                            {{ payment.token_package.name }}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td class="fw-bold">{{ payment.amount|round(2) }}</td>
                         <td>
                             {% if payment.status == 'pending' %}
                             <span class="badge bg-warning">Pending</span>
                             {% elif payment.status == 'completed' %}
                             <span class="badge bg-success">Completed</span>
-                            {% elif payment.status == 'failed' %}
-                            <span class="badge bg-danger">Failed</span>
-                            {% elif payment.status == 'cancelled' %}
-                            <span class="badge bg-secondary">Cancelled</span>
                             {% else %}
-                            <span class="badge bg-info">{{ payment.status|capitalize }}</span>
+                            <span class="badge bg-danger">Failed</span>
                             {% endif %}
                         </td>
                         <td>
-                            <a href="{{ url_for('billing.payment_status') }}?payment_id={{ payment.id }}" class="btn btn-sm btn-info">
+                            <a href="{{ url_for('billing.payment_status') }}?transaction_id={{ payment.transaction_id }}" class="btn btn-sm btn-outline-primary">
                                 <i class="fas fa-eye"></i> View
                             </a>
-                            
-                            {% if payment.status == 'pending' %}
-                            <a href="{{ url_for('billing.mock_payment', transaction_id=payment.transaction_id) }}" class="btn btn-sm btn-primary">
-                                <i class="fas fa-credit-card"></i> Pay
-                            </a>
-                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        
+        <!-- Pagination -->
+        {% if pagination.pages > 1 %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if pagination.page > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('billing.payment_history', page=pagination.page-1, payment_type=request.args.get('payment_type'), status=request.args.get('status')) }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for p in range(1, pagination.pages + 1) %}
+                <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('billing.payment_history', page=p, payment_type=request.args.get('payment_type'), status=request.args.get('status')) }}">{{ p }}</a>
+                </li>
+                {% endfor %}
+                
+                {% if pagination.page < pagination.pages %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('billing.payment_history', page=pagination.page+1, payment_type=request.args.get('payment_type'), status=request.args.get('status')) }}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
         {% else %}
         <div class="alert alert-info">
-            <i class="fas fa-info-circle"></i> You have no payment history yet.
+            <i class="fas fa-info-circle me-2"></i> No payment records found.
+            {% if request.args.get('payment_type') or request.args.get('status') %}
+            <a href="{{ url_for('billing.payment_history') }}" class="alert-link">Clear filters</a>
+            {% endif %}
         </div>
         {% endif %}
     </div>
-    <div class="card-footer">
-        <div class="d-flex justify-content-between">
-            <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary">
-                <i class="fas fa-tachometer-alt"></i> Return to Dashboard
-            </a>
-            <div>
-                <a href="{{ url_for('billing.subscriptions') }}" class="btn btn-outline-primary me-2">
-                    <i class="fas fa-list"></i> Subscriptions
-                </a>
-                <a href="{{ url_for('billing.tokens') }}" class="btn btn-outline-primary">
-                    <i class="fas fa-coins"></i> Token Packages
-                </a>
+</div>
+
+<!-- Payment Statistics -->
+{% if payment_stats %}
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body py-4">
+                <h5 class="card-title text-primary">Total Spent</h5>
+                <h3 class="mb-0">KSh {{ payment_stats.total_spent|round(2) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body py-4">
+                <h5 class="card-title text-primary">Total Tokens Purchased</h5>
+                <h3 class="mb-0">{{ payment_stats.total_tokens }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body py-4">
+                <h5 class="card-title text-primary">Subscription Renewals</h5>
+                <h3 class="mb-0">{{ payment_stats.subscription_count }}</h3>
             </div>
         </div>
     </div>
 </div>
+{% endif %}
+
 {% endblock %}

@@ -1,8 +1,14 @@
-import json
-import secrets
-import time
-from datetime import datetime, timedelta
+"""
+Mock payment system for testing without API keys.
+This will be replaced with PesaPal or DPO integration when API keys are available.
+"""
+
+import uuid
+from datetime import datetime
 from flask import url_for
+
+from app import db
+from models import Payment, User, Subscription, TokenPackage
 
 class MockPaymentSystem:
     """
@@ -12,86 +18,65 @@ class MockPaymentSystem:
     
     def submit_order(self, user, amount, description, payment_type="subscription", redirect_url=None):
         """Create a new payment record and generate a mock payment page URL"""
-        from app import db
-        from models import Payment
-        
         # Generate a unique transaction ID
-        transaction_id = f"TRX-{int(time.time())}-{secrets.token_hex(4)}"
+        transaction_id = f"MOCK-{uuid.uuid4().hex[:10].upper()}"
         
-        # Mock payment data
-        payment_data = {
-            "order_tracking_id": transaction_id,
-            "redirect_url": url_for('billing.mock_payment', transaction_id=transaction_id, _external=True)
-        }
-        
-        # Save the payment record in the database
+        # Create payment record
         payment = Payment(
+            user_id=user.id,
             amount=amount,
             payment_type=payment_type,
-            payment_method='manual',
+            payment_method='mock',
             transaction_id=transaction_id,
             status='pending',
-            payment_data=json.dumps(payment_data),
-            user_id=user.id
+            payment_data=description
         )
         
-        if payment_type == 'subscription' and hasattr(user, 'selected_subscription_id'):
-            payment.subscription_id = user.selected_subscription_id
-            
-        if payment_type == 'tokens' and hasattr(user, 'selected_token_package_id'):
-            payment.token_package_id = user.selected_token_package_id
-            
         db.session.add(payment)
         db.session.commit()
         
-        # Return mock payment page URL
-        return payment_data["redirect_url"], payment
+        # Return the mock payment URL
+        return url_for('billing.mock_payment', transaction_id=transaction_id)
     
     def process_payment(self, transaction_id, status='completed'):
         """Process a payment with the given status"""
-        from app import db
-        from models import Payment, User, Subscription, TokenPackage
-        
-        # Find payment by transaction_id
         payment = Payment.query.filter_by(transaction_id=transaction_id).first()
         
         if not payment:
-            return False, "Payment not found"
+            return False
             
-        # Update payment status
         payment.status = status
         
         if status == 'completed':
-            payment.completed_at = datetime.now()
+            payment.completed_at = datetime.utcnow()
             
-            user = User.query.get(payment.user_id)
-            
-            # Process subscription payment
+            # Process subscription purchase
             if payment.payment_type == 'subscription' and payment.subscription_id:
                 subscription = Subscription.query.get(payment.subscription_id)
-                if subscription:
+                user = User.query.get(payment.user_id)
+                
+                if subscription and user:
+                    from datetime import datetime, timedelta
+                    # Update user's subscription
                     user.account_type = subscription.name
                     user.max_cases = subscription.max_cases
                     user.tokens_available += subscription.tokens_included
-                    user.subscription_end = datetime.now() + timedelta(days=subscription.duration_days)
+                    
+                    # Set subscription end date
+                    current_time = datetime.utcnow()
+                    user.subscription_end = current_time + timedelta(days=subscription.duration_days)
             
             # Process token purchase
-            if payment.payment_type == 'tokens' and payment.token_package_id:
+            elif payment.payment_type == 'tokens' and payment.token_package_id:
                 token_package = TokenPackage.query.get(payment.token_package_id)
-                if token_package:
+                user = User.query.get(payment.user_id)
+                
+                if token_package and user:
+                    # Add tokens to user's account
                     user.tokens_available += token_package.token_count
-            
-            db.session.commit()
-            return True, "Payment processed successfully"
         
-        elif status == 'failed':
-            db.session.commit()
-            return False, "Payment failed"
-        
-        else:
-            # Payment still pending
-            db.session.commit()
-            return False, f"Payment in status: {status}"
+        db.session.commit()
+        return True
 
-# Use MockPaymentSystem as PesaPalPayment to maintain compatibility with existing code
-PesaPalPayment = MockPaymentSystem
+# Use this mock system for now, replace with real implementation later
+payment_gateway = MockPaymentSystem()

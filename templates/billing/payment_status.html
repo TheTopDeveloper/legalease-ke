@@ -7,106 +7,178 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8">
-        <div class="card">
+        {% if payment and payment.status == 'completed' %}
+        <div class="card shadow-sm border-success mb-4">
+            <div class="card-body text-center py-5">
+                <div class="mb-4">
+                    <i class="fas fa-check-circle text-success fa-5x"></i>
+                </div>
+                <h3 class="mb-3">Payment Successful!</h3>
+                
+                {% if payment.payment_type == 'subscription' %}
+                <p class="mb-1">Your subscription has been activated. Enjoy your premium features!</p>
+                <p class="mb-4">Subscription will expire on {{ current_user.subscription_end.strftime('%Y-%m-%d') }}.</p>
+                {% else %}
+                <p class="mb-1">Tokens have been added to your account.</p>
+                <p class="mb-4">New balance: {{ current_user.tokens_available }} tokens</p>
+                {% endif %}
+                
+                <div class="d-flex justify-content-center">
+                    <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary me-2">Go to Dashboard</a>
+                    {% if payment.payment_type == 'subscription' %}
+                    <a href="{{ url_for('billing.subscriptions') }}" class="btn btn-outline-secondary">View Plan Details</a>
+                    {% else %}
+                    <a href="{{ url_for('billing.tokens') }}" class="btn btn-outline-secondary">View Token Usage</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        {% elif payment and payment.status == 'failed' %}
+        <div class="card shadow-sm border-danger mb-4">
+            <div class="card-body text-center py-5">
+                <div class="mb-4">
+                    <i class="fas fa-times-circle text-danger fa-5x"></i>
+                </div>
+                <h3 class="mb-3">Payment Failed</h3>
+                <p class="mb-4">We couldn't process your payment. Please try again or contact support if the problem persists.</p>
+                
+                <div class="d-flex justify-content-center">
+                    <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary me-2">Go to Dashboard</a>
+                    {% if payment.payment_type == 'subscription' %}
+                    <a href="{{ url_for('billing.subscriptions') }}" class="btn btn-outline-secondary">Try Again</a>
+                    {% else %}
+                    <a href="{{ url_for('billing.tokens') }}" class="btn btn-outline-secondary">Try Again</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        {% elif payment and payment.status == 'pending' %}
+        <div class="card shadow-sm border-warning mb-4">
+            <div class="card-body text-center py-5">
+                <div class="mb-4">
+                    <i class="fas fa-hourglass-half text-warning fa-5x"></i>
+                </div>
+                <h3 class="mb-3">Payment Pending</h3>
+                <p class="mb-4">Your payment is being processed. This page will refresh automatically.</p>
+                <p class="text-muted small">Transaction ID: {{ payment.transaction_id }}</p>
+                
+                <div class="d-flex justify-content-center">
+                    <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary me-2">Go to Dashboard</a>
+                    <a href="{{ url_for('billing.payment_status') }}?transaction_id={{ payment.transaction_id }}" class="btn btn-primary">
+                        <i class="fas fa-sync-alt me-2"></i> Refresh Status
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        {% else %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-body text-center py-5">
+                <div class="mb-4">
+                    <i class="fas fa-question-circle text-secondary fa-5x"></i>
+                </div>
+                <h3 class="mb-3">Payment Not Found</h3>
+                <p class="mb-4">We couldn't find information about this payment. Please return to the dashboard.</p>
+                
+                <div class="d-flex justify-content-center">
+                    <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary">Go to Dashboard</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="card shadow-sm">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Payment Status</h5>
+                <h5 class="mb-0">Payment Details</h5>
             </div>
             <div class="card-body">
                 {% if payment %}
-                <div class="row mb-4">
+                <div class="row mb-3">
                     <div class="col-md-6">
-                        <h5>Payment Details</h5>
-                        <table class="table">
-                            <tr>
-                                <th>Transaction ID:</th>
-                                <td>{{ payment.transaction_id }}</td>
-                            </tr>
-                            <tr>
-                                <th>Amount:</th>
-                                <td>KSh {{ payment.amount|round(2) }}</td>
-                            </tr>
-                            <tr>
-                                <th>Type:</th>
-                                <td>{{ payment.payment_type|capitalize }}</td>
-                            </tr>
-                            <tr>
-                                <th>Method:</th>
-                                <td>{{ payment.payment_method|capitalize }}</td>
-                            </tr>
-                            <tr>
-                                <th>Date:</th>
-                                <td>{{ payment.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                            </tr>
-                            <tr>
-                                <th>Status:</th>
-                                <td>
-                                    {% if payment.status == 'pending' %}
-                                    <span class="badge bg-warning">Pending</span>
-                                    {% elif payment.status == 'completed' %}
-                                    <span class="badge bg-success">Completed</span>
-                                    {% elif payment.status == 'failed' %}
-                                    <span class="badge bg-danger">Failed</span>
-                                    {% elif payment.status == 'cancelled' %}
-                                    <span class="badge bg-secondary">Cancelled</span>
-                                    {% else %}
-                                    <span class="badge bg-info">{{ payment.status|capitalize }}</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        </table>
+                        <h6>Transaction ID</h6>
+                        <p class="mb-0 text-primary">{{ payment.transaction_id }}</p>
                     </div>
                     <div class="col-md-6">
-                        <h5>Status Information</h5>
-                        
-                        {% if payment.status == 'pending' %}
-                        <div class="alert alert-warning">
-                            <i class="fas fa-clock"></i> Your payment is being processed. Please wait or check back later.
-                        </div>
-                        {% elif payment.status == 'completed' %}
-                        <div class="alert alert-success">
-                            <i class="fas fa-check-circle"></i> Your payment has been completed successfully!
-                        </div>
-                        {% elif payment.status == 'failed' %}
-                        <div class="alert alert-danger">
-                            <i class="fas fa-exclamation-triangle"></i> There was an issue with your payment. Please try again.
-                        </div>
-                        {% elif payment.status == 'cancelled' %}
-                        <div class="alert alert-secondary">
-                            <i class="fas fa-ban"></i> Your payment has been cancelled.
-                        </div>
-                        {% endif %}
-                        
-                        {% if payment.status == 'pending' %}
-                        <div class="mt-4">
-                            <p>If you were interrupted during payment, you can:</p>
-                            <a href="{{ url_for('billing.mock_payment', transaction_id=payment.transaction_id) }}" class="btn btn-primary">
-                                <i class="fas fa-credit-card"></i> Return to Payment
-                            </a>
-                        </div>
-                        {% endif %}
+                        <h6>Amount</h6>
+                        <p class="mb-0 fw-bold">KSh {{ payment.amount|round(2) }}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6>Payment Type</h6>
+                        <p class="mb-0">
+                            {% if payment.payment_type == 'subscription' %}
+                            <span class="badge bg-info">Subscription</span>
+                            {% else %}
+                            <span class="badge bg-success">Tokens</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Status</h6>
+                        <p class="mb-0">
+                            {% if payment.status == 'pending' %}
+                            <span class="badge bg-warning">Pending</span>
+                            {% elif payment.status == 'completed' %}
+                            <span class="badge bg-success">Completed</span>
+                            {% else %}
+                            <span class="badge bg-danger">Failed</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6>Created</h6>
+                        <p class="mb-0">{{ payment.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Completed</h6>
+                        <p class="mb-0">
+                            {% if payment.completed_at %}
+                            {{ payment.completed_at.strftime('%Y-%m-%d %H:%M') }}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-12">
+                        <h6>Description</h6>
+                        <p class="mb-0">
+                            {% if payment.subscription_id %}
+                            Subscription plan: {{ subscription.name|capitalize }} ({{ subscription.duration_days }} days)
+                            {% elif payment.token_package_id %}
+                            Token package: {{ token_package.name }} ({{ token_package.token_count }} tokens)
+                            {% endif %}
+                        </p>
                     </div>
                 </div>
                 {% else %}
                 <div class="alert alert-warning">
-                    <i class="fas fa-exclamation-triangle"></i> No payment information available.
+                    <i class="fas fa-exclamation-triangle me-2"></i> Payment details not available.
                 </div>
-                {% endif %}
-            </div>
-            <div class="card-footer d-flex justify-content-between">
-                <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary">
-                    <i class="fas fa-tachometer-alt"></i> Return to Dashboard
-                </a>
-                {% if payment.payment_type == 'subscription' %}
-                <a href="{{ url_for('billing.subscriptions') }}" class="btn btn-outline-primary">
-                    <i class="fas fa-list"></i> View Subscriptions
-                </a>
-                {% elif payment.payment_type == 'tokens' %}
-                <a href="{{ url_for('billing.tokens') }}" class="btn btn-outline-primary">
-                    <i class="fas fa-coins"></i> View Token Packages
-                </a>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+{% if payment and payment.status == 'pending' %}
+<script>
+    // Auto-refresh the page every 5 seconds for pending payments
+    setTimeout(function() {
+        window.location.reload();
+    }, 5000);
+</script>
+{% endif %}
 {% endblock %}
