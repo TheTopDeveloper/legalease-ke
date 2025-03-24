@@ -1,0 +1,251 @@
+{% extends 'layout.html' %}
+
+{% block title %}Daily Rewards - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}Daily Rewards{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0"><i class="fas fa-gift me-2"></i> Daily Rewards</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-4">
+                    <h5 class="alert-heading">Welcome to Daily Rewards!</h5>
+                    <p>Visit the platform daily to build your streak and earn increasingly valuable rewards. Don't break your streak!</p>
+                </div>
+
+                {% if daily_reward_claimed %}
+                <div class="alert alert-success mb-4">
+                    <h5 class="alert-heading">Today's Reward Claimed!</h5>
+                    <p>You've already claimed your daily reward for today. Come back tomorrow for your next reward!</p>
+                    <p class="mb-0">Current streak: <strong>{{ user_profile.streak_days }} days</strong></p>
+                </div>
+                {% else %}
+                <div class="text-center mb-4">
+                    <h4>Day {{ user_profile.streak_days + 1 }} Reward Available!</h4>
+                    <div class="my-4">
+                        <div class="reward-container">
+                            <div class="reward-box">
+                                <div class="reward-inner {% if user_profile.streak_days >= 6 %}special-reward{% endif %}">
+                                    {% if user_profile.streak_days < 6 %}
+                                    <i class="fas fa-gift fa-5x text-primary"></i>
+                                    <h5 class="mt-2">{{ daily_reward_tokens }} Tokens</h5>
+                                    {% else %}
+                                    <i class="fas fa-crown fa-5x text-warning"></i>
+                                    <h5 class="mt-2">{{ daily_reward_tokens }} Tokens + Badge</h5>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <form method="POST" action="{{ url_for('gamification.claim_daily_reward') }}">
+                        <button type="submit" class="btn btn-lg btn-primary">
+                            <i class="fas fa-gift me-2"></i> Claim Daily Reward
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+
+                <!-- Streak Calendar -->
+                <div class="card mt-4">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0"><i class="fas fa-calendar-check me-2"></i> Your Reward Streak</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="mb-0">Current Streak: <span class="badge bg-success">{{ user_profile.streak_days }} days</span></h6>
+                            <h6 class="mb-0">Longest Streak: <span class="badge bg-info">{{ user_profile.longest_streak|default(user_profile.streak_days) }} days</span></h6>
+                        </div>
+                        
+                        <div class="streak-calendar">
+                            <div class="row g-2">
+                                {% for day in range(1, 8) %}
+                                <div class="col">
+                                    <div class="streak-day {% if day <= user_profile.streak_days %}active{% endif %} {% if day == 7 %}special{% endif %}">
+                                        <div class="day-number">{{ day }}</div>
+                                        <div class="day-icon">
+                                            {% if day <= user_profile.streak_days %}
+                                            <i class="fas fa-check-circle"></i>
+                                            {% elif day == user_profile.streak_days + 1 and not daily_reward_claimed %}
+                                            <i class="fas fa-circle-notch fa-spin"></i>
+                                            {% else %}
+                                            <i class="far fa-circle"></i>
+                                            {% endif %}
+                                        </div>
+                                        {% if day == 7 %}
+                                        <div class="bonus-label">BONUS</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="reward-schedule mt-4">
+                            <h6>Reward Schedule:</h6>
+                            <ul class="list-group">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Day 1
+                                    <span class="badge bg-primary">5 Tokens</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Day 2
+                                    <span class="badge bg-primary">5 Tokens</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Day 3
+                                    <span class="badge bg-primary">10 Tokens</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Day 4
+                                    <span class="badge bg-primary">10 Tokens</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Day 5
+                                    <span class="badge bg-primary">15 Tokens</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Day 6
+                                    <span class="badge bg-primary">15 Tokens</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center bg-light">
+                                    Day 7
+                                    <span>
+                                        <span class="badge bg-warning">25 Tokens</span>
+                                        <span class="badge bg-info ms-1">Special Badge</span>
+                                    </span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    .reward-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 200px;
+    }
+    
+    .reward-box {
+        width: 160px;
+        height: 160px;
+        perspective: 1000px;
+        cursor: pointer;
+    }
+    
+    .reward-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e6e9f0 100%);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        transition: transform 0.6s;
+        transform-style: preserve-3d;
+        animation: pulse 2s infinite;
+    }
+    
+    .special-reward {
+        background: linear-gradient(135deg, #fceabb 0%, #fccd4d 50%, #f8b500 100%);
+    }
+    
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        50% {
+            transform: scale(1.05);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        }
+        100% {
+            transform: scale(1);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+    }
+    
+    .streak-calendar {
+        margin: 20px 0;
+    }
+    
+    .streak-day {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 10px;
+        text-align: center;
+        border: 2px solid #e9ecef;
+        position: relative;
+    }
+    
+    .streak-day.active {
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+    }
+    
+    .streak-day.special {
+        background-color: #fff3cd;
+        border-color: #ffeeba;
+    }
+    
+    .day-number {
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+    
+    .day-icon {
+        margin-top: 5px;
+    }
+    
+    .streak-day.active .day-icon {
+        color: #28a745;
+    }
+    
+    .bonus-label {
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #ffc107;
+        color: #212529;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.7rem;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animation for reward box when clicked
+        const rewardBox = document.querySelector('.reward-box');
+        if (rewardBox) {
+            rewardBox.addEventListener('click', function() {
+                const rewardInner = this.querySelector('.reward-inner');
+                rewardInner.style.animation = 'none';
+                setTimeout(() => {
+                    rewardInner.style.animation = 'pulse 2s infinite';
+                }, 10);
+            });
+        }
+    });
+</script>
+{% endblock %}

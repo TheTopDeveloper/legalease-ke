@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Circular badge background -->
+  <circle cx="100" cy="100" r="90" fill="#228b22" />
+  <circle cx="100" cy="100" r="80" fill="#1a6b1a" />
+  
+  <!-- Briefcase icon -->
+  <rect x="60" y="70" width="80" height="60" fill="#ffffff" rx="5" />
+  <rect x="85" y="60" width="30" height="10" fill="#ffffff" rx="2" />
+  <line x1="60" y1="90" x2="140" y2="90" stroke="#1a6b1a" stroke-width="2" />
+  
+  <!-- Document icons -->
+  <rect x="75" y="100" width="20" height="25" fill="#f5f5f5" />
+  <line x1="80" y1="105" x2="90" y2="105" stroke="#1a6b1a" stroke-width="1" />
+  <line x1="80" y1="110" x2="90" y2="110" stroke="#1a6b1a" stroke-width="1" />
+  <line x1="80" y1="115" x2="90" y2="115" stroke="#1a6b1a" stroke-width="1" />
+  
+  <rect x="105" y="100" width="20" height="25" fill="#f5f5f5" />
+  <line x1="110" y1="105" x2="120" y2="105" stroke="#1a6b1a" stroke-width="1" />
+  <line x1="110" y1="110" x2="120" y2="110" stroke="#1a6b1a" stroke-width="1" />
+  <line x1="110" y1="115" x2="120" y2="115" stroke="#1a6b1a" stroke-width="1" />
+  
+  <!-- Badge title -->
+  <text x="100" y="140" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#ffffff">CASE MASTER</text>
+  <text x="100" y="158" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#ffffff">MANAGED 10+ CASES</text>
+</svg>

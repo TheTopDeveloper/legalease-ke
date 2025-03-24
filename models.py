@@ -408,10 +408,14 @@ class UserProfile(db.Model):
     total_points = db.Column(db.Integer, default=0)
     title = db.Column(db.String(100), default='Legal Novice')
     streak_days = db.Column(db.Integer, default=0)
+    longest_streak = db.Column(db.Integer, default=0)
     last_active = db.Column(db.DateTime, default=datetime.utcnow)
+    last_reward_claim = db.Column(db.DateTime)
     total_cases_managed = db.Column(db.Integer, default=0)
     total_documents_created = db.Column(db.Integer, default=0)
     total_research_conducted = db.Column(db.Integer, default=0)
+    total_tokens_earned = db.Column(db.Integer, default=0)
+    social_shares = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -450,11 +454,53 @@ class UserProfile(db.Model):
             # If last active within 36 hours but on a different day
             if self.last_active.date() < now.date():
                 self.streak_days += 1
+                # Update longest streak if current streak is longer
+                if self.longest_streak is None or self.streak_days > self.longest_streak:
+                    self.longest_streak = self.streak_days
         else:
             # Reset streak if more than 36 hours have passed
             self.streak_days = 1
         
         self.last_active = now
+        
+    def can_claim_daily_reward(self):
+        """Check if user can claim daily reward"""
+        if not self.last_reward_claim:
+            return True
+            
+        now = datetime.utcnow()
+        return self.last_reward_claim.date() < now.date()
+        
+    def claim_daily_reward(self):
+        """Claim daily reward and return the amount of tokens earned"""
+        # Calculate tokens based on streak
+        tokens_map = {
+            1: 5,   # Day 1: 5 tokens
+            2: 5,   # Day 2: 5 tokens
+            3: 10,  # Day 3: 10 tokens
+            4: 10,  # Day 4: 10 tokens
+            5: 15,  # Day 5: 15 tokens
+            6: 15,  # Day 6: 15 tokens
+            7: 25,  # Day 7: 25 tokens (Bonus day)
+        }
+        
+        day = min(self.streak_days, 7)
+        tokens_earned = tokens_map.get(day, 5)  # Default to 5 tokens
+        
+        # Update user's tokens
+        self.user.tokens_available += tokens_earned
+        self.total_tokens_earned += tokens_earned
+        self.last_reward_claim = datetime.utcnow()
+        
+        # Reset streak after day 7
+        if self.streak_days >= 7:
+            self.streak_days = 0
+            
+        return {
+            'tokens': tokens_earned,
+            'is_bonus_day': day == 7,
+            'streak_day': day
+        }
     
     def update_title(self):
         """Update user title based on level"""

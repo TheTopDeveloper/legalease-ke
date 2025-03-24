@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Circular badge background -->
+  <circle cx="100" cy="100" r="90" fill="#4682b4" />
+  <circle cx="100" cy="100" r="80" fill="#2c5f8c" />
+  
+  <!-- Scales of justice -->
+  <path d="M100,50 L100,120 M70,70 L130,70" stroke="#ffffff" stroke-width="4" />
+  <path d="M70,70 C65,80 65,90 70,100 C75,90 75,80 70,70 Z" fill="#ffffff" />
+  <path d="M130,70 C125,80 125,90 130,100 C135,90 135,80 130,70 Z" fill="#ffffff" />
+  
+  <!-- Eagle silhouette -->
+  <path d="M100,55 C90,45 80,50 75,60 C65,55 60,65 65,75 C55,78 55,90 65,95 C60,110 100,130 140,95 C150,90 150,78 140,75 C145,65 140,55 130,60 C125,50 115,45 105,55 Z" fill="#ffffff" />
+  
+  <!-- Badge title -->
+  <text x="100" y="140" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#ffffff">LEGAL EAGLE</text>
+  <text x="100" y="158" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#ffffff">EXPERT RESEARCHER</text>
+</svg>

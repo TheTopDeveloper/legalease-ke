@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Circular badge background -->
+  <circle cx="100" cy="100" r="90" fill="#ffd700" />
+  <circle cx="100" cy="100" r="80" fill="#f8b500" />
+  
+  <!-- Fire symbol for streak -->
+  <path d="M100,40 C110,60 130,65 120,85 C140,80 150,100 140,115 C160,110 170,135 160,150 C150,170 130,170 100,170 C70,170 50,170 40,150 C30,135 40,110 60,115 C50,100 60,80 80,85 C70,65 90,60 100,40 Z" fill="#ff4500" />
+  
+  <!-- Stars around the badge -->
+  <path d="M35,45 L40,40 L45,45 L40,50 Z" fill="#ffffff" />
+  <path d="M160,45 L165,40 L170,45 L165,50 Z" fill="#ffffff" />
+  <path d="M35,155 L40,150 L45,155 L40,160 Z" fill="#ffffff" />
+  <path d="M160,155 L165,150 L170,155 L165,160 Z" fill="#ffffff" />
+  
+  <!-- Badge title -->
+  <text x="100" y="140" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#ffffff">STREAK MASTER</text>
+  <text x="100" y="158" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#ffffff">7 DAYS STREAK</text>
+</svg>
