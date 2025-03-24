@@ -329,6 +329,22 @@ class LegalResearchAssistant:
             analysis_response = self.llm_client.generate(precedents_analysis_prompt, temperature=0.3, max_tokens=1500)
             results['analysis'] = analysis_response
             
+            # Generate arguments based on precedents
+            arguments_prompt = f"""
+            Based on the Kenyan legal precedents above related to: {issue}
+            
+            Please provide 3-5 strong legal arguments that can be made based on these precedents. For each argument:
+            1. State the argument clearly and concisely
+            2. Identify the supporting precedent(s)
+            3. Explain why the precedent supports this argument
+            4. Note any potential weaknesses in the argument
+            
+            Focus on arguments that would be persuasive in a Kenyan court.
+            """
+            
+            arguments_response = self.llm_client.generate(arguments_prompt, temperature=0.3, max_tokens=1000)
+            results['arguments'] = arguments_response
+            
             return results
         
         except Exception as e:
@@ -339,4 +355,149 @@ class LegalResearchAssistant:
                 'error': str(e),
                 'binding_precedents': [],
                 'persuasive_precedents': []
+            }
+            
+    def generate_legal_arguments(self, issue: str, case_facts: str, opposing_arguments: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Generate legal arguments, supporting evidence, and rebuttals
+        
+        Args:
+            issue: Legal issue to argue
+            case_facts: Facts of the case
+            opposing_arguments: Optional opposing arguments to rebut
+            
+        Returns:
+            Arguments, evidence, and rebuttals
+        """
+        logger.info(f"Generating legal arguments for issue: {issue}")
+        
+        try:
+            # Search for relevant cases and statutes first
+            search_results = self.scraper.search_cases(issue)
+            
+            # Get details for top cases
+            cases = []
+            for result in search_results[:5]:  # Limit to 5 cases
+                case_url = result.get('link')
+                if case_url:
+                    case_details = self.scraper.get_case_details(case_url)
+                    if case_details:
+                        cases.append(case_details)
+            
+            # Get relevant legislation
+            statutes = self.scraper.get_legislation()[:5]  # Limit to 5 statutes
+            
+            # Generate arguments based on gathered evidence
+            arguments_prompt = f"""
+            Please analyze this Kenyan legal issue and provide strong legal arguments:
+            
+            ISSUE: {issue}
+            
+            CASE FACTS:
+            {case_facts}
+            
+            RELEVANT CASES:
+            {json.dumps([{
+                'title': case.get('title', ''),
+                'citation': case.get('citation', ''),
+                'court': case.get('court', ''),
+                'summary': case.get('summary', '')
+            } for case in cases], indent=2)}
+            
+            RELEVANT STATUTES:
+            {json.dumps([{
+                'title': statute.get('title', '')
+            } for statute in statutes], indent=2)}
+            
+            Please provide:
+            1. 3-5 strong arguments supporting the position on this issue
+            2. For each argument, provide:
+               a. The clear legal argument
+               b. Supporting evidence from cases and statutes
+               c. How the law applies to the case facts
+               d. Anticipated counter-arguments
+            
+            Format each argument clearly with headings and structured evidence.
+            """
+            
+            arguments_response = self.llm_client.generate(arguments_prompt, temperature=0.3, max_tokens=1500)
+            
+            # Generate evidence matrix
+            evidence_prompt = f"""
+            Based on the Kenyan legal issue and case facts:
+            
+            ISSUE: {issue}
+            
+            CASE FACTS:
+            {case_facts}
+            
+            Please create an evidence matrix listing:
+            1. Each key fact or piece of evidence
+            2. The legal significance of the evidence
+            3. Related legal authorities (cases or statutes)
+            4. Strength of evidence (strong, moderate, weak)
+            5. How to effectively present this evidence
+            
+            Focus on the most compelling evidence that would be persuasive in a Kenyan court.
+            """
+            
+            evidence_response = self.llm_client.generate(evidence_prompt, temperature=0.2, max_tokens=1000)
+            
+            results = {
+                'issue': issue,
+                'arguments': arguments_response,
+                'evidence': evidence_response,
+                'related_cases': [{
+                    'title': case.get('title', ''),
+                    'citation': case.get('citation', ''),
+                    'court': case.get('court', ''),
+                    'link': case.get('link', '')
+                } for case in cases],
+                'related_statutes': [{
+                    'title': statute.get('title', ''),
+                    'link': statute.get('link', '')
+                } for statute in statutes]
+            }
+            
+            # Generate rebuttals if opposing arguments are provided
+            if opposing_arguments:
+                rebuttal_prompt = f"""
+                Please analyze these opposing arguments in a Kenyan legal context and provide effective rebuttals:
+                
+                ISSUE: {issue}
+                
+                CASE FACTS:
+                {case_facts}
+                
+                OPPOSING ARGUMENTS:
+                {opposing_arguments}
+                
+                RELEVANT CASES AND STATUTES:
+                {json.dumps([{
+                    'title': case.get('title', ''),
+                    'citation': case.get('citation', ''),
+                } for case in cases], indent=2)}
+                
+                Please provide:
+                1. Point-by-point rebuttals to each opposing argument
+                2. Legal authorities that counter the opposing arguments
+                3. Alternative interpretations of facts or law that weaken opposing positions
+                4. Strategic recommendations for addressing these arguments in court
+                
+                Focus on rebuttals that would be persuasive in a Kenyan court based on Kenyan law.
+                """
+                
+                rebuttal_response = self.llm_client.generate(rebuttal_prompt, temperature=0.3, max_tokens=1500)
+                results['rebuttals'] = rebuttal_response
+            
+            return results
+            
+        except Exception as e:
+            logger.error(f"Error generating legal arguments: {str(e)}")
+            return {
+                'issue': issue,
+                'error': str(e),
+                'arguments': [],
+                'evidence': [],
+                'rebuttals': []
             }

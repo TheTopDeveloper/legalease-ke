@@ -393,6 +393,92 @@ def precedents():
                           has_enough_tokens=has_enough_tokens,
                           token_cost=20)
 
+@research_bp.route('/arguments', methods=['GET', 'POST'])
+@login_required
+def legal_arguments():
+    """Generate legal arguments, evidence, and rebuttals"""
+    results = None
+    
+    if request.method == 'POST':
+        issue = request.form.get('issue')
+        case_facts = request.form.get('case_facts')
+        opposing_arguments = request.form.get('opposing_arguments')
+        case_id = request.form.get('case_id')
+        
+        if not issue or not case_facts:
+            flash('Legal issue and case facts are required', 'error')
+            return redirect(url_for('research.legal_arguments'))
+        
+        # Check if user has enough tokens for argument generation
+        tokens_needed = 25  # Example token cost - argument generation is most comprehensive
+        if not current_user.use_tokens(tokens_needed):
+            flash(f'You need {tokens_needed} tokens to generate legal arguments. Please upgrade your subscription or buy more tokens.', 'error')
+            return redirect(url_for('research.legal_arguments'))
+        
+        # Record token usage
+        token_usage = TokenUsage(
+            user_id=current_user.id,
+            tokens_used=tokens_needed,
+            feature='legal_arguments'
+        )
+        db.session.add(token_usage)
+        
+        # Initialize research assistant
+        research_assistant = LegalResearchAssistant()
+        
+        # Generate legal arguments
+        try:
+            logger.info(f"Generating legal arguments for issue: {issue}")
+            results = research_assistant.generate_legal_arguments(issue, case_facts, opposing_arguments)
+            
+            # Save research to history with enhanced fields
+            research_history = LegalResearch(
+                title=f"Arguments: {issue[:50]}",
+                query=f"Issue: {issue}\nFacts: {case_facts[:100]}...",
+                results=json.dumps(results),
+                source="legal_arguments",
+                result_count=len(results.get('related_cases', [])) + len(results.get('related_statutes', [])),
+                has_arguments=True,
+                has_rebuttals=bool(opposing_arguments),
+                tokens_used=tokens_needed,
+                user_id=current_user.id
+            )
+            
+            # Associate with case if selected
+            if case_id:
+                case = Case.query.get(case_id)
+                if case and case.user_id == current_user.id:
+                    research_history.case_id = case_id
+            
+            db.session.add(research_history)
+            db.session.commit()
+            logger.info(f"Saved legal arguments to history: {issue}")
+            flash('Legal arguments generated successfully', 'success')
+            
+            # Return the ID of the new research entry for redirect
+            return redirect(url_for('research.view_research', research_id=research_history.id))
+            
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error generating legal arguments: {str(e)}")
+            flash(f'Error generating legal arguments: {str(e)}', 'error')
+            
+            # Refund tokens on failure
+            current_user.add_tokens(tokens_needed)
+            db.session.commit()
+    
+    # Get cases for selection
+    cases = Case.query.filter_by(user_id=current_user.id).all()
+    
+    # Check if user has enough tokens
+    has_enough_tokens = current_user.tokens_available >= 25  # Example token cost for argument generation
+    
+    return render_template('research/arguments.html', 
+                          results=results,
+                          cases=cases,
+                          has_enough_tokens=has_enough_tokens,
+                          token_cost=25)
+
 @research_bp.route('/history')
 @login_required
 def history():

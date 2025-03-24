@@ -231,6 +231,19 @@
                 </div>
             </div>
             
+            {% if results.arguments %}
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Legal Arguments Based on Precedents</h4>
+                </div>
+                <div class="card-body">
+                    <div class="research-results">
+                        {{ results.arguments|safe|nl2br }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
             <div class="row">
                 <div class="col-md-6">
                     <div class="card mb-4">
@@ -296,6 +309,83 @@
                     </div>
                 </div>
             </div>
+            
+        {% elif research.source == 'legal_arguments' %}
+            <!-- Legal Arguments Results -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Legal Arguments</h4>
+                </div>
+                <div class="card-body">
+                    <div class="research-results">
+                        {{ results.arguments|safe|nl2br }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Evidence Matrix</h4>
+                </div>
+                <div class="card-body">
+                    <div class="research-results">
+                        {{ results.evidence|safe|nl2br }}
+                    </div>
+                </div>
+            </div>
+            
+            {% if results.rebuttals %}
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">Rebuttals to Opposing Arguments</h4>
+                </div>
+                <div class="card-body">
+                    <div class="research-results">
+                        {{ results.rebuttals|safe|nl2br }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if results.related_cases %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Related Cases</h4>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for case in results.related_cases %}
+                        <a href="{{ case.link }}" target="_blank" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ case.title }}</h6>
+                                <small>{{ case.citation }}</small>
+                            </div>
+                            <small>{{ case.court }}</small>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if results.related_statutes %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Related Statutes</h4>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for statute in results.related_statutes %}
+                        <a href="{{ statute.link }}" target="_blank" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ statute.title }}</h6>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
             
         {% else %}
             <!-- Generic Results -->

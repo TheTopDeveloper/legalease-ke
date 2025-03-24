@@ -1,0 +1,143 @@
+{% extends "layout.html" %}
+
+{% block title %}Legal Arguments - Kenyan Legal Assistant{% endblock %}
+
+{% block header %}Legal Arguments Generator{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2>Generate Legal Arguments</h2>
+        <p class="lead">Generate strong legal arguments, evidence matrix, and rebuttals based on Kenyan law</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{{ url_for('research.history') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-history"></i> View History
+        </a>
+    </div>
+</div>
+
+{% if not has_enough_tokens %}
+<div class="alert alert-warning mb-4">
+    <h5 class="alert-heading">Insufficient Tokens</h5>
+    <p>You need at least {{ token_cost }} tokens to use this feature. Please upgrade your subscription or purchase more tokens.</p>
+    <hr>
+    <p class="mb-0">
+        <a href="{{ url_for('billing.subscriptions') }}" class="btn btn-sm btn-primary me-2">View Subscriptions</a>
+        <a href="{{ url_for('billing.tokens') }}" class="btn btn-sm btn-success">Buy Tokens</a>
+    </p>
+</div>
+{% endif %}
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h3>Generate Arguments</h3>
+    </div>
+    <div class="card-body">
+        <form method="POST" id="argumentsForm">
+            <div class="mb-3">
+                <label for="issue" class="form-label">Legal Issue <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="issue" name="issue" required
+                    placeholder="e.g., Breach of contract under Kenyan law" value="{{ request.form.get('issue', '') }}">
+                <div class="form-text">Clearly state the legal issue to be researched</div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="case_facts" class="form-label">Case Facts <span class="text-danger">*</span></label>
+                <textarea class="form-control" id="case_facts" name="case_facts" rows="5" required
+                    placeholder="Provide key facts of the case">{{ request.form.get('case_facts', '') }}</textarea>
+                <div class="form-text">Detail the relevant facts about the case</div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="opposing_arguments" class="form-label">Opposing Arguments (Optional)</label>
+                <textarea class="form-control" id="opposing_arguments" name="opposing_arguments" rows="5"
+                    placeholder="If available, list arguments made by the opposing party">{{ request.form.get('opposing_arguments', '') }}</textarea>
+                <div class="form-text">Include any opposing arguments to generate effective rebuttals</div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="case_id" class="form-label">Associate with Case (Optional)</label>
+                <select class="form-select" id="case_id" name="case_id">
+                    <option value="">None</option>
+                    {% for case in cases %}
+                    <option value="{{ case.id }}" {% if request.form.get('case_id')|int == case.id %}selected{% endif %}>
+                        {{ case.case_number }} - {{ case.title }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <div class="form-text">Link this research to an existing case</div>
+            </div>
+            
+            <div class="card mb-4 bg-light">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title mb-0">Token Cost: <span class="badge bg-primary">{{ token_cost }}</span></h5>
+                            <p class="card-text mb-0">Your available tokens: <span class="badge bg-secondary">{{ current_user.tokens_available }}</span></p>
+                        </div>
+                        <button type="submit" class="btn btn-primary" {% if not has_enough_tokens %}disabled{% endif %}>
+                            <i class="fas fa-gavel"></i> Generate Legal Arguments
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>What You'll Get</h3>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-balance-scale fa-3x mb-3 text-primary"></i>
+                        <h5>Legal Arguments</h5>
+                        <p>3-5 strong legal arguments based on Kenyan case law and statutes</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-table fa-3x mb-3 text-primary"></i>
+                        <h5>Evidence Matrix</h5>
+                        <p>Structured analysis of key evidence and its legal significance</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-reply-all fa-3x mb-3 text-primary"></i>
+                        <h5>Rebuttals</h5>
+                        <p>Point-by-point rebuttals to opposing arguments with legal authorities</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Enable form validation
+        const form = document.getElementById('argumentsForm');
+        if (form) {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            });
+        }
+    });
+</script>
+{% endblock %}
