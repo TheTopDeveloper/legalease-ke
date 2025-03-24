@@ -1,0 +1,335 @@
+/* 
+ * Kenyan Legal Assistant System
+ * Admin Interface Mobile-Responsive Styles
+ */
+
+/* Admin Sidebar */
+.admin-sidebar {
+    background-color: rgba(40, 40, 40, 0.2);
+    padding: 20px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.admin-sidebar .list-group-item {
+    background-color: transparent;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.admin-sidebar .list-group-item.active {
+    background-color: var(--brand-primary);
+    border-color: var(--brand-primary);
+}
+
+.admin-sidebar .list-group-item:hover:not(.active) {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Admin Content */
+.admin-content {
+    margin-bottom: 20px;
+}
+
+/* Admin Cards */
+.admin-card {
+    margin-bottom: 20px;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.admin-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.admin-card .card-header {
+    padding: 15px 20px;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.admin-card .card-title {
+    margin-bottom: 0;
+    font-size: 1.1rem;
+}
+
+/* Stats Cards */
+.admin-stats-card {
+    text-align: center;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    background-color: rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+}
+
+.admin-stats-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.admin-stats-card .stats-icon {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    color: var(--brand-secondary);
+}
+
+.admin-stats-card .stats-number {
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+.admin-stats-card .stats-label {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.8;
+}
+
+/* Mobile Admin Navigation */
+.mobile-admin-nav {
+    display: none;
+    margin-bottom: 20px;
+}
+
+/* Action Buttons */
+.admin-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.admin-actions .btn {
+    padding: 5px 10px;
+    font-size: 0.9rem;
+}
+
+/* Mobile Responsive Tables */
+.table-responsive-mobile {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Card-based mobile view for tables */
+.mobile-card-view {
+    display: none;
+}
+
+.mobile-card {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.mobile-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 10px;
+}
+
+.mobile-card-title {
+    font-weight: 600;
+    margin: 0;
+}
+
+.mobile-card-body .item {
+    padding: 5px 0;
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.mobile-card-body .item:last-child {
+    border-bottom: none;
+}
+
+.mobile-card-body .label {
+    font-weight: 500;
+    color: #aaa;
+}
+
+.mobile-card-body .value {
+    text-align: right;
+}
+
+.mobile-card-footer {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: flex-end;
+    gap: 5px;
+}
+
+/* Responsive Breadcrumbs */
+.admin-breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 0;
+    margin-bottom: 20px;
+    list-style: none;
+}
+
+.admin-breadcrumb-item {
+    display: flex;
+    align-items: center;
+}
+
+.admin-breadcrumb-item + .admin-breadcrumb-item::before {
+    display: inline-block;
+    padding-right: 0.5rem;
+    padding-left: 0.5rem;
+    color: #6c757d;
+    content: "/";
+}
+
+.admin-breadcrumb-back {
+    margin-left: auto;
+}
+
+/* Form Layout */
+.admin-form {
+    max-width: 100%;
+}
+
+.admin-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.admin-form .form-control,
+.admin-form .form-select {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.admin-form .form-control:focus,
+.admin-form .form-select:focus {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 0 0.2rem rgba(155, 44, 44, 0.25);
+}
+
+/* Filter and Sort Controls */
+.admin-filters {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 5px;
+}
+
+.admin-filters .form-group {
+    margin-bottom: 0;
+}
+
+.admin-filters .form-control {
+    height: 36px;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 991.98px) {
+    .admin-breadcrumb {
+        margin-bottom: 15px;
+    }
+    
+    .admin-breadcrumb-item {
+        font-size: 0.9rem;
+    }
+    
+    .admin-breadcrumb-back .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 767.98px) {
+    /* Mobile admin navigation */
+    .mobile-admin-nav {
+        display: block;
+    }
+    
+    .admin-sidebar {
+        display: none;
+    }
+    
+    /* Adjustments for cards */
+    .admin-stats-card {
+        padding: 10px;
+    }
+    
+    .admin-stats-card .stats-icon {
+        font-size: 1.5rem;
+    }
+    
+    .admin-stats-card .stats-number {
+        font-size: 1.5rem;
+    }
+    
+    .admin-stats-card .stats-label {
+        font-size: 0.8rem;
+    }
+    
+    .admin-card .card-header {
+        padding: 12px 15px;
+    }
+    
+    /* Mobile-friendly forms */
+    .admin-form .form-label {
+        font-size: 0.9rem;
+    }
+    
+    /* Hide standard tables on mobile */
+    .admin-table-container {
+        display: none;
+    }
+    
+    /* Show card views on mobile */
+    .mobile-card-view {
+        display: block;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .admin-breadcrumb-item:not(:last-child):not(:first-child) {
+        display: none;
+    }
+    
+    .admin-breadcrumb-item:first-child::after {
+        display: inline-block;
+        padding-right: 0.5rem;
+        padding-left: 0.5rem;
+        color: #6c757d;
+        content: "...";
+    }
+    
+    .admin-card .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .admin-card .card-header .action-buttons {
+        margin-top: 10px;
+        align-self: flex-end;
+    }
+    
+    .admin-filters {
+        padding: 10px;
+    }
+    
+    .admin-filters .row > div {
+        margin-bottom: 10px;
+    }
+    
+    .admin-filters .row > div:last-child {
+        margin-bottom: 0;
+    }
+}

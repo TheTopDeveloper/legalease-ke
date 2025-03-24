@@ -1,0 +1,93 @@
+{% extends 'layout.html' %}
+
+{% block styles %}
+<!-- Admin-specific CSS -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container mb-4">
+    <!-- Admin Breadcrumbs -->
+    <nav aria-label="breadcrumb" class="admin-breadcrumb-wrapper mb-4">
+        <ol class="admin-breadcrumb">
+            <li class="admin-breadcrumb-item"><a href="{{ url_for('admin.index') }}">Admin</a></li>
+            {% block breadcrumb %}{% endblock %}
+            <li class="admin-breadcrumb-back">
+                <a href="{{ url_for('admin.index') }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Mobile Admin Navigation -->
+        <div class="col-12 mobile-admin-nav">
+            <div class="card admin-card">
+                <div class="card-body p-2">
+                    <select id="mobileAdminNav" class="form-select" onchange="if(this.value) window.location.href=this.value;">
+                        <option value="{{ url_for('admin.index') }}" {% if request.endpoint == 'admin.index' %}selected{% endif %}>Admin Dashboard</option>
+                        <option value="{{ url_for('admin.users') }}" {% if request.endpoint == 'admin.users' %}selected{% endif %}>User Management</option>
+                        <option value="{{ url_for('admin.roles') }}" {% if request.endpoint == 'admin.roles' %}selected{% endif %}>Role Management</option>
+                        <option value="{{ url_for('admin.organizations') }}" {% if request.endpoint == 'admin.organizations' %}selected{% endif %}>Organizations</option>
+                        <option value="{{ url_for('admin.system_settings') }}" {% if request.endpoint == 'admin.system_settings' %}selected{% endif %}>System Settings</option>
+                        <option value="{{ url_for('billing.admin_subscriptions') }}" {% if request.endpoint == 'billing.admin_subscriptions' %}selected{% endif %}>Subscription Plans</option>
+                        <option value="{{ url_for('billing.admin_tokens') }}" {% if request.endpoint == 'billing.admin_tokens' %}selected{% endif %}>Token Packages</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar Navigation -->
+        <div class="col-md-3">
+            <div class="admin-sidebar mb-4">
+                <div class="list-group">
+                    <a href="{{ url_for('admin.index') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'admin.index' %}active{% endif %}">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('admin.users') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'admin.users' %}active{% endif %}">
+                        <i class="fas fa-users me-2"></i> User Management
+                    </a>
+                    <a href="{{ url_for('admin.roles') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'admin.roles' %}active{% endif %}">
+                        <i class="fas fa-user-tag me-2"></i> Role Management
+                    </a>
+                    <a href="{{ url_for('admin.organizations') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'admin.organizations' %}active{% endif %}">
+                        <i class="fas fa-building me-2"></i> Organizations
+                    </a>
+                    <a href="{{ url_for('admin.system_settings') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'admin.system_settings' %}active{% endif %}">
+                        <i class="fas fa-cogs me-2"></i> System Settings
+                    </a>
+                    <a href="{{ url_for('billing.admin_subscriptions') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'billing.admin_subscriptions' %}active{% endif %}">
+                        <i class="fas fa-credit-card me-2"></i> Subscription Plans
+                    </a>
+                    <a href="{{ url_for('billing.admin_tokens') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'billing.admin_tokens' %}active{% endif %}">
+                        <i class="fas fa-coins me-2"></i> Token Packages
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9">
+            {% block admin_content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Mobile Admin Navigation
+document.addEventListener('DOMContentLoaded', function() {
+    const mobileAdminNav = document.getElementById('mobileAdminNav');
+    if (mobileAdminNav) {
+        mobileAdminNav.addEventListener('change', function() {
+            if (this.value) {
+                window.location.href = this.value;
+            }
+        });
+    }
+});
+</script>
+{% block admin_scripts %}{% endblock %}
+{% endblock %}

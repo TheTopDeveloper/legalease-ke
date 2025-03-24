@@ -1,101 +1,246 @@
-{% extends 'base.html' %}
+{% extends 'admin/layout.html' %}
 
-{% block title %}User Management{% endblock %}
+{% block title %}User Management | Admin - Kenyan Legal Assistant{% endblock %}
 
-{% block content %}
-<div class="container mt-4">
-    <h1 class="mb-4">User Management</h1>
-    
-    <div class="row">
-        <div class="col-md-3">
-            <div class="list-group mb-4">
-                <a href="{{ url_for('admin.index') }}" class="list-group-item list-group-item-action">Dashboard</a>
-                <a href="{{ url_for('admin.users') }}" class="list-group-item list-group-item-action active">User Management</a>
-                <a href="{{ url_for('admin.roles') }}" class="list-group-item list-group-item-action">Role Management</a>
-                <a href="{{ url_for('admin.organizations') }}" class="list-group-item list-group-item-action">Organization Management</a>
-                <a href="{{ url_for('admin.system_settings') }}" class="list-group-item list-group-item-action">System Settings</a>
-                <a href="{{ url_for('billing.admin_subscriptions') }}" class="list-group-item list-group-item-action">Subscription Plans</a>
-                <a href="{{ url_for('billing.admin_tokens') }}" class="list-group-item list-group-item-action">Token Packages</a>
-            </div>
+{% block breadcrumb %}
+<li class="admin-breadcrumb-item active" aria-current="page">User Management</li>
+{% endblock %}
+
+{% block admin_content %}
+<div class="card admin-card">
+    <div class="card-header">
+        <h5 class="card-title"><i class="fas fa-users me-2"></i> User Management</h5>
+        <div class="action-buttons">
+            <a href="{{ url_for('admin.create_user') }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-user-plus"></i> Create User
+            </a>
         </div>
-        
-        <div class="col-md-9">
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">User List</h5>
-                    <a href="{{ url_for('admin.create_user') }}" class="btn btn-primary btn-sm">Create User</a>
+    </div>
+    <div class="card-body">
+        <!-- Mobile-friendly search filter -->
+        <div class="admin-filters mb-4">
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="searchUsers" placeholder="Search users..." onkeyup="filterUsers()">
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Username</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                    <th>Account Type</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for user in users %}
-                                <tr>
-                                    <td>{{ user.username }}</td>
-                                    <td>{{ user.email }}</td>
-                                    <td>
-                                        <span class="badge bg-{{ 'danger' if user.role == 'admin' else 'primary' if user.role == 'organization' else 'info' if user.role == 'organization_member' else 'secondary' }}">
-                                            {{ user.role }}
-                                        </span>
-                                        {% if user.custom_role %}
-                                        <span class="badge bg-dark">{{ user.custom_role.name }}</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ user.account_type }}</td>
-                                    <td>
-                                        <span class="badge bg-{{ 'success' if user.is_active else 'danger' }}">
-                                            {{ 'Active' if user.is_active else 'Inactive' }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="btn-group" role="group">
-                                            <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="btn btn-sm btn-primary">Edit</a>
-                                            {% if current_user.id != user.id %}
-                                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ user.id }}">
-                                                Delete
-                                            </button>
-                                            {% endif %}
-                                        </div>
-                                        
-                                        <!-- Delete Modal -->
-                                        <div class="modal fade" id="deleteUserModal{{ user.id }}" tabindex="-1" aria-labelledby="deleteUserModalLabel{{ user.id }}" aria-hidden="true">
-                                            <div class="modal-dialog">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title" id="deleteUserModalLabel{{ user.id }}">Confirm Delete</h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                    </div>
-                                                    <div class="modal-body">
-                                                        Are you sure you want to delete user <strong>{{ user.username }}</strong>? This action cannot be undone.
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                        <form action="{{ url_for('admin.delete_user', user_id=user.id) }}" method="post">
-                                                            <button type="submit" class="btn btn-danger">Delete</button>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <select class="form-select" id="filterRole" onchange="filterUsers()">
+                            <option value="">All Roles</option>
+                            <option value="admin">Admin</option>
+                            <option value="organization">Organization</option>
+                            <option value="organization_member">Organization Member</option>
+                            <option value="individual">Individual</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <select class="form-select" id="filterStatus" onchange="filterUsers()">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
                     </div>
                 </div>
             </div>
         </div>
+                    
+        <!-- Desktop table view -->
+        <div class="admin-table-container">
+            <div class="table-responsive-mobile">
+                <table class="table table-striped" id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Account Type</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr data-username="{{ user.username|lower }}" data-email="{{ user.email|lower }}" data-role="{{ user.role|lower }}" data-status="{{ 'active' if user.is_active else 'inactive' }}">
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'danger' if user.role == 'admin' else 'primary' if user.role == 'organization' else 'info' if user.role == 'organization_member' else 'secondary' }}">
+                                    {{ user.role }}
+                                </span>
+                                {% if user.custom_role %}
+                                <span class="badge bg-dark">{{ user.custom_role.name }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user.account_type }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if user.is_active else 'danger' }}">
+                                    {{ 'Active' if user.is_active else 'Inactive' }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="admin-actions">
+                                    <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-edit"></i><span class="d-none d-md-inline"> Edit</span>
+                                    </a>
+                                    {% if current_user.id != user.id %}
+                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ user.id }}">
+                                        <i class="fas fa-trash"></i><span class="d-none d-md-inline"> Delete</span>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Delete Modal -->
+                                <div class="modal fade" id="deleteUserModal{{ user.id }}" tabindex="-1" aria-labelledby="deleteUserModalLabel{{ user.id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="deleteUserModalLabel{{ user.id }}">Confirm Delete</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                Are you sure you want to delete user <strong>{{ user.username }}</strong>? This action cannot be undone.
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <form action="{{ url_for('admin.delete_user', user_id=user.id) }}" method="post">
+                                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Mobile card view -->
+        <div class="mobile-card-view">
+            {% for user in users %}
+            <div class="mobile-card" 
+                 data-username="{{ user.username|lower }}" 
+                 data-email="{{ user.email|lower }}" 
+                 data-role="{{ user.role|lower }}" 
+                 data-status="{{ 'active' if user.is_active else 'inactive' }}">
+                <div class="mobile-card-header">
+                    <h5 class="mobile-card-title">{{ user.username }}</h5>
+                    <div>
+                        <span class="badge bg-{{ 'success' if user.is_active else 'danger' }}">
+                            {{ 'Active' if user.is_active else 'Inactive' }}
+                        </span>
+                    </div>
+                </div>
+                <div class="mobile-card-body">
+                    <div class="item">
+                        <div class="label">Email</div>
+                        <div class="value">{{ user.email }}</div>
+                    </div>
+                    <div class="item">
+                        <div class="label">Role</div>
+                        <div class="value">
+                            <span class="badge bg-{{ 'danger' if user.role == 'admin' else 'primary' if user.role == 'organization' else 'info' if user.role == 'organization_member' else 'secondary' }}">
+                                {{ user.role }}
+                            </span>
+                            {% if user.custom_role %}
+                            <span class="badge bg-dark">{{ user.custom_role.name }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="item">
+                        <div class="label">Account Type</div>
+                        <div class="value">{{ user.account_type }}</div>
+                    </div>
+                </div>
+                <div class="mobile-card-footer">
+                    <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    {% if current_user.id != user.id %}
+                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModalMobile{{ user.id }}">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                    
+                    <!-- Mobile Delete Modal -->
+                    <div class="modal fade" id="deleteUserModalMobile{{ user.id }}" tabindex="-1" aria-labelledby="deleteUserModalMobileLabel{{ user.id }}" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="deleteUserModalMobileLabel{{ user.id }}">Confirm Delete</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    Are you sure you want to delete user <strong>{{ user.username }}</strong>? This action cannot be undone.
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <form action="{{ url_for('admin.delete_user', user_id=user.id) }}" method="post">
+                                        <button type="submit" class="btn btn-danger">Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
     </div>
 </div>
+{% endblock %}
+
+{% block admin_scripts %}
+<script>
+// Filter users by search term, role and status
+function filterUsers() {
+    const searchTerm = document.getElementById('searchUsers').value.toLowerCase();
+    const roleFilter = document.getElementById('filterRole').value.toLowerCase();
+    const statusFilter = document.getElementById('filterStatus').value.toLowerCase();
+    
+    // Filter table rows
+    const tableRows = document.querySelectorAll('#usersTable tbody tr');
+    tableRows.forEach(row => {
+        const username = row.getAttribute('data-username');
+        const email = row.getAttribute('data-email');
+        const role = row.getAttribute('data-role');
+        const status = row.getAttribute('data-status');
+        
+        const matchesSearch = username.includes(searchTerm) || email.includes(searchTerm);
+        const matchesRole = roleFilter === '' || role.includes(roleFilter);
+        const matchesStatus = statusFilter === '' || status === statusFilter;
+        
+        if (matchesSearch && matchesRole && matchesStatus) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Filter mobile cards
+    const mobileCards = document.querySelectorAll('.mobile-card');
+    mobileCards.forEach(card => {
+        const username = card.getAttribute('data-username');
+        const email = card.getAttribute('data-email');
+        const role = card.getAttribute('data-role');
+        const status = card.getAttribute('data-status');
+        
+        const matchesSearch = username.includes(searchTerm) || email.includes(searchTerm);
+        const matchesRole = roleFilter === '' || role.includes(roleFilter);
+        const matchesStatus = statusFilter === '' || status === statusFilter;
+        
+        if (matchesSearch && matchesRole && matchesStatus) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+</script>
 {% endblock %}
