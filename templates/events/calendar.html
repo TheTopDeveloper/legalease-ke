@@ -182,6 +182,7 @@
                                     <!-- CALENDAR GENERATION START -->
                                     {% set total_days = (end_range - start_range).days + 1 %}
                                     {% set num_weeks = total_days // 7 %}
+                                    {% set day_counter = 0 %}
                                     
                                     <!-- Week-by-week display of the calendar -->
                                     {% for week_num in range(num_weeks) %}
