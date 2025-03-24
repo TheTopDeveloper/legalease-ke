@@ -1,9 +1,10 @@
 import logging
-from flask import Blueprint, render_template, redirect, url_for
+from flask import Blueprint, render_template, redirect, url_for, request
 from flask_login import login_required, current_user
 from models import Case, Document, Contract, Event, Client
 from sqlalchemy import func
 from datetime import datetime, timedelta
+from app import db
 
 logger = logging.getLogger(__name__)
 
@@ -56,31 +57,42 @@ def index():
 @login_required
 def calendar():
     """Calendar view of events"""
-    # Get start and end date from query params, default to current month
-    today = datetime.utcnow().date()
-    start_date_str = request.args.get('start_date')
-    if start_date_str:
+    # Get view type (month, week, day) - for dashboard always default to month
+    view_type = 'month'
+    
+    # Get date parameters
+    date_str = request.args.get('date')
+    if date_str:
         try:
-            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            current_date = datetime.strptime(date_str, '%Y-%m-%d').date()
         except ValueError:
-            start_date = today.replace(day=1)
+            current_date = datetime.now().date()
     else:
-        start_date = today.replace(day=1)
+        current_date = datetime.now().date()
     
-    # Get end date (start date + 1 month)
+    # Calculate date range based on view type
+    start_date = current_date.replace(day=1)
     if start_date.month == 12:
-        end_date = start_date.replace(year=start_date.year + 1, month=1)
+        end_date = datetime(start_date.year + 1, 1, 1).date() - timedelta(days=1)
     else:
-        end_date = start_date.replace(month=start_date.month + 1)
+        end_date = datetime(start_date.year, start_date.month + 1, 1).date() - timedelta(days=1)
     
-    # Get events for the selected month
+    # We need to include the days from the previous and next months to fill the calendar grid
+    first_day_weekday = start_date.weekday()
+    start_range = start_date - timedelta(days=first_day_weekday)
+    
+    last_day_weekday = end_date.weekday()
+    days_to_next_month = 6 - last_day_weekday
+    end_range = end_date + timedelta(days=days_to_next_month)
+    
+    # Get events for the date range
     events = Event.query.filter(
         Event.user_id == current_user.id,
-        func.date(Event.start_time) >= start_date,
-        func.date(Event.start_time) < end_date
+        func.date(Event.start_time) >= start_range,
+        func.date(Event.start_time) <= end_range
     ).order_by(Event.start_time).all()
     
-    # Organize events by date
+    # Group events by date for easier rendering
     events_by_date = {}
     for event in events:
         event_date = event.start_time.date()
@@ -88,28 +100,57 @@ def calendar():
             events_by_date[event_date] = []
         events_by_date[event_date].append(event)
     
-    # Generate calendar days
-    first_day_weekday = start_date.weekday()
-    days_in_month = (end_date - start_date).days
+    # Get conflicts (events on the same day that overlap)
+    conflicts = []
+    for date_events in events_by_date.values():
+        for i, event1 in enumerate(date_events):
+            for event2 in date_events[i+1:]:
+                if event1.overlaps_with(event2):
+                    conflicts.append((event1.id, event2.id))
+                    # Update conflict status if not already set
+                    if not event1.conflict_status:
+                        event1.conflict_status = 'potential'
+                    if not event2.conflict_status:
+                        event2.conflict_status = 'potential'
     
-    # Previous and next month links
-    prev_month = start_date - timedelta(days=1)
-    prev_month = prev_month.replace(day=1)
+    # Commit any changes to conflict status
+    if conflicts:
+        db.session.commit()
     
-    next_month = end_date
+    # Calculate navigation dates
+    if current_date.month == 1:
+        prev_month = datetime(current_date.year - 1, 12, 1).date()
+    else:
+        prev_month = datetime(current_date.year, current_date.month - 1, 1).date()
+        
+    if current_date.month == 12:
+        next_month = datetime(current_date.year + 1, 1, 1).date()
+    else:
+        next_month = datetime(current_date.year, current_date.month + 1, 1).date()
     
-    return render_template('events/calendar.html',
-                          start_date=start_date,
-                          end_date=end_date,
-                          first_day_weekday=first_day_weekday,
-                          days_in_month=days_in_month,
-                          events_by_date=events_by_date,
-                          prev_month=prev_month,
-                          next_month=next_month,
-                          view_type='month',
-                          current_date=start_date,
-                          cases=Case.query.filter_by(user_id=current_user.id).all(),
-                          timedelta=timedelta)
+    prev_date = prev_month
+    next_date = next_month
+    
+    # Get cases for the filter sidebar
+    cases = Case.query.filter_by(user_id=current_user.id).order_by(Case.title).all()
+    
+    # Calculate days in month for calendar grid
+    days_in_month = (end_date - start_date).days + 1
+    
+    return render_template(
+        'events/calendar.html',
+        view_type=view_type,
+        current_date=current_date,
+        start_date=start_date,
+        end_date=end_date,
+        events_by_date=events_by_date,
+        conflicts=conflicts,
+        prev_date=prev_date,
+        next_date=next_date,
+        cases=cases,
+        days_in_month=days_in_month,
+        first_day_weekday=first_day_weekday,
+        timedelta=timedelta
+    )
 
-# Import request here to avoid circular imports
-from flask import request
+# No need to import request here, already imported at the top
