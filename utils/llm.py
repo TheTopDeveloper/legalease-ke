@@ -5,6 +5,12 @@ import requests
 from typing import List, Dict, Any, Optional
 import config
 
+try:
+    from openai import OpenAI
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
 
 class OllamaClient:
