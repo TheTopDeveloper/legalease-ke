@@ -11,7 +11,168 @@ try:
 except ImportError:
     OPENAI_AVAILABLE = False
 
+# Configure logging
 logger = logging.getLogger(__name__)
+
+# Define LLM models
+LLM_MODELS = {
+    "openai": {
+        "default": "gpt-3.5-turbo",
+        "models": ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo"]
+    },
+    "ollama": {
+        "default": "llama3",
+        "models": ["llama3", "mistral", "deepseek", "gemma", "phi3", "mixtral"]
+    }
+}
+
+def get_llm_client():
+    """
+    Get the appropriate LLM client based on available services
+    
+    Returns:
+        A configured LLM client
+    """
+    # First try OpenAI if API key is available
+    if OPENAI_AVAILABLE and os.environ.get("OPENAI_API_KEY"):
+        logger.info("Using OpenAI client")
+        return OpenAIClient()
+    
+    # Then try Ollama
+    try:
+        ollama_client = OllamaClient()
+        # Test connection
+        test_result = ollama_client.generate("Test connection", max_tokens=5)
+        if test_result is not None:
+            logger.info("Using Ollama client")
+            return ollama_client
+    except Exception as e:
+        logger.warning(f"Ollama not available: {str(e)}")
+    
+    # Return OpenAI client even if not configured - it will handle its own errors
+    logger.warning("No functioning LLM client available. Using unconfigured OpenAI client.")
+    return OpenAIClient()
+
+class OpenAIClient:
+    """
+    Client for interacting with OpenAI API
+    """
+    
+    def __init__(self, api_key=None, model=None):
+        """
+        Initialize OpenAI client
+        
+        Args:
+            api_key: OpenAI API key
+            model: Default model to use
+        """
+        self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
+        self.model = model or "gpt-3.5-turbo"
+        
+        if not self.api_key:
+            logger.warning("No OpenAI API key provided. Set OPENAI_API_KEY environment variable.")
+            self.client = None
+        else:
+            self.client = OpenAI(api_key=self.api_key)
+            logger.info(f"Initialized OpenAI client with model: {self.model}")
+    
+    def generate(self, prompt: str, model: Optional[str] = None, temperature: float = 0.7, max_tokens: int = 1000) -> str:
+        """
+        Generate text completion using OpenAI
+        
+        Args:
+            prompt: The prompt to generate a response for
+            model: Model to use (defaults to configured model)
+            temperature: Temperature for generation
+            max_tokens: Maximum tokens to generate
+            
+        Returns:
+            Generated text
+        """
+        if not self.client:
+            logger.error("OpenAI client not initialized. API key missing.")
+            return None
+            
+        model = model or self.model
+        
+        try:
+            response = self.client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": "You are a legal AI assistant for the Kenyan legal system."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=temperature,
+                max_tokens=max_tokens
+            )
+            
+            return response.choices[0].message.content
+            
+        except Exception as e:
+            logger.error(f"Error generating text with OpenAI: {str(e)}")
+            return None
+    
+    def get_embedding(self, text: str, model: Optional[str] = None) -> List[float]:
+        """
+        Get embedding vector for text using OpenAI
+        
+        Args:
+            text: The text to get embedding for
+            model: Model to use (defaults to embedding model)
+            
+        Returns:
+            List of float values representing the embedding
+        """
+        if not self.client:
+            logger.error("OpenAI client not initialized. API key missing.")
+            return []
+            
+        embedding_model = model or "text-embedding-ada-002"
+        
+        try:
+            response = self.client.embeddings.create(
+                model=embedding_model,
+                input=text
+            )
+            
+            return response.data[0].embedding
+            
+        except Exception as e:
+            logger.error(f"Error getting embedding from OpenAI: {str(e)}")
+            return []
+    
+    def chat(self, messages: List[Dict[str, str]], model: Optional[str] = None, temperature: float = 0.7, max_tokens: int = 1000) -> str:
+        """
+        Generate chat completion using OpenAI
+        
+        Args:
+            messages: List of message objects with 'role' and 'content' keys
+            model: Model to use (defaults to configured model)
+            temperature: Temperature for generation
+            max_tokens: Maximum tokens to generate
+            
+        Returns:
+            Generated response
+        """
+        if not self.client:
+            logger.error("OpenAI client not initialized. API key missing.")
+            return None
+            
+        model = model or self.model
+        
+        try:
+            response = self.client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens
+            )
+            
+            return response.choices[0].message.content
+            
+        except Exception as e:
+            logger.error(f"Error generating chat response with OpenAI: {str(e)}")
+            return None
 
 class OllamaClient:
     """
@@ -156,9 +317,9 @@ class LegalAssistant:
         Initialize legal assistant
         
         Args:
-            llm_client: LLM client (defaults to OllamaClient)
+            llm_client: LLM client (defaults to best available client)
         """
-        self.llm_client = llm_client or OllamaClient()
+        self.llm_client = llm_client or get_llm_client()
     
     def analyze_case(self, case_text: str) -> Dict[str, Any]:
         """
