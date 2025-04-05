@@ -3,9 +3,10 @@ import logging
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
-
+#Postgres Configuration
+DATABASE_URL="postgresql://postgres:Abc.123@localhost:5432/legalease-ke"
 # Database configuration
-DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///kenyalaw.db")
+#DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///kenyalaw.db")
 
 # Kenya Law API configuration
 KENYALAW_BASE_URL = "https://new.kenyalaw.org"
