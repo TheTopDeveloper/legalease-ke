@@ -1,0 +1,8 @@
+Admin
+Email:admin@kenyalegalassistant.com
+Username:admin
+Password:admin123
+
+Test User
+Username:test
+Password:test123
