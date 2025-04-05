@@ -4,7 +4,7 @@ import logging
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 #Postgres Configuration
-DATABASE_URL="postgresql://postgres@localhost:5432/legalease"
+DATABASE_URL="postgresql://legalease:Abc.123@localhost:5432/legalease"
 # Database configuration
 #DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///kenyalaw.db")
 
