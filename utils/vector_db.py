@@ -48,7 +48,18 @@ class VectorDatabase:
                     self.llm_client = llm_client
                 
                 def __call__(self, texts):
-                    return [self.llm_client.get_embedding(text) for text in texts]
+                    # Get embeddings for each text
+                    embeddings = [self.llm_client.get_embedding(text) for text in texts]
+                    
+                    # Convert numpy arrays to lists if needed
+                    processed_embeddings = []
+                    for emb in embeddings:
+                        if isinstance(emb, np.ndarray):
+                            processed_embeddings.append(emb.tolist())
+                        else:
+                            processed_embeddings.append(emb)
+                    
+                    return processed_embeddings
                 
             self.embedding_function = CustomEmbeddingFunction(self.llm_client)
             

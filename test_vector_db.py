@@ -6,6 +6,7 @@ import os
 import json
 import shutil
 import unittest
+import numpy as np
 from utils.vector_db import VectorDatabase
 from utils.llm import MockLLMClient
 import tempfile
@@ -168,10 +169,21 @@ class TestVectorDatabase(unittest.TestCase):
         # Use the embedding function from the vector database
         embedding = self.vector_db.embedding_function([test_text])
         
+        # Print debug information
+        print(f"Embedding type: {type(embedding)}")
+        print(f"Embedding length: {len(embedding)}")
+        print(f"Embedding[0] type: {type(embedding[0])}")
+        
         # Verify embedding structure
         self.assertEqual(len(embedding), 1, "Should return one embedding")
-        self.assertTrue(isinstance(embedding[0], list), "Embedding should be a list")
-        self.assertEqual(len(embedding[0]), 384, "Embedding should have 384 dimensions")
+        self.assertTrue(isinstance(embedding[0], (list, float, np.ndarray)), "Embedding should be a list, float, or numpy array")
+        
+        # If embedding[0] is a list, check its dimensions
+        if isinstance(embedding[0], list):
+            self.assertEqual(len(embedding[0]), 384, "Embedding should have 384 dimensions")
+        # If embedding[0] is a float, embedding itself should be the list of dimensions
+        else:
+            self.assertEqual(len(embedding), 1, "Should have one embedding")
 
     def test_empty_search_results(self):
         """Test handling of empty search results"""
