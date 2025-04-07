@@ -35,7 +35,7 @@
         {{ stats_card('user-shield', users|selectattr('role', 'equalto', 'admin')|list|length, 'Admins', null, 'danger') }}
     </div>
     <div class="col-sm-6 col-md-3">
-        {{ stats_card('building', users|selectattr('role', 'search', 'organization')|list|length, 'Organization Users', null, 'info') }}
+        {{ stats_card('building', users|rejectattr('role', 'equalto', 'admin')|list|length, 'Organization Users', null, 'info') }}
     </div>
 </div>
 
@@ -129,7 +129,7 @@ function filterUsers() {
     const roleFilter = document.getElementById('roleFilter').value;
     const statusFilter = document.getElementById('statusFilter').value;
     
-    const rows = document.querySelectorAll('#rolesTable tbody tr');
+    const rows = document.querySelectorAll('#users tbody tr');
     
     rows.forEach(row => {
         const userInfo = row.querySelector('td:first-child').textContent.toLowerCase();
