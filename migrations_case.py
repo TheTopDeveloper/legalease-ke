@@ -8,12 +8,23 @@ from datetime import datetime
 
 def get_db_connection():
     """Get database connection from environment variables"""
+    # First try to get DATABASE_URL from environment
     db_url = os.environ.get('DATABASE_URL')
+    
+    # If not found in environment, try to import from config.py as fallback
     if not db_url:
-        print("DATABASE_URL environment variable not set")
+        try:
+            from config import DATABASE_URL
+            db_url = DATABASE_URL
+        except (ImportError, AttributeError):
+            pass
+    
+    # If still not found, exit with error
+    if not db_url:
+        print("DATABASE_URL environment variable not set and not found in config.py")
         sys.exit(1)
     
-    # Parse components from DATABASE_URL
+    # Connect using the DATABASE_URL
     conn = psycopg2.connect(db_url)
     return conn
 

@@ -1,0 +1,139 @@
+INFO:app:Database tables created
+DEBUG:htmldate.validators:minimum date setting: 1995-01-01 00:00:00
+INFO:utils.notification_service:Using Mock SMS service for notifications
+INFO:utils.llm:Initialized OLLAMA client with base URL: http://localhost:11434, model: llama3:latest
+INFO:utils.llm:Legal Assistant initialized
+INFO:utils.llm:Initialized Mock LLM client (fallback responses)
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): localhost:11434
+DEBUG:urllib3.connectionpool:http://localhost:11434 "GET /api/version HTTP/1.1" 200 19
+INFO:utils.llm:Ollama server detected at http://localhost:11434
+INFO:utils.llm:Initialized OLLAMA client with base URL: http://localhost:11434, model: llama3:latest
+INFO:utils.llm:Initialized OLLAMA client with base URL: http://localhost:11434, model: deepseek:latest
+INFO:utils.llm:Initialized CounterCheck client with models: llama3:latest (primary) and deepseek:latest (secondary)
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): localhost:11434
+DEBUG:urllib3.connectionpool:http://localhost:11434 "POST /api/generate HTTP/1.1" 404 43
+ERROR:utils.llm:Error generating text with OLLAMA: 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): localhost:11434
+DEBUG:urllib3.connectionpool:http://localhost:11434 "POST /api/generate HTTP/1.1" 404 45
+ERROR:utils.llm:Error generating text with OLLAMA: 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+INFO:utils.llm:Using Counter-Check LLM client with multiple models
+INFO:utils.llm:Legal Assistant initialized
+EEEEEE
+======================================================================
+ERROR: test_case_document_association (__main__.TestCourtCases.test_case_document_association)
+Test associating documents with cases
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/prodai/Desktop/legalease-ke/test_court_cases.py", line 43, in setUp
+    self.test_client = Client(
+                       ^^^^^^^
+  File "<string>", line 4, in __init__
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/orm/state.py", line 571, in _initialize_instance
+    with util.safe_reraise():
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/orm/state.py", line 569, in _initialize_instance
+    manager.original_init(*mixed[1:], **kwargs)
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/orm/decl_base.py", line 2175, in _declarative_constructor
+    raise TypeError(
+TypeError: 'user_id' is an invalid keyword argument for Client
+
+======================================================================
+ERROR: test_case_events (__main__.TestCourtCases.test_case_events)
+Test adding and managing case events
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/prodai/Desktop/legalease-ke/test_court_cases.py", line 43, in setUp
+    self.test_client = Client(
+                       ^^^^^^^
+  File "<string>", line 4, in __init__
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/orm/state.py", line 571, in _initialize_instance
+    with util.safe_reraise():
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/orm/state.py", line 569, in _initialize_instance
+    manager.original_init(*mixed[1:], **kwargs)
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/orm/decl_base.py", line 2175, in _declarative_constructor
+    raise TypeError(
+TypeError: 'user_id' is an invalid keyword argument for Client
+
+======================================================================
+ERROR: test_case_milestone_tracking (__main__.TestCourtCases.test_case_milestone_tracking)
+Test adding and tracking case milestones
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/prodai/Desktop/legalease-ke/test_court_cases.py", line 43, in setUp
+    self.test_client = Client(
+                       ^^^^^^^
+  File "<string>", line 4, in __init__
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/orm/state.py", line 571, in _initialize_instance
+    with util.safe_reraise():
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/orm/state.py", line 569, in _initialize_instance
+    manager.original_init(*mixed[1:], **kwargs)
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/orm/decl_base.py", line 2175, in _declarative_constructor
+    raise TypeError(
+TypeError: 'user_id' is an invalid keyword argument for Client
+
+======================================================================
+ERROR: test_case_status_updates (__main__.TestCourtCases.test_case_status_updates)
+Test updating case status
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/prodai/Desktop/legalease-ke/test_court_cases.py", line 43, in setUp
+    self.test_client = Client(
+                       ^^^^^^^
+  File "<string>", line 4, in __init__
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/orm/state.py", line 571, in _initialize_instance
+    with util.safe_reraise():
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/orm/state.py", line 569, in _initialize_instance
+    manager.original_init(*mixed[1:], **kwargs)
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/orm/decl_base.py", line 2175, in _declarative_constructor
+    raise TypeError(
+TypeError: 'user_id' is an invalid keyword argument for Client
+
+======================================================================
+ERROR: test_case_vector_db_integration (__main__.TestCourtCases.test_case_vector_db_integration)
+Test integrating case data with vector database
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/prodai/Desktop/legalease-ke/test_court_cases.py", line 43, in setUp
+    self.test_client = Client(
+                       ^^^^^^^
+  File "<string>", line 4, in __init__
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/orm/state.py", line 571, in _initialize_instance
+    with util.safe_reraise():
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/orm/state.py", line 569, in _initialize_instance
+    manager.original_init(*mixed[1:], **kwargs)
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/orm/decl_base.py", line 2175, in _declarative_constructor
+    raise TypeError(
+TypeError: 'user_id' is an invalid keyword argument for Client
+
+======================================================================
+ERROR: test_create_case (__main__.TestCourtCases.test_create_case)
+Test creating a new case
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/prodai/Desktop/legalease-ke/test_court_cases.py", line 43, in setUp
+    self.test_client = Client(
+                       ^^^^^^^
+  File "<string>", line 4, in __init__
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/orm/state.py", line 571, in _initialize_instance
+    with util.safe_reraise():
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/orm/state.py", line 569, in _initialize_instance
+    manager.original_init(*mixed[1:], **kwargs)
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/orm/decl_base.py", line 2175, in _declarative_constructor
+    raise TypeError(
+TypeError: 'user_id' is an invalid keyword argument for Client
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.412s
+
+FAILED (errors=6)
