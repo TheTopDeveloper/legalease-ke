@@ -3,6 +3,7 @@ Routes for admin functionality, including role and permission management.
 """
 import logging
 import os
+import datetime
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify
 from flask_login import current_user, login_required
 from sqlalchemy import desc
@@ -21,6 +22,11 @@ logger = logging.getLogger(__name__)
 
 # Create admin blueprint
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+
+# Make a context processor to add now to all templates
+@admin_bp.context_processor
+def inject_now():
+    return {'now': datetime.datetime.now()}
 
 @admin_bp.route('/')
 @login_required
@@ -247,8 +253,9 @@ def roles():
     # Get permission groups from the Permissions class
     permission_groups = Permissions.get_permission_groups()
     
+    # Use the new responsive template
     return render_template(
-        'admin/roles.html', 
+        'admin/new/roles.html', 
         roles=roles, 
         permissions=permissions, 
         permission_groups=permission_groups
@@ -270,14 +277,14 @@ def create_role():
         
         if not name:
             flash("Role name is required", "error")
-            return render_template('admin/create_role.html', 
+            return render_template('admin/new/create_role.html', 
                                   permissions=permissions, 
                                   permission_groups=permission_groups)
             
         # Check if role already exists
         if Role.query.filter_by(name=name).first():
             flash("Role already exists", "error")
-            return render_template('admin/create_role.html', 
+            return render_template('admin/new/create_role.html', 
                                   permissions=permissions, 
                                   permission_groups=permission_groups)
             
@@ -304,7 +311,8 @@ def create_role():
             logger.error(f"Error creating role: {str(e)}")
             flash(f"Error creating role: {str(e)}", "error")
     
-    return render_template('admin/create_role.html', 
+    # Use the new responsive template
+    return render_template('admin/new/create_role.html', 
                           permissions=permissions, 
                           permission_groups=permission_groups)
 
@@ -345,7 +353,8 @@ def edit_role(role_id):
             logger.error(f"Error updating role: {str(e)}")
             flash(f"Error updating role: {str(e)}", "error")
     
-    return render_template('admin/edit_role.html', 
+    # Use the new responsive template
+    return render_template('admin/new/edit_role.html', 
                           role=role, 
                           permissions=permissions, 
                           permission_groups=permission_groups)

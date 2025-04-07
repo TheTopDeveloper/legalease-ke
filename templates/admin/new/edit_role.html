@@ -1,0 +1,207 @@
+{% extends 'admin/new/layout.html' %}
+{% from 'admin/new/responsive_card.html' import responsive_card, stats_card, info_section %}
+
+{% block title %}Edit Role | Admin - Kenyan Legal Assistant{% endblock %}
+
+{% block breadcrumb %}
+<li class="admin-breadcrumb-item"><a href="{{ url_for('admin.roles') }}">Role Management</a></li>
+<li class="admin-breadcrumb-item active" aria-current="page">Edit Role: {{ role.name }}</li>
+{% endblock %}
+
+{% block admin_content %}
+<!-- Page header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="h2 mb-4">Edit Role: {{ role.name }}</h1>
+        {{ info_section('Role Modification', 'Modify the role details and update the permissions assigned to this role. These changes will affect all users with this role.') }}
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="d-flex justify-content-md-end mb-3">
+            <a href="{{ url_for('admin.roles') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i> Back to Roles
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Role Form -->
+{% call responsive_card('Edit Role', 'Update the details and permissions for this role', null, 'user-shield') %}
+<form method="post" action="{{ url_for('admin.edit_role', role_id=role.id) }}">
+    <!-- Role Information -->
+    <div class="mb-4">
+        <h5 class="mb-3">Role Information</h5>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="form-group mb-3">
+                    <label for="name" class="form-label">Role Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="name" name="name" value="{{ role.name }}" required>
+                    <div class="form-text">Enter a descriptive name for this role</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <input type="text" class="form-control" id="description" name="description" value="{{ role.description }}">
+                    <div class="form-text">Brief description of this role's purpose</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Permissions Section -->
+    <div class="mb-4">
+        <h5 class="d-flex align-items-center mb-3">
+            <span>Role Permissions</span>
+            <div class="ms-auto">
+                <button type="button" class="btn btn-sm btn-outline-primary" id="selectAll">Select All</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="deselectAll">Deselect All</button>
+            </div>
+        </h5>
+        
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i> Select the permissions this role should have. Permissions are grouped by functionality.
+        </div>
+        
+        <div class="row">
+            {% for group_name, permissions in permission_groups.items() %}
+            <div class="col-md-6 mb-4">
+                <div class="permission-group">
+                    <h6 class="permission-group-title d-flex align-items-center">
+                        <i class="fas fa-layer-group me-2"></i>
+                        <span>{{ group_name }}</span>
+                        <div class="ms-auto">
+                            <button type="button" class="btn btn-sm btn-outline-secondary group-select" data-group="{{ group_name }}">Select Group</button>
+                        </div>
+                    </h6>
+                    <div class="permission-list">
+                        {% for permission in permissions %}
+                        <div class="permission-item">
+                            <div class="form-check">
+                                <input class="form-check-input permission-checkbox" type="checkbox" name="permission_{{ permission.id }}" id="permission_{{ permission.id }}" data-group="{{ group_name }}" 
+                                {% if permission in role.permissions %}checked{% endif %}>
+                                <label class="form-check-label" for="permission_{{ permission.id }}">
+                                    <div class="permission-name">{{ permission.name }}</div>
+                                    <div class="permission-description text-muted small">{{ permission.description }}</div>
+                                </label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Submit buttons -->
+    <div class="row">
+        <div class="col-md-12 text-end">
+            <button type="button" class="btn btn-danger me-2" data-bs-toggle="modal" data-bs-target="#deleteRoleModal">Delete Role</button>
+            <a href="{{ url_for('admin.roles') }}" class="btn btn-secondary me-2">Cancel</a>
+            <button type="submit" class="btn btn-primary">Update Role</button>
+        </div>
+    </div>
+</form>
+{% endcall %}
+
+<!-- Delete Role Modal -->
+<div class="modal fade" id="deleteRoleModal" tabindex="-1" aria-labelledby="deleteRoleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteRoleModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the role <strong>{{ role.name }}</strong>?</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> This action cannot be undone. All users with this role will need to be reassigned.
+                </div>
+                
+                {% if role.users %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-user-times"></i> This role is currently assigned to {{ role.users|length }} user(s). You cannot delete it until you reassign these users.
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('admin.delete_role', role_id=role.id) }}" method="post">
+                    <button type="submit" class="btn btn-danger" {% if role.users %}disabled{% endif %}>Delete Role</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Select all permissions
+    document.getElementById('selectAll').addEventListener('click', function() {
+        document.querySelectorAll('.permission-checkbox').forEach(function(checkbox) {
+            checkbox.checked = true;
+        });
+    });
+    
+    // Deselect all permissions
+    document.getElementById('deselectAll').addEventListener('click', function() {
+        document.querySelectorAll('.permission-checkbox').forEach(function(checkbox) {
+            checkbox.checked = false;
+        });
+    });
+    
+    // Select permissions by group
+    document.querySelectorAll('.group-select').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const group = this.getAttribute('data-group');
+            document.querySelectorAll(`.permission-checkbox[data-group="${group}"]`).forEach(function(checkbox) {
+                checkbox.checked = true;
+            });
+        });
+    });
+});
+</script>
+
+<style>
+.permission-group {
+    background-color: rgba(35, 38, 45, 0.5);
+    border-radius: var(--admin-border-radius);
+    padding: 1rem;
+    height: 100%;
+}
+
+.permission-group-title {
+    font-size: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.permission-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.permission-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.permission-item:last-child {
+    border-bottom: none;
+}
+
+.permission-name {
+    font-weight: 500;
+}
+
+.form-check-input {
+    cursor: pointer;
+    width: 1.2em;
+    height: 1.2em;
+}
+</style>
+{% endblock %}

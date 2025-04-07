@@ -1,0 +1,217 @@
+{% extends 'admin/new/layout.html' %}
+{% from 'admin/new/responsive_card.html' import responsive_card, stats_card, info_section, responsive_table %}
+
+{% block title %}Role Management | Admin - Kenyan Legal Assistant{% endblock %}
+
+{% block breadcrumb %}
+<li class="admin-breadcrumb-item active" aria-current="page">Role Management</li>
+{% endblock %}
+
+{% block admin_content %}
+<!-- Page header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="h2 mb-4">Role Management</h1>
+        {{ info_section('Role Administration', 'Manage system roles and their associated permissions. Roles define what users can access and modify in the system.') }}
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="d-flex justify-content-md-end mb-3">
+            <a href="{{ url_for('admin.create_role') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i> Add New Role
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Role statistics -->
+<div class="row mb-4">
+    <div class="col-sm-6 col-md-4">
+        {{ stats_card('shield-alt', roles|length, 'Total Roles', 'System and custom roles', 'primary') }}
+    </div>
+    <div class="col-sm-6 col-md-4">
+        {{ stats_card('lock', roles|selectattr('is_default', 'eq', true)|list|length, 'System Roles', 'Non-modifiable roles', 'danger') }}
+    </div>
+    <div class="col-sm-6 col-md-4">
+        {{ stats_card('user-cog', roles|rejectattr('is_default', 'eq', true)|list|length, 'Custom Roles', 'Organization-specific roles', 'success') }}
+    </div>
+</div>
+
+<!-- Roles management table -->
+{% call responsive_card('Role Management', 'Manage all system and custom roles', null, 'user-shield') %}
+<!-- Roles table -->
+{% set role_rows = [] %}
+{% for role in roles %}
+{% set role_row = [
+    '<div class="d-flex align-items-center"><div class="admin-avatar me-2 ' ~ ('bg-danger' if role.is_default else 'bg-success') ~ '">' ~ role.name[:1] ~ '</div><div><strong>' ~ role.name ~ '</strong><div class="small text-muted">' ~ role.description|default('No description')|truncate(50) ~ '</div></div></div>',
+    '<span class="badge ' ~ ('bg-danger' if role.is_default else 'bg-success') ~ '">' ~ ('System Role' if role.is_default else 'Custom Role') ~ '</span>',
+    role.permissions|length|string,
+    '<div class="text-muted small">' ~ (role.created_at|default('')|string)[:10] ~ '</div>',
+    '<div class="action-buttons">' ~ 
+    ('<a href="' ~ url_for('admin.edit_role', role_id=role.id) ~ '" class="btn btn-sm btn-outline-primary ' ~ ('disabled' if role.is_default else '') ~ '"><i class="fas fa-edit"></i><span class="d-none d-lg-inline"> Edit</span></a>' if not role.is_default else '<button class="btn btn-sm btn-outline-secondary disabled"><i class="fas fa-lock"></i><span class="d-none d-lg-inline"> System</span></button>') ~ 
+    (' <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteRoleModal' ~ role.id ~ '"><i class="fas fa-trash"></i><span class="d-none d-lg-inline"> Delete</span></button>' if not role.is_default else '') ~
+    '</div>'
+] %}
+{% set _ = role_rows.append(role_row) %}
+{% endfor %}
+
+{{ responsive_table(
+    ['Role', 'Type', 'Permissions', 'Created', 'Actions'],
+    role_rows,
+    'No roles found in the system',
+    '<a href="' ~ url_for('admin.create_role') ~ '" class="btn btn-primary"><i class="fas fa-plus"></i> Add New Role</a>',
+    'roles'
+) }}
+
+<!-- Delete Modals -->
+{% for role in roles %}
+{% if not role.is_default %}
+<div class="modal fade" id="deleteRoleModal{{ role.id }}" tabindex="-1" aria-labelledby="deleteRoleModalLabel{{ role.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteRoleModalLabel{{ role.id }}">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the role <strong>{{ role.name }}</strong>?</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> This action cannot be undone. All users with this role will need to be reassigned.
+                </div>
+                
+                {% if role.users %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-user-times"></i> This role is currently assigned to {{ role.users|length }} user(s). You cannot delete it until you reassign these users.
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('admin.delete_role', role_id=role.id) }}" method="post">
+                    <button type="submit" class="btn btn-danger" {% if role.users %}disabled{% endif %}>Delete Role</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+{% endcall %}
+
+<!-- Permission Overview -->
+{% call responsive_card('Permission Groups', 'Overview of available permissions by group', null, 'key') %}
+<div class="row">
+    {% for group_name, permissions in permission_groups.items() %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="permission-group">
+            <h5 class="permission-group-title">
+                <i class="fas fa-layer-group me-2"></i>
+                {{ group_name }}
+            </h5>
+            <ul class="permission-list">
+                {% for permission in permissions %}
+                <li class="permission-item">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <div>
+                            <div class="permission-name">{{ permission.name }}</div>
+                            <div class="permission-description text-muted small">{{ permission.description }}</div>
+                        </div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endcall %}
+{% endblock %}
+
+{% block admin_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    makeTablesResponsive();
+});
+
+// Add role filtering functionality
+function filterRoles() {
+    const searchInput = document.getElementById('roleSearch').value.toLowerCase();
+    const typeFilter = document.getElementById('typeFilter').value;
+    
+    const rows = document.querySelectorAll('#roles tbody tr');
+    
+    rows.forEach(row => {
+        const roleInfo = row.querySelector('td:first-child').textContent.toLowerCase();
+        const typeCell = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+        
+        let showByType = true;
+        if (typeFilter !== 'all') {
+            showByType = typeCell.includes(typeFilter.toLowerCase());
+        }
+        
+        const showBySearch = roleInfo.includes(searchInput);
+        
+        if (showByType && showBySearch) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Also filter mobile cards
+    const mobileCards = document.querySelectorAll('.mobile-card');
+    mobileCards.forEach(card => {
+        const roleInfo = card.querySelector('.mobile-card-title').textContent.toLowerCase();
+        const typeValue = card.querySelector('.item:nth-child(1) .value').textContent.toLowerCase();
+        
+        let showByType = true;
+        if (typeFilter !== 'all') {
+            showByType = typeValue.includes(typeFilter.toLowerCase());
+        }
+        
+        const showBySearch = roleInfo.includes(searchInput);
+        
+        if (showByType && showBySearch) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+</script>
+
+<style>
+.permission-group {
+    background-color: rgba(35, 38, 45, 0.5);
+    border-radius: var(--admin-border-radius);
+    padding: 1rem;
+    height: 100%;
+}
+
+.permission-group-title {
+    font-size: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.permission-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.permission-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.permission-item:last-child {
+    border-bottom: none;
+}
+
+.permission-name {
+    font-weight: 500;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,175 @@
+{% extends 'admin/new/layout.html' %}
+{% from 'admin/new/responsive_card.html' import responsive_card, stats_card, info_section %}
+
+{% block title %}Create Role | Admin - Kenyan Legal Assistant{% endblock %}
+
+{% block breadcrumb %}
+<li class="admin-breadcrumb-item"><a href="{{ url_for('admin.roles') }}">Role Management</a></li>
+<li class="admin-breadcrumb-item active" aria-current="page">Create New Role</li>
+{% endblock %}
+
+{% block admin_content %}
+<!-- Page header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="h2 mb-4">Create New Role</h1>
+        {{ info_section('Role Creation', 'Create a new custom role to define what users can access and modify in the system. Select the appropriate permissions for this role.') }}
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="d-flex justify-content-md-end mb-3">
+            <a href="{{ url_for('admin.roles') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i> Back to Roles
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Create Role Form -->
+{% call responsive_card('Create Role', 'Configure the details and permissions for the new role', null, 'user-shield') %}
+<form method="post" action="{{ url_for('admin.create_role') }}">
+    <!-- Role Information -->
+    <div class="mb-4">
+        <h5 class="mb-3">Role Information</h5>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="form-group mb-3">
+                    <label for="name" class="form-label">Role Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="name" name="name" required>
+                    <div class="form-text">Enter a descriptive name for this role</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <input type="text" class="form-control" id="description" name="description">
+                    <div class="form-text">Brief description of this role's purpose</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Permissions Section -->
+    <div class="mb-4">
+        <h5 class="d-flex align-items-center mb-3">
+            <span>Role Permissions</span>
+            <div class="ms-auto">
+                <button type="button" class="btn btn-sm btn-outline-primary" id="selectAll">Select All</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="deselectAll">Deselect All</button>
+            </div>
+        </h5>
+        
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i> Select the permissions this role should have. Permissions are grouped by functionality.
+        </div>
+        
+        <div class="row">
+            {% for group_name, permissions in permission_groups.items() %}
+            <div class="col-md-6 mb-4">
+                <div class="permission-group">
+                    <h6 class="permission-group-title d-flex align-items-center">
+                        <i class="fas fa-layer-group me-2"></i>
+                        <span>{{ group_name }}</span>
+                        <div class="ms-auto">
+                            <button type="button" class="btn btn-sm btn-outline-secondary group-select" data-group="{{ group_name }}">Select Group</button>
+                        </div>
+                    </h6>
+                    <div class="permission-list">
+                        {% for permission in permissions %}
+                        <div class="permission-item">
+                            <div class="form-check">
+                                <input class="form-check-input permission-checkbox" type="checkbox" name="permission_{{ permission.id }}" id="permission_{{ permission.id }}" data-group="{{ group_name }}">
+                                <label class="form-check-label" for="permission_{{ permission.id }}">
+                                    <div class="permission-name">{{ permission.name }}</div>
+                                    <div class="permission-description text-muted small">{{ permission.description }}</div>
+                                </label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Submit buttons -->
+    <div class="row">
+        <div class="col-md-12 text-end">
+            <a href="{{ url_for('admin.roles') }}" class="btn btn-secondary me-2">Cancel</a>
+            <button type="submit" class="btn btn-primary">Create Role</button>
+        </div>
+    </div>
+</form>
+{% endcall %}
+{% endblock %}
+
+{% block admin_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Select all permissions
+    document.getElementById('selectAll').addEventListener('click', function() {
+        document.querySelectorAll('.permission-checkbox').forEach(function(checkbox) {
+            checkbox.checked = true;
+        });
+    });
+    
+    // Deselect all permissions
+    document.getElementById('deselectAll').addEventListener('click', function() {
+        document.querySelectorAll('.permission-checkbox').forEach(function(checkbox) {
+            checkbox.checked = false;
+        });
+    });
+    
+    // Select permissions by group
+    document.querySelectorAll('.group-select').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const group = this.getAttribute('data-group');
+            document.querySelectorAll(`.permission-checkbox[data-group="${group}"]`).forEach(function(checkbox) {
+                checkbox.checked = true;
+            });
+        });
+    });
+});
+</script>
+
+<style>
+.permission-group {
+    background-color: rgba(35, 38, 45, 0.5);
+    border-radius: var(--admin-border-radius);
+    padding: 1rem;
+    height: 100%;
+}
+
+.permission-group-title {
+    font-size: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.permission-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.permission-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.permission-item:last-child {
+    border-bottom: none;
+}
+
+.permission-name {
+    font-weight: 500;
+}
+
+.form-check-input {
+    cursor: pointer;
+    width: 1.2em;
+    height: 1.2em;
+}
+</style>
+{% endblock %}
