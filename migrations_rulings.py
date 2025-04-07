@@ -16,13 +16,23 @@ logger = logging.getLogger(__name__)
 def get_db_connection():
     """Get database connection from environment variables"""
     try:
+        # Try to load environment variables from .env file if it exists
+        try:
+            from dotenv import load_dotenv
+            load_dotenv()
+            logger.info("Loaded environment variables from .env file")
+        except ImportError:
+            logger.warning("python-dotenv not installed, proceeding without loading .env file")
+            
         # First try to use the DATABASE_URL environment variable
         database_url = os.environ.get('DATABASE_URL')
         if database_url:
+            logger.info("Connecting using DATABASE_URL")
             conn = psycopg2.connect(database_url)
             return conn
         
         # Fallback to individual connection parameters
+        logger.info("Connecting using individual connection parameters")
         conn = psycopg2.connect(
             host=os.environ.get('PGHOST'),
             database=os.environ.get('PGDATABASE'),
