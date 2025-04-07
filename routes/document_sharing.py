@@ -277,12 +277,12 @@ def secure_document(token, document_id):
         # Validate token and access
         if not portal_user or not portal_user.is_token_valid():
             flash('Invalid or expired access token.', 'danger')
-            return redirect(url_for('client_portal.login'))
+            return redirect(url_for('client_portal_bp.login'))
         
         # Check if user has access to this document
         if document not in portal_user.shared_documents:
             flash('You do not have access to this document.', 'danger')
-            return redirect(url_for('client_portal.login'))
+            return redirect(url_for('client_portal_bp.login'))
         
         # Log access
         # TODO: Implement access logging
@@ -293,4 +293,4 @@ def secure_document(token, document_id):
     except SQLAlchemyError as e:
         logger.error(f"Database error in secure document: {e}")
         flash('An error occurred while accessing the document.', 'danger')
-        return redirect(url_for('client_portal.login'))
+        return redirect(url_for('client_portal_bp.login'))
