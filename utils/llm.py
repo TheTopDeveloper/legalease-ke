@@ -785,114 +785,60 @@ class OllamaClient:
         logger.info(f"Using Ollama version: {ollama_version}")
         
         # Configure API endpoints based on Ollama version
-        # For version 0.6.4+, prioritize OpenAI-compatible endpoints
-        if ollama_version.startswith("0.6"):
-            api_configs = [
-                # OpenAI-compatible endpoint for 0.6.4+ (primary)
-                {
-                    "url": f"{self.base_url}/v1/chat/completions",
-                    "payload": {
-                        "model": model,
-                        "messages": [{"role": "user", "content": prompt}],
+        # Try all known endpoints to find one that works
+        # Newer Ollama versions might change their API structure
+        
+        # Try all possible endpoints regardless of version
+        api_configs = [
+            # OpenAI-compatible endpoints (prioritized)
+            {
+                "url": f"{self.base_url}/v1/chat/completions",
+                "payload": {
+                    "model": model,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": temperature,
+                    "max_tokens": max_tokens
+                },
+                "extract": lambda data: data.get("choices", [{}])[0].get("message", {}).get("content", "")
+            },
+            {
+                "url": f"{self.base_url}/v1/completions",
+                "payload": {
+                    "model": model,
+                    "prompt": prompt,
+                    "temperature": temperature,
+                    "max_tokens": max_tokens
+                },
+                "extract": lambda data: data.get("choices", [{}])[0].get("text", "")
+            },
+            # Legacy Ollama API endpoints
+            {
+                "url": f"{self.base_url}/api/generate",
+                "payload": {
+                    "model": model,
+                    "prompt": prompt,
+                    "stream": False,
+                    "options": {
                         "temperature": temperature,
-                        "max_tokens": max_tokens
-                    },
-                    "extract": lambda data: data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                        "num_predict": max_tokens
+                    }
                 },
-                # OpenAI-compatible completions endpoint (fallback)
-                {
-                    "url": f"{self.base_url}/v1/completions",
-                    "payload": {
-                        "model": model,
-                        "prompt": prompt,
+                "extract": lambda data: data.get("response", "")
+            },
+            {
+                "url": f"{self.base_url}/api/chat",
+                "payload": {
+                    "model": model,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "stream": False,
+                    "options": {
                         "temperature": temperature,
-                        "max_tokens": max_tokens
-                    },
-                    "extract": lambda data: data.get("choices", [{}])[0].get("text", "")
+                        "num_predict": max_tokens
+                    }
                 },
-                # Legacy API for older 0.6.x versions - only as fallback
-                {
-                    "url": f"{self.base_url}/api/generate",
-                    "payload": {
-                        "model": model,
-                        "prompt": prompt,
-                        "stream": False,
-                        "options": {
-                            "temperature": temperature,
-                            "num_predict": max_tokens
-                        }
-                    },
-                    "extract": lambda data: data.get("response", "")
-                },
-                # Legacy chat API for older 0.6.x versions - only as fallback
-                {
-                    "url": f"{self.base_url}/api/chat",
-                    "payload": {
-                        "model": model,
-                        "messages": [{"role": "user", "content": prompt}],
-                        "stream": False,
-                        "options": {
-                            "temperature": temperature,
-                            "num_predict": max_tokens
-                        }
-                    },
-                    "extract": lambda data: data.get("message", {}).get("content", "")
-                }
-            ]
-        else:
-            # For other versions, try a broader range of endpoints
-            api_configs = [
-                # Standard Ollama API
-                {
-                    "url": f"{self.base_url}/api/generate",
-                    "payload": {
-                        "model": model,
-                        "prompt": prompt,
-                        "stream": False,
-                        "options": {
-                            "temperature": temperature,
-                            "num_predict": max_tokens
-                        }
-                    },
-                    "extract": lambda data: data.get("response", "")
-                },
-                # Newer Ollama chat API
-                {
-                    "url": f"{self.base_url}/api/chat",
-                    "payload": {
-                        "model": model,
-                        "messages": [{"role": "user", "content": prompt}],
-                        "stream": False,
-                        "options": {
-                            "temperature": temperature,
-                            "num_predict": max_tokens
-                        }
-                    },
-                    "extract": lambda data: data.get("message", {}).get("content", "")
-                },
-                # OpenAI-compatible endpoint (newer Ollama versions)
-                {
-                    "url": f"{self.base_url}/v1/chat/completions",
-                    "payload": {
-                        "model": model,
-                        "messages": [{"role": "user", "content": prompt}],
-                        "temperature": temperature,
-                        "max_tokens": max_tokens
-                    },
-                    "extract": lambda data: data.get("choices", [{}])[0].get("message", {}).get("content", "")
-                },
-                # OpenAI-compatible completions endpoint (fallback)
-                {
-                    "url": f"{self.base_url}/v1/completions",
-                    "payload": {
-                        "model": model,
-                        "prompt": prompt,
-                        "temperature": temperature,
-                        "max_tokens": max_tokens
-                    },
-                    "extract": lambda data: data.get("choices", [{}])[0].get("text", "")
-                }
-            ]
+                "extract": lambda data: data.get("message", {}).get("content", "")
+            }
+        ]
         
         errors = []
         for config in api_configs:

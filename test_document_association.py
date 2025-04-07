@@ -98,7 +98,7 @@ class TestDocumentAssociation(unittest.TestCase):
         db.session.commit()
         
         # Verify document was associated with case
-        case = Case.query.filter_by(title='Document Test Case').first()
+        case = db.session.query(Case).filter_by(title='Document Test Case').first()
         self.assertEqual(len(case.documents), 1, "Case should have 1 document")
         self.assertEqual(case.documents[0].title, 'Test Pleading', "Document title should match")
         print("Document association test passed!")
