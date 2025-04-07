@@ -467,12 +467,25 @@ class Event(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
+    # Advanced scheduling fields
+    is_flexible = db.Column(db.Boolean, default=False)  # Whether this event has flexible timing
+    buffer_before = db.Column(db.Integer, default=0)  # Minutes required before the event
+    buffer_after = db.Column(db.Integer, default=0)  # Minutes required after the event
+    related_event_id = db.Column(db.Integer, db.ForeignKey('event.id'))  # For linking related events
+    court_reference_number = db.Column(db.String(100))  # Court-issued reference number
+    participants = db.Column(db.Text)  # Stored as JSON list of participant details
+    travel_time_minutes = db.Column(db.Integer, default=0)  # Estimated travel time to event location
+    notification_preferences = db.Column(db.String(200))  # JSON string of notification preferences
+    synchronization_status = db.Column(db.String(50))  # For tracking sync with external calendars
+    
     # Foreign keys
     case_id = db.Column(db.Integer, db.ForeignKey('case.id'))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     
     # Relationships
     milestones = db.relationship('CaseMilestone', backref='linked_event', lazy='dynamic')
+    related_events = db.relationship('Event', backref=db.backref('parent_event', remote_side=[id]), 
+                                    foreign_keys='Event.related_event_id')
     
     def get_duration_minutes(self):
         """Get event duration in minutes"""
@@ -487,14 +500,151 @@ class Event(db.Model):
         if self.is_all_day or other_event.is_all_day:
             return self.start_time.date() == other_event.start_time.date()
         
-        # Regular events overlap if one starts before the other ends
-        return (self.start_time < other_event.end_time or not other_event.end_time) and \
-               (other_event.start_time < self.end_time or not self.end_time)
+        # Consider buffer times for more accurate conflict detection
+        self_start = self.start_time - timedelta(minutes=self.buffer_before or 0)
+        self_end = self.end_time + timedelta(minutes=self.buffer_after or 0) if self.end_time else self.start_time + timedelta(hours=1)
+        
+        other_start = other_event.start_time - timedelta(minutes=other_event.buffer_before or 0)
+        other_end = other_event.end_time + timedelta(minutes=other_event.buffer_after or 0) if other_event.end_time else other_event.start_time + timedelta(hours=1)
+        
+        # Events overlap if one starts before the other ends
+        return self_start < other_end and other_start < self_end
                
     def is_court_related(self):
         """Check if this event is related to court proceedings"""
         court_event_types = ['Court Appearance', 'Hearing', 'Mention', 'Filing']
         return self.event_type in court_event_types
+    
+    def get_total_time_required(self):
+        """Calculate total time required for this event including travel and buffers"""
+        duration = self.get_duration_minutes()
+        return duration + (self.buffer_before or 0) + (self.buffer_after or 0) + (self.travel_time_minutes or 0)
+    
+    def get_participants_list(self):
+        """Get participants as a Python list"""
+        if not self.participants:
+            return []
+        try:
+            return json.loads(self.participants)
+        except:
+            return []
+            
+    def get_conflict_severity(self, other_event):
+        """
+        Calculate the severity of a conflict with another event
+        Returns: critical, significant, or minor
+        """
+        # Calculate overlap duration in minutes
+        self_start = self.start_time - timedelta(minutes=self.buffer_before or 0)
+        self_end = self.end_time + timedelta(minutes=self.buffer_after or 0) if self.end_time else self.start_time + timedelta(hours=1)
+        
+        other_start = other_event.start_time - timedelta(minutes=other_event.buffer_before or 0)
+        other_end = other_event.end_time + timedelta(minutes=other_event.buffer_after or 0) if other_event.end_time else other_event.start_time + timedelta(hours=1)
+        
+        # Calculate the overlap period
+        overlap_start = max(self_start, other_start)
+        overlap_end = min(self_end, other_end)
+        overlap_minutes = (overlap_end - overlap_start).total_seconds() / 60
+        
+        # Determine severity based on event types, priority, and overlap duration
+        both_court_related = self.is_court_related() and other_event.is_court_related()
+        either_high_priority = self.priority == 1 or other_event.priority == 1
+        
+        if both_court_related:
+            return "critical"  # Two court events overlapping is always critical
+        elif overlap_minutes > 30 and either_high_priority:
+            return "critical"  # Major overlap with high priority event
+        elif overlap_minutes > 15:
+            return "significant"  # Moderate overlap
+        else:
+            return "minor"  # Minor overlap
+            
+    def get_suggested_alternatives(self, date):
+        """
+        Get suggested alternative times on the same day
+        Returns list of datetime objects representing possible start times
+        """
+        from datetime import datetime, time
+        
+        # Start with standard business hours (8am to 5pm)
+        business_start = time(8, 0)
+        business_end = time(17, 0)
+        
+        # For court events, prefer morning slots (courts typically have more hearings in the mornings)
+        if self.is_court_related():
+            preferred_slots = [
+                datetime.combine(date, time(9, 0)),
+                datetime.combine(date, time(10, 0)),
+                datetime.combine(date, time(11, 0)),
+                datetime.combine(date, time(14, 0)),
+                datetime.combine(date, time(15, 0))
+            ]
+        else:
+            # For general events, offer evenly spaced slots
+            preferred_slots = [
+                datetime.combine(date, time(9, 0)),
+                datetime.combine(date, time(11, 0)),
+                datetime.combine(date, time(13, 0)),
+                datetime.combine(date, time(15, 0)),
+                datetime.combine(date, time(16, 0))
+            ]
+            
+        # Add the next day as an option if this is flexible
+        if self.is_flexible:
+            next_day = date + timedelta(days=1)
+            preferred_slots.append(datetime.combine(next_day, time(9, 0)))
+            
+        return preferred_slots
+        
+    def get_notification_recipients(self):
+        """Get a list of notification recipients based on event type and participants"""
+        recipients = []
+        
+        # Always include the event owner
+        if hasattr(self, 'user') and self.user and self.user.email:
+            recipients.append({
+                'name': self.user.name if hasattr(self.user, 'name') else 'User',
+                'email': self.user.email,
+                'role': 'owner'
+            })
+            
+        # Include case participants if this is a case-related event
+        if self.case_id and hasattr(self, 'case') and self.case:
+            # Add client
+            if hasattr(self.case, 'client') and self.case.client and self.case.client.email:
+                recipients.append({
+                    'name': self.case.client.name,
+                    'email': self.case.client.email,
+                    'role': 'client'
+                })
+                
+        # Add any additional participants specified in the event
+        participant_list = self.get_participants_list()
+        for participant in participant_list:
+            if isinstance(participant, dict) and 'email' in participant:
+                recipients.append(participant)
+                
+        return recipients
+    
+    def add_participant(self, name, role=None, email=None, phone=None):
+        """Add a participant to this event"""
+        participants = self.get_participants_list()
+        participants.append({
+            'name': name,
+            'role': role,
+            'email': email,
+            'phone': phone
+        })
+        self.participants = json.dumps(participants)
+        
+    def get_notification_settings(self):
+        """Get notification preferences as a Python dict"""
+        if not self.notification_preferences:
+            return {'email': True, 'sms': False, 'in_app': True}
+        try:
+            return json.loads(self.notification_preferences)
+        except:
+            return {'email': True, 'sms': False, 'in_app': True}
     
     def __repr__(self):
         return f'<Event {self.id}: {self.title}>'

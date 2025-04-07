@@ -149,6 +149,96 @@
                     </div>
                     {% endif %}
                     
+                    <!-- Advanced Scheduling Information Section -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Advanced Scheduling Information</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="row mb-2">
+                                                <div class="col-6 fw-bold">Buffer Before:</div>
+                                                <div class="col-6">{{ event.buffer_before or 0 }} minutes</div>
+                                            </div>
+                                            <div class="row mb-2">
+                                                <div class="col-6 fw-bold">Buffer After:</div>
+                                                <div class="col-6">{{ event.buffer_after or 0 }} minutes</div>
+                                            </div>
+                                            <div class="row mb-2">
+                                                <div class="col-6 fw-bold">Travel Time:</div>
+                                                <div class="col-6">{{ event.travel_time_minutes or 0 }} minutes</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="row mb-2">
+                                                <div class="col-6 fw-bold">Flexible Scheduling:</div>
+                                                <div class="col-6">
+                                                    {% if event.is_flexible %}
+                                                        <span class="badge bg-success">Yes</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">No</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            {% if event.court_reference_number %}
+                                            <div class="row mb-2">
+                                                <div class="col-6 fw-bold">Court Reference:</div>
+                                                <div class="col-6">{{ event.court_reference_number }}</div>
+                                            </div>
+                                            {% endif %}
+                                            {% if event.notification_preferences %}
+                                            <div class="row mb-2">
+                                                <div class="col-6 fw-bold">Notifications:</div>
+                                                <div class="col-6">{{ event.notification_preferences }}</div>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    {% if event.participants %}
+                                    <div class="row mt-2">
+                                        <div class="col-md-3 fw-bold">Participants:</div>
+                                        <div class="col-md-9">
+                                            {{ event.participants }}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if conflict_details %}
+                                    <div class="row mt-3">
+                                        <div class="col-12">
+                                            <div class="alert alert-warning">
+                                                <h6 class="alert-heading">Conflict Analysis:</h6>
+                                                <ul class="mb-0">
+                                                    {% for conflict in conflict_details %}
+                                                    <li>
+                                                        {{ conflict.title }} ({{ conflict.start_time }})
+                                                        <span class="badge 
+                                                            {% if conflict.severity == 'critical' %}bg-danger
+                                                            {% elif conflict.severity == 'significant' %}bg-warning
+                                                            {% else %}bg-info{% endif %}">
+                                                            {{ conflict.severity }}
+                                                        </span>
+                                                        {% if conflict.is_double_court %}
+                                                        <span class="badge bg-danger">Double Court Booking!</span>
+                                                        {% endif %}
+                                                        <br>
+                                                        <small class="text-muted">Overlap: {{ conflict.overlap_minutes }} minutes</small>
+                                                    </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="row mb-3">
                         <div class="col-md-3 fw-bold">Created:</div>
                         <div class="col-md-9">

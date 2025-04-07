@@ -262,6 +262,16 @@ def create():
             flash(f'Invalid date format: {str(e)}', 'error')
             return redirect(url_for('events.create'))
         
+        # Get advanced scheduling parameters
+        buffer_before = request.form.get('buffer_before', '0')
+        buffer_after = request.form.get('buffer_after', '0')
+        travel_time_minutes = request.form.get('travel_time_minutes', '0')
+        is_flexible = 'is_flexible' in request.form
+        court_reference_number = request.form.get('court_reference_number', '')
+        participants = request.form.get('participants', '')
+        related_event_id = request.form.get('related_event_id') or None
+        notification_preferences = request.form.get('notification_preferences', '')
+        
         # Create new event
         new_event = Event(
             title=title,
@@ -277,15 +287,42 @@ def create():
             is_recurring=is_recurring,
             recurrence_pattern=recurrence_pattern if is_recurring else None,
             recurrence_end_date=recurrence_end_date,
-            reminder_time=int(reminder_time)
+            reminder_time=int(reminder_time),
+            # Advanced scheduling fields
+            buffer_before=int(buffer_before),
+            buffer_after=int(buffer_after),
+            travel_time_minutes=int(travel_time_minutes),
+            is_flexible=is_flexible,
+            court_reference_number=court_reference_number,
+            participants=participants,
+            related_event_id=related_event_id,
+            notification_preferences=notification_preferences
         )
         
         # Check for conflicts
-        conflicts = check_conflicts(new_event)
+        conflicts, conflict_details = check_conflicts(new_event)
         if conflicts:
-            conflict_warning = f"Warning: This event conflicts with {len(conflicts)} existing events."
+            # Create a more detailed conflict warning if we have details
+            if conflict_details:
+                # Count severity levels
+                critical = sum(1 for c in conflict_details if c['severity'] == 'critical')
+                significant = sum(1 for c in conflict_details if c['severity'] == 'significant')
+                minor = sum(1 for c in conflict_details if c['severity'] == 'minor')
+                
+                if critical > 0:
+                    conflict_warning = f"Warning: This event has {critical} critical conflicts that require attention."
+                    flash(conflict_warning, 'danger')
+                elif significant > 0:
+                    conflict_warning = f"Warning: This event has {significant} significant conflicts that should be reviewed."
+                    flash(conflict_warning, 'warning')
+                else:
+                    conflict_warning = f"Notice: This event has {minor} minor conflicts."
+                    flash(conflict_warning, 'info')
+            else:
+                conflict_warning = f"Warning: This event conflicts with {len(conflicts)} existing events."
+                flash(conflict_warning, 'warning')
+                
             new_event.conflict_status = 'potential'
-            flash(conflict_warning, 'warning')
         
         # Save to database
         db.session.add(new_event)
@@ -339,13 +376,14 @@ def view(event_id):
         flash('You do not have permission to view this event', 'error')
         return redirect(url_for('events.index'))
     
-    # Check for conflicts
-    conflicts = check_conflicts(event)
+    # Check for conflicts with enhanced conflict detection
+    conflicts, conflict_details = check_conflicts(event)
     
     return render_template(
         'events/view.html',
         event=event,
-        conflicts=conflicts
+        conflicts=conflicts,
+        conflict_details=conflict_details
     )
 
 @events_bp.route('/<int:event_id>/edit', methods=['GET', 'POST'])
@@ -389,12 +427,40 @@ def edit(event_id):
             flash(f'Invalid date format: {str(e)}', 'error')
             return redirect(url_for('events.edit', event_id=event.id))
         
-        # Check for conflicts
-        conflicts = check_conflicts(event)
+        # Get advanced scheduling parameters
+        event.buffer_before = int(request.form.get('buffer_before', '0'))
+        event.buffer_after = int(request.form.get('buffer_after', '0'))
+        event.travel_time_minutes = int(request.form.get('travel_time_minutes', '0'))
+        event.is_flexible = 'is_flexible' in request.form
+        event.court_reference_number = request.form.get('court_reference_number', '')
+        event.participants = request.form.get('participants', '')
+        event.related_event_id = request.form.get('related_event_id') or None
+        event.notification_preferences = request.form.get('notification_preferences', '')
+        
+        # Check for conflicts with enhanced conflict detection
+        conflicts, conflict_details = check_conflicts(event)
         if conflicts:
-            conflict_warning = f"Warning: This event conflicts with {len(conflicts)} existing events."
+            # Create a more detailed conflict warning if we have details
+            if conflict_details:
+                # Count severity levels
+                critical = sum(1 for c in conflict_details if c['severity'] == 'critical')
+                significant = sum(1 for c in conflict_details if c['severity'] == 'significant')
+                minor = sum(1 for c in conflict_details if c['severity'] == 'minor')
+                
+                if critical > 0:
+                    conflict_warning = f"Warning: This event has {critical} critical conflicts that require attention."
+                    flash(conflict_warning, 'danger')
+                elif significant > 0:
+                    conflict_warning = f"Warning: This event has {significant} significant conflicts that should be reviewed."
+                    flash(conflict_warning, 'warning')
+                else:
+                    conflict_warning = f"Notice: This event has {minor} minor conflicts."
+                    flash(conflict_warning, 'info')
+            else:
+                conflict_warning = f"Warning: This event conflicts with {len(conflicts)} existing events."
+                flash(conflict_warning, 'warning')
+                
             event.conflict_status = 'potential'
-            flash(conflict_warning, 'warning')
         else:
             event.conflict_status = None
         
@@ -482,13 +548,18 @@ def resolve_conflict(event_id):
 @events_bp.route('/suggest-times', methods=['POST'])
 @login_required
 def suggest_times():
-    """Suggest available times for scheduling"""
+    """Suggest available times for scheduling with advanced conflict detection"""
     # Get parameters from request
     data = request.get_json()
     date_str = data.get('date')
     duration_minutes = int(data.get('duration', 60))
     case_id = data.get('case_id')
     event_type = data.get('event_type')
+    location = data.get('location')
+    buffer_before = int(data.get('buffer_before', 0))
+    buffer_after = int(data.get('buffer_after', 0))
+    travel_time = int(data.get('travel_time', 0))
+    court_priority = data.get('court_priority', False)  # Whether to prioritize court schedules
     
     try:
         target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
@@ -501,24 +572,48 @@ def suggest_times():
         func.date(Event.start_time) == target_date
     ).order_by(Event.start_time).all()
     
+    # Court operational hours might be different from business hours
+    court_start_hour = 8  # Courts typically start at 8:00 AM
+    court_end_hour = 16   # Courts typically end by 4:00 PM
+    
     # Business hours (8:00 AM to 5:00 PM, adjust as needed)
     business_start_hour = 8
     business_end_hour = 17
     
+    # Choose the appropriate hours based on event type
+    is_court_related = event_type in ['Court Appearance', 'Hearing', 'Mention', 'Filing']
+    
+    if is_court_related and court_priority:
+        start_hour = court_start_hour
+        end_hour = court_end_hour
+    else:
+        start_hour = business_start_hour
+        end_hour = business_end_hour
+    
+    # Total time needed including buffers and travel time
+    total_minutes_needed = duration_minutes + buffer_before + buffer_after + travel_time
+    
     # Create list of available time slots (30-minute increments)
-    business_day_start = datetime.combine(target_date, datetime.min.time().replace(hour=business_start_hour))
-    business_day_end = datetime.combine(target_date, datetime.min.time().replace(hour=business_end_hour))
+    day_start = datetime.combine(target_date, datetime.min.time().replace(hour=start_hour))
+    day_end = datetime.combine(target_date, datetime.min.time().replace(hour=end_hour))
     
     # Generate potential time slots (30-minute intervals)
     time_slots = []
-    current_time = business_day_start
-    while current_time < business_day_end:
-        end_time = current_time + timedelta(minutes=duration_minutes)
-        if end_time <= business_day_end:
+    current_time = day_start
+    while current_time < day_end:
+        # The actual event window including buffers
+        event_start = current_time
+        event_end = current_time + timedelta(minutes=total_minutes_needed)
+        
+        # Only include slots that fit within the day
+        if event_end <= day_end:
             time_slots.append({
                 'start': current_time,
-                'end': end_time,
-                'available': True
+                'end': current_time + timedelta(minutes=duration_minutes),  # Just the event itself
+                'buffer_start': current_time - timedelta(minutes=buffer_before) if buffer_before > 0 else current_time,
+                'buffer_end': event_end,
+                'available': True,
+                'conflicts': []
             })
         current_time += timedelta(minutes=30)
     
@@ -528,11 +623,27 @@ def suggest_times():
             # Skip if the slot is already marked as unavailable
             if not slot['available']:
                 continue
-                
-            # Check if slot overlaps with the event
-            event_end = event.end_time or (event.start_time + timedelta(minutes=60))
-            if not (slot['end'] <= event.start_time or slot['start'] >= event_end):
+            
+            # Get the complete time range for the existing event including buffers and travel time
+            existing_event_start = event.start_time - timedelta(minutes=event.buffer_before or 0)
+            
+            if event.end_time:
+                existing_event_end = event.end_time + timedelta(minutes=event.buffer_after or 0)
+            else:
+                # Default duration of 1 hour if no end time
+                existing_event_end = event.start_time + timedelta(hours=1) + timedelta(minutes=event.buffer_after or 0)
+            
+            # Check for overlap between the slot (including buffers) and the existing event
+            if (slot['buffer_start'] < existing_event_end and 
+                slot['buffer_end'] > existing_event_start):
+                # There's an overlap - the slot conflicts with an existing event
                 slot['available'] = False
+                slot['conflicts'].append({
+                    'event_id': event.id,
+                    'title': event.title,
+                    'type': event.event_type,
+                    'time': event.start_time.strftime('%H:%M')
+                })
     
     # Filter to only available slots
     available_slots = [slot for slot in time_slots if slot['available']]
@@ -541,26 +652,31 @@ def suggest_times():
     formatted_slots = [{
         'start_time': slot['start'].strftime('%H:%M'),
         'end_time': slot['end'].strftime('%H:%M'),
-        'formatted_time': f"{slot['start'].strftime('%I:%M %p')} - {slot['end'].strftime('%I:%M %p')}"
+        'formatted_time': f"{slot['start'].strftime('%I:%M %p')} - {slot['end'].strftime('%I:%M %p')}",
+        'with_buffers': f"{slot['buffer_start'].strftime('%I:%M %p')} - {slot['buffer_end'].strftime('%I:%M %p')}" if buffer_before > 0 or buffer_after > 0 else None
     } for slot in available_slots]
     
     # Special case: court hearings are typically scheduled in the morning
-    if event_type in ['Court Appearance', 'Hearing', 'Mention']:
-        # Prioritize morning slots for court events
+    if is_court_related:
+        # Prioritize morning slots for court events (court hearings typically happen in the morning)
         morning_slots = [slot for slot in formatted_slots if datetime.strptime(slot['start_time'], '%H:%M').hour < 12]
         afternoon_slots = [slot for slot in formatted_slots if datetime.strptime(slot['start_time'], '%H:%M').hour >= 12]
         
-        # Put morning slots first for court events
+        # Reorder to show morning slots first, but still include afternoon slots
         formatted_slots = morning_slots + afternoon_slots
     
     return jsonify({
-        'date': date_str,
-        'available_slots': formatted_slots
+        'available_slots': formatted_slots,
+        'date': target_date.strftime('%Y-%m-%d'),
+        'total_slots': len(formatted_slots),
+        'duration_minutes': duration_minutes,
+        'total_time_needed': total_minutes_needed,
+        'is_court_related': is_court_related
     })
 
 # Helper functions
 def check_conflicts(event):
-    """Check if an event has conflicts with existing events"""
+    """Check if an event has conflicts with existing events and provide detailed conflict info"""
     # Skip conflict check for the same event (in case of edit)
     query = Event.query.filter(
         Event.user_id == current_user.id,
@@ -570,12 +686,73 @@ def check_conflicts(event):
     
     same_day_events = query.all()
     conflicts = []
+    conflict_details = []
+    
+    # Also check for events +/- 1 day if this is a multi-day event or has significant buffer/travel time
+    total_time_with_buffers = (event.get_duration_minutes() + 
+                              (event.buffer_before or 0) + 
+                              (event.buffer_after or 0) + 
+                              (event.travel_time_minutes or 0))
+    
+    # If total time exceeds 12 hours, check adjacent days too
+    if total_time_with_buffers > 720:  # 12 hours in minutes
+        adjacent_day_events = Event.query.filter(
+            Event.user_id == current_user.id,
+            Event.id != event.id,
+            or_(
+                func.date(Event.start_time) == event.start_time.date() - timedelta(days=1),
+                func.date(Event.start_time) == event.start_time.date() + timedelta(days=1)
+            )
+        ).all()
+        same_day_events.extend(adjacent_day_events)
     
     for existing_event in same_day_events:
         if event.overlaps_with(existing_event):
             conflicts.append(existing_event)
+            
+            # Determine conflict severity based on overlap duration
+            # Calculate overlap duration
+            existing_start = existing_event.start_time - timedelta(minutes=existing_event.buffer_before or 0)
+            if existing_event.end_time:
+                existing_end = existing_event.end_time + timedelta(minutes=existing_event.buffer_after or 0)
+            else:
+                existing_end = existing_event.start_time + timedelta(hours=1)
+            
+            event_start = event.start_time - timedelta(minutes=event.buffer_before or 0)
+            if event.end_time:
+                event_end = event.end_time + timedelta(minutes=event.buffer_after or 0)
+            else:
+                event_end = event.start_time + timedelta(hours=1)
+            
+            # Calculate overlap in minutes
+            overlap_start = max(existing_start, event_start)
+            overlap_end = min(existing_end, event_end)
+            overlap_minutes = (overlap_end - overlap_start).total_seconds() / 60
+            
+            # Determine conflict severity based on overlap and priority
+            if overlap_minutes > 30 and (existing_event.priority == 1 or event.priority == 1):
+                severity = "critical"
+            elif overlap_minutes > 15:
+                severity = "significant"
+            else:
+                severity = "minor"
+            
+            # Note if both are court-related events (most critical)
+            is_double_court = existing_event.is_court_related() and event.is_court_related()
+            
+            conflict_details.append({
+                'event_id': existing_event.id,
+                'title': existing_event.title,
+                'event_type': existing_event.event_type,
+                'start_time': existing_event.start_time.strftime('%H:%M'),
+                'end_time': existing_event.end_time.strftime('%H:%M') if existing_event.end_time else None,
+                'priority': existing_event.priority,
+                'overlap_minutes': int(overlap_minutes),
+                'severity': severity,
+                'is_double_court': is_double_court
+            })
     
-    return conflicts
+    return conflicts, conflict_details if conflict_details else None
 
 def create_recurring_events(base_event):
     """Create recurring instances of an event"""
@@ -587,6 +764,10 @@ def create_recurring_events(base_event):
     
     # Skip the first occurrence (it's the base event)
     current_date = start_date
+    
+    # Define time deltas for different recurrence patterns
+    delta = None
+    month_delta = None
     
     if base_event.recurrence_pattern == 'daily':
         delta = timedelta(days=1)
@@ -605,7 +786,7 @@ def create_recurring_events(base_event):
     
     # Create recurring instances
     while current_date < end_date:
-        if base_event.recurrence_pattern == 'monthly':
+        if base_event.recurrence_pattern == 'monthly' and month_delta is not None:
             # Monthly recurrence - try to keep the same day of month
             month = current_date.month + month_delta
             year = current_date.year
@@ -626,7 +807,7 @@ def create_recurring_events(base_event):
                     # For other months, use the last day of the month
                     if month in [4, 6, 9, 11] and current_date.day > 30:
                         current_date = date(year, month, 30)
-        else:
+        elif delta is not None:
             # For daily, weekly, biweekly
             current_date += delta
         
@@ -650,11 +831,20 @@ def create_recurring_events(base_event):
             priority=base_event.priority,
             is_all_day=base_event.is_all_day,
             is_recurring=False,  # Child events are not recurring themselves
-            reminder_time=base_event.reminder_time
+            reminder_time=base_event.reminder_time,
+            # Copy advanced scheduling fields
+            buffer_before=base_event.buffer_before,
+            buffer_after=base_event.buffer_after,
+            travel_time_minutes=base_event.travel_time_minutes,
+            is_flexible=base_event.is_flexible,
+            court_reference_number=base_event.court_reference_number,
+            participants=base_event.participants,
+            related_event_id=base_event.related_event_id,
+            notification_preferences=base_event.notification_preferences
         )
         
         # Check for conflicts
-        conflicts = check_conflicts(new_event)
+        conflicts, conflict_details = check_conflicts(new_event)
         if conflicts:
             new_event.conflict_status = 'potential'
         
