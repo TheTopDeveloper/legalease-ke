@@ -140,8 +140,8 @@ class TestCaseClientRelationship(unittest.TestCase):
         print(f"Created test case with ID: {test_case.id}")
         
         # Get fresh instances of clients from database to avoid detached instance errors
-        client1 = Client.query.get(self.client1_id)
-        client2 = Client.query.get(self.client2_id)
+        client1 = db.session.get(Client, self.client1_id)
+        client2 = db.session.get(Client, self.client2_id)
         
         # Associate clients with the case
         test_case.clients.append(client1)
@@ -150,14 +150,14 @@ class TestCaseClientRelationship(unittest.TestCase):
         print("Associated clients with the case")
         
         # Verify associations
-        retrieved_case = Case.query.get(test_case.id)
+        retrieved_case = db.session.get(Case, test_case.id)
         self.assertEqual(len(retrieved_case.clients), 2)
         client_names = sorted([client.name for client in retrieved_case.clients])
         self.assertEqual(client_names, ['Client One', 'Client Two'])
         print("Case-client associations verified")
         
         # Verify bidirectional relationship
-        client1_refreshed = Client.query.get(self.client1_id)
+        client1_refreshed = db.session.get(Client, self.client1_id)
         client1_cases = list(client1_refreshed.cases)
         self.assertEqual(len(client1_cases), 1)
         self.assertEqual(client1_cases[0].title, 'Test Case With Multiple Clients')

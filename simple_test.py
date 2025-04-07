@@ -13,6 +13,10 @@ logger = logging.getLogger(__name__)
 # Bypass LLM initialization
 os.environ['MOCK_LLM'] = 'True'
 os.environ['SKIP_LLM_INIT'] = 'True'
+os.environ['NO_LLM'] = 'True'
+os.environ['DISABLE_OLLAMA_CONNECTION'] = 'True'
+os.environ['USE_MOCK_LLM'] = 'True'
+os.environ['DISABLE_LLM_SERVICES'] = 'True'
 
 def basic_test():
     """Run a very basic test to verify basic functionality"""
@@ -89,7 +93,7 @@ def basic_test():
                 print("Associated the client with the case")
                 
                 # Verify the association
-                retrieved_case = Case.query.filter_by(id=test_case.id).first()
+                retrieved_case = db.session.get(Case, test_case.id)
                 if retrieved_case and len(retrieved_case.clients) > 0:
                     print(f"Case-client association verified: Case has {len(retrieved_case.clients)} clients")
                     print(f"Client name: {retrieved_case.clients[0].name}")
