@@ -745,6 +745,7 @@ class OllamaClient:
         model = model or self.model
         
         try:
+            # First try the standard Ollama API endpoint
             url = f"{self.base_url}/api/generate"
             payload = {
                 "model": model,
@@ -756,11 +757,31 @@ class OllamaClient:
                 }
             }
             
-            response = requests.post(url, json=payload, timeout=30)
-            response.raise_for_status()
-            
-            data = response.json()
-            return data.get("response", "")
+            try:
+                response = requests.post(url, json=payload, timeout=30)
+                response.raise_for_status()
+                data = response.json()
+                return data.get("response", "")
+            except requests.exceptions.HTTPError as e:
+                if e.response.status_code == 404:
+                    # If 404, try the newer Ollama API format (Ollama v0.1.14+)
+                    logger.info(f"Trying newer Ollama API format (404 on {url})")
+                    url = f"{self.base_url}/api/chat"
+                    payload = {
+                        "model": model,
+                        "messages": [{"role": "user", "content": prompt}],
+                        "stream": False,
+                        "options": {
+                            "temperature": temperature,
+                            "num_predict": max_tokens
+                        }
+                    }
+                    response = requests.post(url, json=payload, timeout=30)
+                    response.raise_for_status()
+                    data = response.json()
+                    return data.get("message", {}).get("content", "")
+                else:
+                    raise
             
         except Exception as e:
             error_msg = f"Error generating response with OLLAMA: {str(e)}"
@@ -781,17 +802,40 @@ class OllamaClient:
         model = model or self.model
         
         try:
+            # Try standard Ollama embeddings API
             url = f"{self.base_url}/api/embeddings"
             payload = {
                 "model": model,
                 "prompt": text
             }
             
-            response = requests.post(url, json=payload, timeout=10)
-            response.raise_for_status()
-            
-            data = response.json()
-            return data.get("embedding", [])
+            try:
+                response = requests.post(url, json=payload, timeout=10)
+                response.raise_for_status()
+                data = response.json()
+                return data.get("embedding", [])
+            except requests.exceptions.HTTPError as e:
+                if e.response.status_code == 404:
+                    # If 404, try with new Ollama embeddings format
+                    logger.info(f"Trying newer Ollama embeddings API format (404 on {url})")
+                    # Different models have embeddings at different API endpoints
+                    embeddings_url = f"{self.base_url}/api/embeddings"
+                    payload = {
+                        "model": model,
+                        "input": text
+                    }
+                    response = requests.post(embeddings_url, json=payload, timeout=10)
+                    response.raise_for_status()
+                    data = response.json()
+                    # Try different response formats
+                    if "embedding" in data:
+                        return data["embedding"]
+                    elif "data" in data and len(data["data"]) > 0:
+                        return data["data"][0].get("embedding", [])
+                    else:
+                        raise ValueError("Unexpected response format from embeddings API")
+                else:
+                    raise
             
         except Exception as e:
             logger.error(f"Error getting embedding from OLLAMA: {str(e)}")
