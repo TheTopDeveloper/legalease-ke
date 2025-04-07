@@ -1,67 +1,39 @@
 {% extends "layout.html" %}
 
-{% block title %}Case: {{ case.title }} - Kenyan Legal Assistant{% endblock %}
-
-{% block header %}Case Details{% endblock %}
+{% block title %}{{ case.title }} - Case Details{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-md-8">
-        <h2>{{ case.title }}</h2>
-        <h5 class="text-muted">{{ case.case_number }}</h5>
-    </div>
-    <div class="col-md-4 text-md-end">
-        <div class="btn-group">
-            <a href="{{ url_for('cases.edit', case_id=case.id) }}" class="btn btn-primary">
-                <i class="fas fa-edit"></i> Edit Case
-            </a>
-            <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
-                <span class="visually-hidden">Toggle Dropdown</span>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end">
-                <li>
-                    <a class="dropdown-item" href="{{ url_for('cases.add_document', case_id=case.id) }}">
-                        <i class="fas fa-file-alt"></i> Add Document
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3">{{ case.title }}</h1>
+                    <p class="text-muted">Case #{{ case.case_number }}</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('cases_bp.index') }}" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-arrow-left me-1"></i> Back to Cases
                     </a>
-                </li>
-                <li>
-                    <a class="dropdown-item" href="{{ url_for('cases.add_event', case_id=case.id) }}">
-                        <i class="fas fa-calendar-plus"></i> Add Event
+                    <a href="{{ url_for('cases_bp.edit', case_id=case.id) }}" class="btn btn-primary">
+                        <i class="fas fa-edit me-1"></i> Edit Case
                     </a>
-                </li>
-                <li>
-                    <a class="dropdown-item" href="{{ url_for('research.search') }}?case_id={{ case.id }}">
-                        <i class="fas fa-search"></i> Research for this Case
-                    </a>
-                </li>
-                <li>
-                    <a class="dropdown-item" href="{{ url_for('milestone.list_milestones', case_id=case.id) }}">
-                        <i class="fas fa-flag"></i> Case Milestones
-                    </a>
-                </li>
-                <li><hr class="dropdown-divider"></li>
-                <li>
-                    <button class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                        <i class="fas fa-trash"></i> Delete Case
-                    </button>
-                </li>
-            </ul>
+                </div>
+            </div>
         </div>
     </div>
-</div>
-
-<!-- Case Information -->
-<div class="row">
-    <div class="col-md-8">
-        <!-- Main Case Details -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Case Information</h5>
-            </div>
-            <div class="card-body">
+    
+    <div class="row">
+        <!-- Case Details -->
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Case Details</h5>
+                </div>
+                <div class="card-body">
                 <div class="row mb-3">
                     <div class="col-md-4">
-                        <strong>Court Level:</strong>
+                        <strong>Court:</strong>
                     </div>
                     <div class="col-md-8">
                         {{ case.court_level }}
@@ -72,7 +44,7 @@
                         <strong>Case Type:</strong>
                     </div>
                     <div class="col-md-8">
-                        {{ case.case_type }}
+                        {{ case.case_type if case.case_type else 'Not specified' }}
                     </div>
                 </div>
                 <div class="row mb-3">
@@ -80,7 +52,7 @@
                         <strong>Practice Area:</strong>
                     </div>
                     <div class="col-md-8">
-                        {{ case.practice_area }}
+                        {{ case.practice_area if case.practice_area else 'Not specified' }}
                     </div>
                 </div>
                 <div class="row mb-3">
@@ -119,205 +91,304 @@
                         {% endif %}
                     </div>
                 </div>
+                {% if case.status == 'Closed' %}
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <strong>Outcome:</strong>
+                    </div>
+                    <div class="col-md-8">
+                        {{ case.outcome if case.outcome else 'Not specified' }}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <strong>Closing Date:</strong>
+                    </div>
+                    <div class="col-md-8">
+                        {% if case.closing_date %}
+                        {{ case.closing_date.strftime('%d %B %Y') }}
+                        {% else %}
+                        Not specified
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
                 <div class="row">
                     <div class="col-md-4">
                         <strong>Description:</strong>
                     </div>
                     <div class="col-md-8">
-                        {{ case.description or 'No description provided.' }}
+                        {{ case.description if case.description else 'No description provided.' }}
                     </div>
                 </div>
-            </div>
-        </div>
-        
-        <!-- Documents -->
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Case Documents</h5>
-                <a href="{{ url_for('cases.add_document', case_id=case.id) }}" class="btn btn-sm btn-primary">
-                    <i class="fas fa-plus"></i> Add Document
-                </a>
-            </div>
-            <div class="card-body p-0">
-                <div class="list-group list-group-flush">
-                    {% for document in documents %}
-                    <a href="{{ url_for('documents.view', document_id=document.id) }}" class="list-group-item list-group-item-action">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1">{{ document.title }}</h6>
-                            <small>{{ document.created_at.strftime('%d %b %Y') }}</small>
-                        </div>
-                        <p class="mb-1">{{ document.document_type }}</p>
-                        <small>
-                            <i class="fas fa-file-alt"></i> v{{ document.version }}
-                            | <span class="badge bg-{{ 'success' if document.status == 'Final' else 'warning' }}">{{ document.status }}</span>
-                        </small>
-                    </a>
-                    {% else %}
-                    <div class="list-group-item">
-                        <p class="mb-0 text-center">No documents found for this case.</p>
-                    </div>
-                    {% endfor %}
                 </div>
             </div>
-        </div>
-        
-        <!-- Events -->
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Case Timeline</h5>
-                <a href="{{ url_for('cases.add_event', case_id=case.id) }}" class="btn btn-sm btn-primary">
-                    <i class="fas fa-plus"></i> Add Event
-                </a>
-            </div>
-            <div class="card-body p-0">
-                <div class="list-group list-group-flush">
-                    {% for event in events %}
-                    <div class="list-group-item">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1">{{ event.title }}</h6>
-                            <small>{{ event.start_time.strftime('%d %b %Y, %H:%M') }}</small>
-                        </div>
-                        <p class="mb-1">{{ event.description }}</p>
-                        <small>
-                            <i class="fas fa-map-marker-alt"></i> {{ event.location or 'No location specified' }}
-                            {% if event.event_type %}
-                            | <span class="badge bg-info">{{ event.event_type }}</span>
-                            {% endif %}
-                        </small>
-                    </div>
-                    {% else %}
-                    <div class="list-group-item">
-                        <p class="mb-0 text-center">No events found for this case.</p>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Sidebar -->
-    <div class="col-md-4">
-        <!-- Clients -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Clients</h5>
-            </div>
-            <div class="card-body p-0">
-                <div class="list-group list-group-flush">
-                    {% for client in case.clients %}
-                    <div class="list-group-item">
-                        <h6 class="mb-1">{{ client.name }}</h6>
-                        <small>
-                            {% if client.email %}
-                            <i class="fas fa-envelope"></i> {{ client.email }}<br>
-                            {% endif %}
-                            {% if client.phone %}
-                            <i class="fas fa-phone"></i> {{ client.phone }}<br>
-                            {% endif %}
-                            <i class="fas fa-user-tag"></i> {{ client.client_type or 'Not specified' }}
-                        </small>
-                    </div>
-                    {% else %}
-                    <div class="list-group-item">
-                        <p class="mb-0 text-center">No clients associated with this case.</p>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-        
-        <!-- Research for this Case -->
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Legal Research</h5>
-                <a href="{{ url_for('research.search') }}?case_id={{ case.id }}" class="btn btn-sm btn-primary">
-                    <i class="fas fa-search"></i> Research
-                </a>
-            </div>
-            <div class="card-body">
-                <p>Conduct legal research specific to this case:</p>
-                <div class="list-group">
-                    <a href="{{ url_for('research.search') }}?case_id={{ case.id }}" class="list-group-item list-group-item-action">
-                        <i class="fas fa-search"></i> Search Kenya Law
-                    </a>
-                    <a href="{{ url_for('research.research_issue') }}?case_id={{ case.id }}" class="list-group-item list-group-item-action">
-                        <i class="fas fa-brain"></i> AI Research Assistant
-                    </a>
-                    <a href="{{ url_for('research.precedents') }}?case_id={{ case.id }}" class="list-group-item list-group-item-action">
-                        <i class="fas fa-balance-scale"></i> Find Relevant Precedents
+            
+            <!-- Documents -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Documents</h5>
+                    <a href="{{ url_for('cases_bp.add_document', case_id=case.id) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-plus me-1"></i> Add Document
                     </a>
                 </div>
-            </div>
-        </div>
-        
-        <!-- Case Milestones Card -->
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Case Milestones</h5>
-                <a href="{{ url_for('milestone.list_milestones', case_id=case.id) }}" class="btn btn-sm btn-primary">
-                    <i class="fas fa-flag"></i> View All
-                </a>
-            </div>
-            <div class="card-body p-0">
-                <div class="list-group list-group-flush">
-                    {% for milestone in milestones[:3] if milestones %}
-                    <div class="list-group-item">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1">{{ milestone.title }}</h6>
-                            <small>{{ milestone.date.strftime('%d %b %Y') }}</small>
-                        </div>
-                        <p class="mb-1">{{ milestone.description }}</p>
-                        <small>
-                            <span class="badge {% if milestone.completed %}bg-success{% else %}bg-warning{% endif %}">
-                                {% if milestone.completed %}Completed{% else %}Pending{% endif %}
-                            </span>
-                        </small>
+                <div class="card-body">
+                    {% if case.documents %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for document in case.documents %}
+                                <tr>
+                                    <td>{{ document.title }}</td>
+                                    <td>{{ document.document_type }}</td>
+                                    <td>{{ document.status }}</td>
+                                    <td>{{ document.created_at.strftime('%d %b %Y') }}</td>
+                                    <td>
+                                        <a href="{{ url_for('documents_bp.view', document_id=document.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('documents_bp.edit', document_id=document.id) }}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                     {% else %}
-                    <div class="list-group-item">
-                        <p class="mb-0 text-center">No milestones recorded for this case.</p>
+                    <p class="text-muted">No documents associated with this case.</p>
+                    <a href="{{ url_for('cases_bp.add_document', case_id=case.id) }}" class="btn btn-outline-primary">
+                        <i class="fas fa-plus me-1"></i> Add First Document
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Case Events -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Case Events</h5>
+                    <a href="{{ url_for('cases_bp.add_event', case_id=case.id) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-plus me-1"></i> Add Event
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if case.events.count() > 0 %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Type</th>
+                                    <th>Date & Time</th>
+                                    <th>Location</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for event in case.events %}
+                                <tr{% if event.start_time < now %} class="table-secondary"{% endif %}>
+                                    <td>{{ event.title }}</td>
+                                    <td>{{ event.event_type }}</td>
+                                    <td>{{ event.start_time.strftime('%d %b %Y, %H:%M') }}</td>
+                                    <td>{{ event.location if event.location else 'N/A' }}</td>
+                                    <td>
+                                        <a href="{{ url_for('events_bp.view', event_id=event.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('events_bp.edit', event_id=event.id) }}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
-                    {% endfor %}
+                    {% else %}
+                    <p class="text-muted">No events scheduled for this case.</p>
+                    <a href="{{ url_for('cases_bp.add_event', case_id=case.id) }}" class="btn btn-outline-primary">
+                        <i class="fas fa-plus me-1"></i> Schedule First Event
+                    </a>
+                    {% endif %}
                 </div>
             </div>
-        </div>
-        
-        <!-- Case Creation Info -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Case Information</h5>
-            </div>
-            <div class="card-body">
-                <div class="mb-2">
-                    <strong>Created:</strong> {{ case.created_at.strftime('%d %B %Y') }}
-                </div>
-                <div class="mb-2">
-                    <strong>Last Updated:</strong> {{ case.updated_at.strftime('%d %B %Y') }}
-                </div>
-                <div>
-                    <strong>Assigned To:</strong> {{ case.assigned_user.username }}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <!-- Milestones -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Case Milestones</h5>
+                    <a href="{{ url_for('milestones_bp.add', case_id=case.id) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-plus me-1"></i> Add Milestone
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if case.milestones.count() > 0 %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Target Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for milestone in case.milestones %}
+                                <tr>
+                                    <td>{{ milestone.title }}</td>
+                                    <td>{{ milestone.milestone_type }}</td>
+                                    <td>
+                                        {% if milestone.is_completed() %}
+                                        <span class="badge bg-success">Completed</span>
+                                        {% elif milestone.is_delayed() %}
+                                        <span class="badge bg-danger">Delayed</span>
+                                        {% else %}
+                                        <span class="badge bg-info">{{ milestone.status|title }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if milestone.target_date %}
+                                        {{ milestone.target_date.strftime('%d %b %Y') }}
+                                        {% else %}
+                                        N/A
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('milestones_bp.view', milestone_id=milestone.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('milestones_bp.edit', milestone_id=milestone.id) }}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No milestones defined for this case.</p>
+                    <a href="{{ url_for('milestones_bp.add', case_id=case.id) }}" class="btn btn-outline-primary">
+                        <i class="fas fa-plus me-1"></i> Add First Milestone
+                    </a>
+                    {% endif %}
+                </div>
             </div>
-            <div class="modal-body">
-                Are you sure you want to delete the case "{{ case.title }}"? This action cannot be undone.
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <!-- Clients Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Clients</h5>
+                    <a href="{{ url_for('cases_bp.clients', case_id=case.id) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-user-plus me-1"></i> Manage
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if case.clients %}
+                    <ul class="list-group list-group-flush">
+                        {% for client in case.clients %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">{{ client.name }}</h6>
+                                <small class="text-muted">{{ client.email }}</small>
+                            </div>
+                            <a href="{{ url_for('clients_bp.view', client_id=client.id) }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-user"></i>
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted">No clients associated with this case.</p>
+                    <a href="{{ url_for('cases_bp.clients', case_id=case.id) }}" class="btn btn-outline-primary">
+                        <i class="fas fa-user-plus me-1"></i> Add Client
+                    </a>
+                    {% endif %}
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form action="{{ url_for('cases.delete', case_id=case.id) }}" method="POST">
-                    <button type="submit" class="btn btn-danger">Delete</button>
-                </form>
+            
+            <!-- Quick Actions -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('research_bp.create', case_id=case.id) }}" class="btn btn-outline-primary">
+                            <i class="fas fa-search me-1"></i> New Legal Research
+                        </a>
+                        <a href="{{ url_for('documents_bp.generate', case_id=case.id) }}" class="btn btn-outline-primary">
+                            <i class="fas fa-file-alt me-1"></i> Generate Document
+                        </a>
+                        <a href="{{ url_for('cases_bp.add_event', case_id=case.id) }}" class="btn btn-outline-primary">
+                            <i class="fas fa-calendar-plus me-1"></i> Schedule Event
+                        </a>
+                        <a href="{{ url_for('documents_bp.share', case_id=case.id) }}" class="btn btn-outline-primary">
+                            <i class="fas fa-share-alt me-1"></i> Share Documents
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Case Statistics -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Case Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <h6 class="text-muted">Documents</h6>
+                            <h3>{{ case.documents|length }}</h3>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <h6 class="text-muted">Events</h6>
+                            <h3>{{ case.events.count() }}</h3>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <h6 class="text-muted">Milestones</h6>
+                            <h3>{{ case.milestones.count() }}</h3>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <h6 class="text-muted">Clients</h6>
+                            <h3>{{ case.clients|length }}</h3>
+                        </div>
+                    </div>
+                    
+                    {% if case.milestones.count() > 0 %}
+                    <div class="progress mt-3" style="height: 20px;">
+                        {% set completed_count = namespace(value=0) %}
+                        {% for milestone in case.milestones %}
+                            {% if milestone.is_completed() %}
+                                {% set completed_count.value = completed_count.value + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% set completion_percentage = (completed_count.value / case.milestones.count()) * 100 %}
+                        
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ completion_percentage }}%;" 
+                             aria-valuenow="{{ completion_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                            {{ completed_count.value }}/{{ case.milestones.count() }} milestones
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>

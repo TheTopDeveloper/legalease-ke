@@ -137,6 +137,21 @@ def edit(case_id):
         case.status = request.form.get('status')
         case.court_stage = request.form.get('court_stage')
         
+        # Handle outcome for closed cases
+        if case.status == 'Closed':
+            case.outcome = request.form.get('outcome')
+            closing_date_str = request.form.get('closing_date')
+            if closing_date_str:
+                try:
+                    case.closing_date = datetime.strptime(closing_date_str, '%Y-%m-%d').date()
+                except ValueError:
+                    flash('Invalid closing date format', 'error')
+                    return render_template('cases/edit.html', 
+                                         case=case,
+                                         court_levels=config.COURT_LEVELS,
+                                         case_types=config.CASE_TYPES,
+                                         practice_areas=config.PRACTICE_AREAS)
+        
         filing_date_str = request.form.get('filing_date')
         if filing_date_str:
             try:

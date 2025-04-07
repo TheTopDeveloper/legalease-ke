@@ -1,0 +1,159 @@
+{% extends "layout.html" %}
+
+{% block title %}Edit Case - {{ case.title }}{% endblock %}
+
+{% block header %}Edit Case{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header">
+                <h4>Edit Case Information</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('cases.edit', case_id=case.id) }}">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="title" class="form-label">Case Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="title" name="title" value="{{ case.title }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="case_number" class="form-label">Case Number <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="case_number" name="case_number" value="{{ case.case_number }}" required>
+                            <div class="form-text">Format according to Kenyan court protocols (e.g., HCCC 123/2023)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="court_level" class="form-label">Court Level <span class="text-danger">*</span></label>
+                            <select class="form-select" id="court_level" name="court_level" required>
+                                <option value="">Select Court Level</option>
+                                {% for court_name in court_levels %}
+                                <option value="{{ court_name }}" {% if case.court_level == court_name %}selected{% endif %}>{{ court_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="case_type" class="form-label">Case Type</label>
+                            <select class="form-select" id="case_type" name="case_type">
+                                <option value="">Select Case Type</option>
+                                {% for case_type in case_types %}
+                                <option value="{{ case_type }}" {% if case.case_type == case_type %}selected{% endif %}>{{ case_type }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="practice_area" class="form-label">Practice Area</label>
+                            <select class="form-select" id="practice_area" name="practice_area">
+                                <option value="">Select Practice Area</option>
+                                {% for practice_area in practice_areas %}
+                                <option value="{{ practice_area }}" {% if case.practice_area == practice_area %}selected{% endif %}>{{ practice_area }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="filing_date" class="form-label">Filing Date</label>
+                            <input type="date" class="form-control" id="filing_date" name="filing_date" value="{{ case.filing_date.strftime('%Y-%m-%d') if case.filing_date else '' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="Active" {% if case.status == 'Active' %}selected{% endif %}>Active</option>
+                                <option value="Pending" {% if case.status == 'Pending' %}selected{% endif %}>Pending</option>
+                                <option value="Closed" {% if case.status == 'Closed' %}selected{% endif %}>Closed</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="court_stage" class="form-label">Court Stage</label>
+                            <select class="form-select" id="court_stage" name="court_stage">
+                                <option value="Filing" {% if case.court_stage == 'Filing' %}selected{% endif %}>Filing</option>
+                                <option value="Mention" {% if case.court_stage == 'Mention' %}selected{% endif %}>Mention</option>
+                                <option value="Hearing" {% if case.court_stage == 'Hearing' %}selected{% endif %}>Hearing</option>
+                                <option value="Judgment" {% if case.court_stage == 'Judgment' %}selected{% endif %}>Judgment</option>
+                                <option value="Appeal" {% if case.court_stage == 'Appeal' %}selected{% endif %}>Appeal</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Case Outcome and Closing Date (visible only when status is Closed) -->
+                    <div class="row mb-3" id="closed-case-fields" {% if case.status != 'Closed' %}style="display: none;"{% endif %}>
+                        <div class="col-md-6">
+                            <label for="outcome" class="form-label">Case Outcome</label>
+                            <select class="form-select" id="outcome" name="outcome">
+                                <option value="">Select Outcome</option>
+                                <option value="Favorable" {% if case.outcome == 'Favorable' %}selected{% endif %}>Favorable</option>
+                                <option value="Unfavorable" {% if case.outcome == 'Unfavorable' %}selected{% endif %}>Unfavorable</option>
+                                <option value="Partially Favorable" {% if case.outcome == 'Partially Favorable' %}selected{% endif %}>Partially Favorable</option>
+                                <option value="Settled" {% if case.outcome == 'Settled' %}selected{% endif %}>Settled</option>
+                                <option value="Dismissed" {% if case.outcome == 'Dismissed' %}selected{% endif %}>Dismissed</option>
+                                <option value="Withdrawn" {% if case.outcome == 'Withdrawn' %}selected{% endif %}>Withdrawn</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="closing_date" class="form-label">Closing Date</label>
+                            <input type="date" class="form-control" id="closing_date" name="closing_date" value="{{ case.closing_date.strftime('%Y-%m-%d') if case.closing_date else '' }}">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Case Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="4">{{ case.description }}</textarea>
+                    </div>
+                    
+                    <!-- Client Selection -->
+                    <div class="mb-3">
+                        <label class="form-label">Clients</label>
+                        <div class="card">
+                            <div class="card-body">
+                                {% if clients %}
+                                <div class="row">
+                                    {% for client in clients %}
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" name="clients" value="{{ client.id }}" id="client{{ client.id }}" {% if client.id in case_client_ids %}checked{% endif %}>
+                                            <label class="form-check-label" for="client{{ client.id }}">
+                                                {{ client.name }}
+                                                <small class="text-muted d-block">{{ client.client_type or 'Client' }}</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <p class="mb-0 text-center">No clients found. <a href="{{ url_for('cases.clients') }}">Add clients</a> first.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('cases.view', case_id=case.id) }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Show/hide outcome and closing date fields based on status selection
+    document.addEventListener('DOMContentLoaded', function() {
+        const statusSelect = document.getElementById('status');
+        const closedCaseFields = document.getElementById('closed-case-fields');
+        
+        statusSelect.addEventListener('change', function() {
+            if (this.value === 'Closed') {
+                closedCaseFields.style.display = 'flex';
+            } else {
+                closedCaseFields.style.display = 'none';
+            }
+        });
+    });
+</script>
+{% endblock %}

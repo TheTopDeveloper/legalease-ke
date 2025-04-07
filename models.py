@@ -361,6 +361,8 @@ class Case(db.Model):
     status = db.Column(db.String(20))  # Active, Closed, Pending, etc.
     court_stage = db.Column(db.String(20))  # Filing, Mention, Hearing, Judgment, Appeal
     next_court_date = db.Column(db.DateTime)
+    outcome = db.Column(db.Text)  # Outcome of the case when closed
+    closing_date = db.Column(db.DateTime)  # Date when case was closed
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

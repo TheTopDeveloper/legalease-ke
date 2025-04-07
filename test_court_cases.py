@@ -33,19 +33,18 @@ class TestCourtCases(unittest.TestCase):
         
         # Create test user
         self.test_user = User(
-            username='testuser',
-            email='test@example.com'
+            username='courtcasetestuser',
+            email='courtcase_test@example.com'
         )
         self.test_user.set_password('testpassword')
         db.session.add(self.test_user)
         
         # Create test client
         self.test_client = Client(
-            name='Test Client',
-            email='client@example.com',
+            name='Test Court Case Client',
+            email='courtcase_client@example.com',
             phone='1234567890',
-            address='123 Test Street',
-            user_id=1
+            address='123 Test Street'
         )
         db.session.add(self.test_client)
         db.session.commit()
@@ -73,11 +72,10 @@ class TestCourtCases(unittest.TestCase):
         test_case = Case(
             title='Test Case v. Respondent',
             case_number='CV-2023-001',
-            court='Supreme Court',
+            court_level='Supreme Court',  # Changed from 'court' to 'court_level' to match model
             filing_date=datetime.datetime.now(),
             status='Active',
             description='This is a test case',
-            client_id=self.test_client.id,
             user_id=self.test_user.id
         )
         db.session.add(test_case)
@@ -87,10 +85,17 @@ class TestCourtCases(unittest.TestCase):
         case = Case.query.filter_by(title='Test Case v. Respondent').first()
         self.assertIsNotNone(case, "Case should be created")
         self.assertEqual(case.case_number, 'CV-2023-001', "Case number should match")
-        self.assertEqual(case.court, 'Supreme Court', "Court should match")
+        self.assertEqual(case.court_level, 'Supreme Court', "Court level should match")
         self.assertEqual(case.status, 'Active', "Status should match")
-        self.assertEqual(case.client_id, self.test_client.id, "Client ID should match")
         self.assertEqual(case.user_id, self.test_user.id, "User ID should match")
+        
+        # Add the client association
+        case.clients.append(self.test_client)
+        db.session.commit()
+        
+        # Verify client association
+        self.assertEqual(len(case.clients), 1, "Case should have 1 client")
+        self.assertEqual(case.clients[0].id, self.test_client.id, "Client ID should match")
     
     def test_case_milestone_tracking(self):
         """Test adding and tracking case milestones"""
@@ -98,12 +103,12 @@ class TestCourtCases(unittest.TestCase):
         test_case = Case(
             title='Milestone Test Case',
             case_number='CV-2023-002',
-            court='High Court',
+            court_level='High Court',
             filing_date=datetime.datetime.now(),
             status='Active',
-            user_id=self.test_user.id,
-            client_id=self.test_client.id
+            user_id=self.test_user.id
         )
+        test_case.clients.append(self.test_client)
         db.session.add(test_case)
         db.session.commit()
         
@@ -154,12 +159,12 @@ class TestCourtCases(unittest.TestCase):
         test_case = Case(
             title='Document Test Case',
             case_number='CV-2023-003',
-            court='Commercial Court',
+            court_level='Commercial Court',
             filing_date=datetime.datetime.now(),
             status='Active',
-            user_id=self.test_user.id,
-            client_id=self.test_client.id
+            user_id=self.test_user.id
         )
+        test_case.clients.append(self.test_client)
         db.session.add(test_case)
         db.session.commit()
         
@@ -186,13 +191,13 @@ class TestCourtCases(unittest.TestCase):
         test_case = Case(
             title='Vector DB Test Case',
             case_number='CV-2023-004',
-            court='Supreme Court',
+            court_level='Supreme Court',
             filing_date=datetime.datetime.now(),
             status='Active',
             description='This is a test case for vector database integration',
-            user_id=self.test_user.id,
-            client_id=self.test_client.id
+            user_id=self.test_user.id
         )
+        test_case.clients.append(self.test_client)
         db.session.add(test_case)
         db.session.commit()
         
@@ -201,7 +206,7 @@ class TestCourtCases(unittest.TestCase):
             'id': str(test_case.id),
             'title': test_case.title,
             'citation': test_case.case_number,
-            'court': test_case.court,
+            'court': test_case.court_level,
             'date': test_case.filing_date.strftime('%Y-%m-%d'),
             'parties': {
                 'applicant': 'Test Applicant',
@@ -230,12 +235,12 @@ class TestCourtCases(unittest.TestCase):
         test_case = Case(
             title='Event Test Case',
             case_number='CV-2023-005',
-            court='High Court',
+            court_level='High Court',
             filing_date=datetime.datetime.now(),
             status='Active',
-            user_id=self.test_user.id,
-            client_id=self.test_client.id
+            user_id=self.test_user.id
         )
+        test_case.clients.append(self.test_client)
         db.session.add(test_case)
         db.session.commit()
         
@@ -291,12 +296,12 @@ class TestCourtCases(unittest.TestCase):
         test_case = Case(
             title='Status Update Test Case',
             case_number='CV-2023-006',
-            court='Court of Appeal',
+            court_level='Court of Appeal',
             filing_date=datetime.datetime.now(),
             status='Active',
-            user_id=self.test_user.id,
-            client_id=self.test_client.id
+            user_id=self.test_user.id
         )
+        test_case.clients.append(self.test_client)
         db.session.add(test_case)
         db.session.commit()
         
