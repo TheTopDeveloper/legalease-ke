@@ -67,8 +67,7 @@ class Role(db.Model):
     def init_roles():
         """Initialize default roles and their permissions"""
         # Create all permissions
-        for perm in Permissions.get_all_permissions():
-            permission_name = getattr(Permissions, perm)
+        for permission_name in Permissions.get_all_permissions():
             description = permission_name.replace('_', ' ').title()
             permission = Permission.query.filter_by(name=permission_name).first()
             if not permission:
