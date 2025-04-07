@@ -33,6 +33,319 @@ LLM_MODELS = {
     }
 }
 
+class MockLLMClient:
+    """
+    Mock LLM client that provides reasonable responses without requiring an actual LLM.
+    This is useful when Ollama is not available but we still want the application to function.
+    """
+    
+    def __init__(self):
+        """Initialize mock client"""
+        logger.info("Initialized Mock LLM client (fallback responses)")
+    
+    def generate(self, prompt: str, model: Optional[str] = None, temperature: float = 0.7, max_tokens: int = 1000) -> str:
+        """
+        Generate a mock response based on the type of prompt
+        
+        Args:
+            prompt: The prompt to generate a response for
+            model: Ignored in mock client
+            temperature: Ignored in mock client
+            max_tokens: Ignored in mock client
+            
+        Returns:
+            A reasonable mock response
+        """
+        # Check the type of prompt to provide an appropriate mock response
+        prompt_lower = prompt.lower()
+        
+        if "analyze" in prompt_lower and "case" in prompt_lower:
+            return self._mock_case_analysis()
+        elif "draft" in prompt_lower and "document" in prompt_lower:
+            return self._mock_document_draft()
+        elif "analyze" in prompt_lower and "statute" in prompt_lower:
+            return self._mock_statute_analysis()
+        elif "legal research" in prompt_lower:
+            return self._mock_legal_research()
+        elif "summary" in prompt_lower:
+            return self._mock_case_summary()
+        elif "contract" in prompt_lower and "clause" in prompt_lower:
+            return self._mock_contract_clause()
+        else:
+            # Generic response for other prompts
+            return "[This is a mock response as the LLM service is currently unavailable. Please ensure Ollama server is running and properly configured if you need AI-generated responses.]"
+    
+    def chat(self, messages: List[Dict[str, str]], model: Optional[str] = None, temperature: float = 0.7, max_tokens: int = 1000) -> str:
+        """
+        Generate a mock chat response
+        
+        Args:
+            messages: List of message objects (used to extract the last user message)
+            model: Ignored in mock client
+            temperature: Ignored in mock client
+            max_tokens: Ignored in mock client
+            
+        Returns:
+            A reasonable mock response
+        """
+        # Extract the last user message if available
+        user_messages = [msg for msg in messages if msg.get('role') == 'user']
+        if user_messages:
+            last_user_message = user_messages[-1].get('content', '')
+            return self.generate(last_user_message)
+        
+        return "[This is a mock response as the LLM service is currently unavailable. Please ensure Ollama server is running and properly configured if you need AI-generated responses.]"
+    
+    def get_embedding(self, text: str, model: Optional[str] = None) -> List[float]:
+        """
+        Generate a mock embedding
+        
+        Args:
+            text: The text to get embedding for
+            model: Ignored in mock client
+            
+        Returns:
+            A mock embedding vector with 384 dimensions (common embedding size)
+        """
+        # Generate a deterministic but seemingly random embedding based on the text
+        import hashlib
+        
+        # Get a hash of the text
+        hash_obj = hashlib.md5(text.encode())
+        hash_bytes = hash_obj.digest()
+        
+        # Use the hash to seed a random number generator
+        import random
+        random.seed(hash_bytes)
+        
+        # Generate a 384-dimension embedding with values between -1 and 1
+        return [random.uniform(-1, 1) for _ in range(384)]
+    
+    def _mock_case_analysis(self) -> str:
+        """Generate a mock case analysis"""
+        return """# Case Analysis
+
+## Case Citation
+Civil Appeal No. 123 of 2022
+
+## Court
+Supreme Court of Kenya
+
+## Judges
+- Justice X (presiding)
+- Justice Y
+- Justice Z
+
+## Parties Involved
+Appellant: Company ABC Ltd.
+Respondent: Company XYZ Ltd.
+
+## Key Legal Issues
+1. Whether the contract between the parties was validly terminated
+2. Whether the appellant is entitled to damages for breach of contract
+
+## Main Legal Principles Established
+1. A party seeking to terminate a contract must show that the breach was fundamental
+2. Notice of termination must be clear and unequivocal
+
+## Holding/Decision
+Appeal dismissed with costs to the respondent
+
+## Reasoning
+The Court found that the appellant had failed to demonstrate that the respondent's breach was fundamental. The Court also found that the termination notice was defective.
+
+## Precedents Cited
+1. Giella v. Cassman Brown & Co Ltd [1973] EA 358
+2. East African Portland Cement Co. Ltd v. Ndung'u & Another, Civil Appeal No. 157 of 2011
+
+## Statutes/Regulations Referenced
+1. Law of Contract Act, Cap 23 Laws of Kenya
+2. Civil Procedure Act, Cap 21 Laws of Kenya
+
+[This is a mock analysis as the LLM service is currently unavailable]
+"""
+    
+    def _mock_document_draft(self) -> str:
+        """Generate a mock legal document draft"""
+        return """# NOTICE OF APPEAL
+
+IN THE SUPREME COURT OF KENYA AT NAIROBI
+CIVIL APPEAL NO. _____ OF 2025
+
+BETWEEN
+
+ABC LIMITED................................................APPELLANT
+
+AND
+
+XYZ LIMITED...............................................RESPONDENT
+
+(Being an appeal from the judgment of the Court of Appeal at Nairobi (Justice A, Justice B, and Justice C) dated 1st March, 2025 in Civil Appeal No. 100 of 2024)
+
+TAKE NOTICE that ABC Limited, the Appellant herein, being dissatisfied with the decision of the Court of Appeal given at Nairobi on the 1st day of March, 2025, intends to appeal to the Supreme Court against the whole of the said decision.
+
+DATED at Nairobi this _______ day of ________, 2025
+
+SIGNED: ______________________
+ADVOCATE FOR THE APPELLANT
+
+DRAWN & FILED BY:
+ABC ADVOCATES
+Advocates for the Appellant
+Address for Service:
+P.O. Box 12345-00100
+NAIROBI
+
+TO: The Registrar
+     Supreme Court of Kenya
+
+AND TO: XYZ Advocates
+         Advocates for the Respondent
+         P.O. Box 54321-00100
+         NAIROBI
+
+[This is a mock document as the LLM service is currently unavailable]
+"""
+    
+    def _mock_statute_analysis(self) -> str:
+        """Generate a mock statute analysis"""
+        return """# Analysis of the Data Protection Act, 2019
+
+## Full Title of the Statute
+The Data Protection Act, No. 24 of 2019, Laws of Kenya
+
+## Date of Enactment
+November 8, 2019
+
+## Purpose and Scope
+The Act aims to establish the legal and institutional framework for protecting personal data and to regulate the collection, processing, storage, use, and disclosure of personal data.
+
+## Key Definitions
+1. "Data controller" - a person who determines the purpose and means of processing personal data
+2. "Data processor" - a person who processes personal data on behalf of a data controller
+3. "Personal data" - any information relating to an identified or identifiable natural person (data subject)
+
+## Main Provisions
+1. Establishes the Office of the Data Protection Commissioner
+2. Outlines registration requirements for data controllers and processors
+3. Sets forth data protection principles
+4. Provides for rights of data subjects
+5. Establishes procedures for complaints, investigations, and enforcement
+
+## Obligations Created
+1. Data controllers must implement appropriate technical and organizational measures
+2. Mandatory registration for data controllers and processors
+3. Requirement to conduct data protection impact assessments for high-risk processing
+4. Obligation to notify data breaches to the Commissioner
+
+## Penalties or Consequences
+1. General penalty: fine not exceeding five million shillings or imprisonment for a term not exceeding ten years, or both
+2. Administrative fines up to five million shillings or 1% of annual turnover, whichever is lower
+
+## Related Regulations or Statutory Instruments
+1. Data Protection (Registration of Data Controllers and Data Processors) Regulations, 2021
+2. Data Protection (Complaints Handling Procedure and Enforcement) Regulations, 2021
+
+[This is a mock analysis as the LLM service is currently unavailable]
+"""
+    
+    def _mock_legal_research(self) -> str:
+        """Generate a mock legal research memo"""
+        return """# LEGAL RESEARCH MEMORANDUM
+
+## INTRODUCTION AND STATEMENT OF THE LEGAL ISSUE
+
+This memorandum addresses the legal implications of electronic signatures in commercial contracts under Kenyan law. Specifically, this research examines whether electronic signatures are legally binding for commercial contracts in Kenya, and what requirements must be met for such signatures to be valid.
+
+## BRIEF STATEMENT OF THE CONCLUSION
+
+Electronic signatures are legally binding for commercial contracts in Kenya under the Kenya Information and Communications Act (KICA) and its amendments. To be valid, electronic signatures must meet certain criteria including authentication, reliability, and consent of the parties to use electronic form for the transaction.
+
+## STATEMENT OF FACTS
+
+Our client, ABC Ltd., is entering into several commercial agreements with both local and international business partners. They want to streamline their contract execution process by using electronic signature platforms. They need clarity on the legal standing of such signatures in Kenya.
+
+## DISCUSSION OF APPLICABLE LAW
+
+### Relevant Statutory Provisions
+
+The primary legislation governing electronic signatures in Kenya is the Kenya Information and Communications Act (KICA), Cap 411A, particularly as amended by the Kenya Information and Communications (Amendment) Act of 2008. Section 83P of KICA recognizes electronic signatures and provides that where a law requires a signature, an electronic signature may satisfy that requirement.
+
+### Relevant Case Law
+
+In Musikari Kombo v. Royal Media Services Ltd [2018] eKLR, the court held that electronic signatures are valid where the method used is as reliable as appropriate for the purpose for which the information was communicated.
+
+## CONCLUSION AND RECOMMENDATIONS
+
+Electronic signatures are legally binding for commercial contracts in Kenya, provided they meet the requirements set forth in KICA. We recommend that ABC Ltd. implement an electronic signature system that:
+
+1. Uniquely identifies the signatory
+2. Maintains a clear audit trail of the signing process
+3. Ensures the signatory intends to be bound by the signature
+4. Obtains express consent from all parties to use electronic signatures
+
+[This is a mock memorandum as the LLM service is currently unavailable]
+"""
+    
+    def _mock_case_summary(self) -> str:
+        """Generate a mock case summary"""
+        return """# CASE SUMMARY: Mutual Benefits Assurance PLC v. KRA [2020] eKLR
+
+## Citation
+Civil Appeal No. 263 of 2019
+
+## Parties Involved
+Appellant: Mutual Benefits Assurance PLC
+Respondent: Kenya Revenue Authority (KRA)
+
+## Court
+Court of Appeal of Kenya at Nairobi
+
+## Key Facts
+The appellant, an insurance company, disputed tax assessments issued by the KRA regarding withholding tax on reinsurance premiums paid to non-resident reinsurers between 2009-2015. The appellant argued that the Double Taxation Agreement (DTA) between Kenya and the respective countries of the reinsurers exempted them from withholding tax obligations.
+
+## Legal Issues Presented
+1. Whether reinsurance premiums paid to non-resident reinsurers are subject to withholding tax in Kenya
+2. Whether the appellant can rely on DTAs to claim exemption from withholding tax
+
+## Court's Holding
+The Court held that reinsurance premiums paid to non-resident reinsurers are subject to withholding tax under Section 10 of the Income Tax Act unless specifically exempted under a DTA. The Court found that the appellant failed to provide evidence that the reinsurers were residents of countries with applicable DTAs with Kenya.
+
+## Key Reasoning
+The Court reasoned that while DTAs may provide exemptions from withholding tax, a taxpayer seeking to rely on such exemptions must provide satisfactory evidence of the residence status of the foreign entity. The appellant's failure to provide such evidence was fatal to its case.
+
+## Significance of the Decision
+This decision clarifies the application of withholding tax on reinsurance premiums and establishes the procedural requirements for claiming exemptions under DTAs. It emphasizes the importance of proper documentation when dealing with international tax matters.
+
+[This is a mock summary as the LLM service is currently unavailable]
+"""
+    
+    def _mock_contract_clause(self) -> str:
+        """Generate a mock contract clause"""
+        return """## FORCE MAJEURE CLAUSE
+
+### 15. FORCE MAJEURE
+
+15.1 Definition. For purposes of this Agreement, "Force Majeure" means an event or circumstance that is beyond the reasonable control of a Party, which event or circumstance was not reasonably foreseeable by such Party at the time of execution of this Agreement, and which prevents or delays a Party from performing its obligations under this Agreement, in whole or in part.
+
+15.2 Suspension of Obligations. Neither Party shall be liable for any failure to perform or delay in performance of its obligations under this Agreement to the extent that and for so long as such failure or delay is caused by a Force Majeure event, provided that the Party affected by the Force Majeure event:
+
+   (a) promptly notifies the other Party in writing of the nature and extent of the Force Majeure event;
+   
+   (b) could not have prevented or overcome the Force Majeure event by taking precautions which, having regard to all matters known to it before the occurrence of the Force Majeure event and all relevant factors, it ought reasonably to have taken;
+   
+   (c) has used reasonable endeavors to mitigate the effect of the Force Majeure event and to carry out its obligations under this Agreement in any other way that is reasonably practicable; and
+   
+   (d) resumes performance of its obligations as soon as reasonably possible after the Force Majeure event ceases.
+
+15.3 Extended Force Majeure. If a Force Majeure event prevails for a continuous period in excess of ninety (90) days, the Parties shall enter into good faith discussions with a view to alleviating its effects, or to agreeing upon such alternative arrangements as may be fair and reasonable in the circumstances.
+
+15.4 Termination for Extended Force Majeure. If a Force Majeure event prevents a Party from performing substantially all of its obligations under this Agreement for a continuous period of one hundred and eighty (180) days or more, the Party not affected by such event shall have the right to terminate this Agreement by giving thirty (30) days' written notice to the affected Party, without liability to either Party.
+
+[This is a mock clause as the LLM service is currently unavailable]
+"""
+
+
 def get_llm_client():
     """
     Get the appropriate LLM client based on available services
@@ -45,33 +358,56 @@ def get_llm_client():
         logger.info("Using OpenAI client")
         return OpenAIClient()
     
+    # Create a MockLLMClient if Ollama is not available but still allow application to function
+    mock_client = MockLLMClient()
+    
     # Then try Ollama with counter-checking if enabled
     try:
+        # Test OLLAMA connectivity first with a quick simple request
+        try:
+            url = f"{config.OLLAMA_BASE_URL}/api/version"
+            response = requests.get(url, timeout=2)
+            response.raise_for_status()
+            logger.info(f"Ollama server detected at {config.OLLAMA_BASE_URL}")
+        except Exception as e:
+            logger.warning(f"Ollama server not available at {config.OLLAMA_BASE_URL}: {str(e)}")
+            logger.info("Using Mock LLM client instead")
+            return mock_client
+        
         if config.ENABLE_LLM_COUNTERCHECK:
             # Create counter-check client with primary and secondary models
             counter_client = CounterCheckLLMClient(
                 primary_model=config.OLLAMA_PRIMARY_MODEL,
                 secondary_model=config.OLLAMA_SECONDARY_MODEL
             )
-            # Test connection with both models
-            test_result = counter_client.generate("Test connection", max_tokens=5)
-            if test_result is not None:
-                logger.info("Using Counter-Check LLM client with multiple models")
-                return counter_client
-        else:
-            # Use regular Ollama client with primary model only
-            ollama_client = OllamaClient()
-            # Test connection
-            test_result = ollama_client.generate("Test connection", max_tokens=5)
+            # Test connection with reduced timeout
+            try:
+                test_result = counter_client.generate("Test", max_tokens=5)
+                if test_result is not None:
+                    logger.info("Using Counter-Check LLM client with multiple models")
+                    return counter_client
+            except Exception as e:
+                logger.warning(f"Counter-Check client failed: {str(e)}")
+                # Fall through to try regular client
+        
+        # Use regular Ollama client with primary model only
+        ollama_client = OllamaClient()
+        # Test connection with reduced timeout
+        try:
+            test_result = ollama_client.generate("Test", max_tokens=5)
             if test_result is not None:
                 logger.info("Using Ollama client with single model")
                 return ollama_client
+        except Exception as e:
+            logger.warning(f"Ollama client failed: {str(e)}")
+            # Fall through to mock client
     except Exception as e:
-        logger.warning(f"Ollama not available: {str(e)}")
+        logger.warning(f"Ollama setup failed: {str(e)}")
     
-    # Return OpenAI client even if not configured - it will handle its own errors
-    logger.warning("No functioning LLM client available. Using unconfigured OpenAI client.")
-    return OpenAIClient()
+    # Return MockLLMClient that provides reasonable fallback responses
+    logger.info("Using Mock LLM client for fallback responses")
+    return mock_client
+
 
 class OpenAIClient:
     """
@@ -111,7 +447,7 @@ class OpenAIClient:
         """
         if not self.client:
             logger.error("OpenAI client not initialized. API key missing.")
-            return None
+            return "[OpenAI API key not configured. Please set the OPENAI_API_KEY environment variable.]"
             
         model = model or self.model
         
@@ -130,7 +466,7 @@ class OpenAIClient:
             
         except Exception as e:
             logger.error(f"Error generating text with OpenAI: {str(e)}")
-            return None
+            return f"[Error generating text with OpenAI: {str(e)}]"
     
     def get_embedding(self, text: str, model: Optional[str] = None) -> List[float]:
         """
@@ -176,7 +512,7 @@ class OpenAIClient:
         """
         if not self.client:
             logger.error("OpenAI client not initialized. API key missing.")
-            return None
+            return "[OpenAI API key not configured. Please set the OPENAI_API_KEY environment variable.]"
             
         model = model or self.model
         
@@ -192,7 +528,8 @@ class OpenAIClient:
             
         except Exception as e:
             logger.error(f"Error generating chat response with OpenAI: {str(e)}")
-            return None
+            return f"[Error generating chat response with OpenAI: {str(e)}]"
+
 
 class CounterCheckLLMClient:
     """
@@ -251,7 +588,7 @@ class CounterCheckLLMClient:
         # If either model fails, return the successful one
         if primary_response is None and secondary_response is None:
             logger.error("Both LLM models failed to generate responses")
-            return None
+            return "[Error: Both LLM models failed to generate responses]"
         
         if primary_response is None:
             logger.warning(f"Primary model ({self.primary_model}) failed, using secondary model response")
@@ -305,7 +642,7 @@ class CounterCheckLLMClient:
         # If either model fails, return the successful one
         if primary_response is None and secondary_response is None:
             logger.error("Both LLM models failed to generate responses")
-            return None
+            return "[Error: Both LLM models failed to generate responses]"
         
         if primary_response is None:
             logger.warning(f"Primary model ({self.primary_model}) failed, using secondary model response")
@@ -419,18 +756,14 @@ class OllamaClient:
                 }
             }
             
-            logger.debug(f"Sending request to OLLAMA: {url}, model: {model}")
-            response = requests.post(url, json=payload, timeout=5)  # Add a 5 second timeout
+            response = requests.post(url, json=payload, timeout=30)
             response.raise_for_status()
             
-            result = response.json()
-            generated_text = result.get("response", "")
+            data = response.json()
+            return data.get("response", "")
             
-            return generated_text
-        
         except Exception as e:
             logger.error(f"Error generating text with OLLAMA: {str(e)}")
-            # Return None instead of an error message to allow fallback handling
             return None
     
     def get_embedding(self, text: str, model: Optional[str] = None) -> List[float]:
@@ -453,19 +786,16 @@ class OllamaClient:
                 "prompt": text
             }
             
-            logger.debug(f"Getting embedding from OLLAMA: {url}, model: {model}")
-            response = requests.post(url, json=payload)
+            response = requests.post(url, json=payload, timeout=10)
             response.raise_for_status()
             
-            result = response.json()
-            embedding = result.get("embedding", [])
+            data = response.json()
+            return data.get("embedding", [])
             
-            return embedding
-        
         except Exception as e:
             logger.error(f"Error getting embedding from OLLAMA: {str(e)}")
             return []
-
+    
     def chat(self, messages: List[Dict[str, str]], model: Optional[str] = None, temperature: float = 0.7, max_tokens: int = 1000) -> str:
         """
         Generate chat completion using OLLAMA
@@ -481,6 +811,9 @@ class OllamaClient:
         """
         model = model or self.model
         
+        # Format messages into a single prompt for models that don't support chat format natively
+        prompt = self._format_chat_messages(messages)
+        
         try:
             url = f"{self.base_url}/api/chat"
             payload = {
@@ -493,20 +826,49 @@ class OllamaClient:
                 }
             }
             
-            logger.debug(f"Sending chat request to OLLAMA: {url}, model: {model}")
-            response = requests.post(url, json=payload, timeout=5)  # Add a 5 second timeout
+            response = requests.post(url, json=payload, timeout=30)
             response.raise_for_status()
             
-            result = response.json()
-            message = result.get("message", {})
-            generated_text = message.get("content", "")
+            data = response.json()
+            return data.get("message", {}).get("content", "")
             
-            return generated_text
-        
         except Exception as e:
-            logger.error(f"Error generating chat response with OLLAMA: {str(e)}")
-            # Return None instead of an error message to allow fallback handling
-            return None
+            # Fallback to generate API if chat API fails
+            logger.warning(f"Error using chat API with OLLAMA, falling back to generate: {str(e)}")
+            try:
+                return self.generate(prompt, model, temperature, max_tokens)
+            except Exception as inner_e:
+                logger.error(f"Error generating chat response with OLLAMA (fallback): {str(inner_e)}")
+                return None
+    
+    def _format_chat_messages(self, messages: List[Dict[str, str]]) -> str:
+        """
+        Format chat messages into a single prompt string
+        
+        Args:
+            messages: List of message objects with 'role' and 'content' keys
+            
+        Returns:
+            Formatted prompt string
+        """
+        formatted = []
+        
+        for msg in messages:
+            role = msg.get("role", "").lower()
+            content = msg.get("content", "")
+            
+            if role == "system":
+                formatted.append(f"System: {content}")
+            elif role == "user":
+                formatted.append(f"User: {content}")
+            elif role == "assistant":
+                formatted.append(f"Assistant: {content}")
+            else:
+                formatted.append(f"{role.capitalize()}: {content}")
+        
+        formatted.append("Assistant: ")
+        return "\n\n".join(formatted)
+
 
 class LegalAssistant:
     """
@@ -521,6 +883,7 @@ class LegalAssistant:
             llm_client: LLM client (defaults to best available client)
         """
         self.llm_client = llm_client or get_llm_client()
+        logger.info("Legal Assistant initialized")
     
     def analyze_case(self, case_text: str) -> Dict[str, Any]:
         """
@@ -533,48 +896,38 @@ class LegalAssistant:
             Dictionary with analysis results
         """
         prompt = f"""
-        Please analyze the following Kenyan legal case and extract key information:
+        Analyze the following legal case from the Kenyan legal system and extract the key information.
         
-        {case_text[:5000]}... [truncated]
+        {case_text}
         
-        Extract and organize the following information in a well-structured format:
-        1. Case citation
+        Format your response as a structured analysis with the following sections:
+        1. Citation
         2. Court
         3. Judges
-        4. Parties involved
-        5. Key legal issues
-        6. Main legal principles established
+        4. Parties Involved
+        5. Key Legal Issues
+        6. Main Legal Principles Established
         7. Holding/Decision
         8. Reasoning
-        9. Precedents cited
-        10. Statutes/regulations referenced
-        
-        Format your response as a structured analysis that would be helpful for a legal professional.
+        9. Precedents Cited
+        10. Statutes/Regulations Referenced
         """
         
-        response = self.llm_client.generate(prompt, temperature=0.1)
+        analysis_text = self.llm_client.generate(prompt)
         
-        # If LLM connection failed, return a default analysis with a notice
-        if response is None:
-            return {
-                'full_analysis': "Unable to analyze case due to AI service unavailability. Please try again later.",
-                'summary': "AI service unavailable",
-                'legal_issues': "Unable to extract legal issues at this time",
-                'legal_principles': "Unable to extract legal principles at this time",
-                'decision': "Unable to extract decision at this time",
-                'precedents_cited': "Unable to extract precedents at this time",
-                'statutes_referenced': "Unable to extract statutes at this time"
-            }
-        
-        # Attempt to extract structured information
+        # Convert to structured format
         analysis = {
-            'full_analysis': response,
-            'summary': self._extract_section(response, 'summary', 'key legal issues'),
-            'legal_issues': self._extract_section(response, 'key legal issues', 'main legal principles'),
-            'legal_principles': self._extract_section(response, 'main legal principles', 'holding'),
-            'decision': self._extract_section(response, 'holding', 'reasoning'),
-            'precedents_cited': self._extract_section(response, 'precedents cited', 'statutes'),
-            'statutes_referenced': self._extract_section(response, 'statutes', '')
+            "citation": self._extract_section(analysis_text, "Citation", "Court"),
+            "court": self._extract_section(analysis_text, "Court", "Judges"),
+            "judges": self._extract_section(analysis_text, "Judges", "Parties Involved"),
+            "parties": self._extract_section(analysis_text, "Parties Involved", "Key Legal Issues"),
+            "legal_issues": self._extract_section(analysis_text, "Key Legal Issues", "Main Legal Principles"),
+            "legal_principles": self._extract_section(analysis_text, "Main Legal Principles", "Holding/Decision"),
+            "decision": self._extract_section(analysis_text, "Holding/Decision", "Reasoning"),
+            "reasoning": self._extract_section(analysis_text, "Reasoning", "Precedents Cited"),
+            "precedents": self._extract_section(analysis_text, "Precedents Cited", "Statutes/Regulations"),
+            "statutes": self._extract_section(analysis_text, "Statutes/Regulations", ""),
+            "full_analysis": analysis_text
         }
         
         return analysis
@@ -591,19 +944,22 @@ class LegalAssistant:
         Returns:
             Draft document text
         """
+        # Format case_info as string
+        case_info_str = "\n".join([f"{key}: {value}" for key, value in case_info.items()])
+        
         prompt = f"""
-        Please draft a Kenyan legal document of type: {document_type}
+        Draft a {document_type} for the Kenyan legal system based on the following case information and instructions.
         
-        Case Information:
-        {json.dumps(case_info, indent=2)}
+        CASE INFORMATION:
+        {case_info_str}
         
-        Specific instructions:
+        SPECIFIC INSTRUCTIONS:
         {instructions}
         
-        Please follow Kenyan legal standards and formatting for this type of document. Include all necessary sections, references to appropriate laws and precedents, and proper legal language.
+        Please format the document appropriately for the Kenyan legal system.
         """
         
-        return self.llm_client.generate(prompt, temperature=0.2, max_tokens=2000)
+        return self.llm_client.generate(prompt)
     
     def analyze_statute(self, statute_text: str) -> Dict[str, Any]:
         """
@@ -616,46 +972,34 @@ class LegalAssistant:
             Dictionary with analysis results
         """
         prompt = f"""
-        Please analyze the following Kenyan statute and extract key information:
+        Analyze the following statute from the Kenyan legal system and extract the key information.
         
-        {statute_text[:5000]}... [truncated]
+        {statute_text}
         
-        Extract and organize the following information:
-        1. Full title of the statute
-        2. Date of enactment
-        3. Purpose and scope
-        4. Key definitions
-        5. Main provisions
-        6. Obligations created
-        7. Penalties or consequences
-        8. Related regulations or statutory instruments
-        
-        Format your response as a structured analysis that would be helpful for a legal professional.
+        Format your response as a structured analysis with the following sections:
+        1. Full Title of the Statute
+        2. Date of Enactment
+        3. Purpose and Scope
+        4. Key Definitions
+        5. Main Provisions
+        6. Obligations Created
+        7. Penalties or Consequences
+        8. Related Regulations or Statutory Instruments
         """
         
-        response = self.llm_client.generate(prompt, temperature=0.1)
+        analysis_text = self.llm_client.generate(prompt)
         
-        # If LLM connection failed, return a default analysis with a notice
-        if response is None:
-            return {
-                'full_analysis': "Unable to analyze statute due to AI service unavailability. Please try again later.",
-                'title': "AI service unavailable",
-                'purpose': "Unable to extract purpose at this time",
-                'key_definitions': "Unable to extract key definitions at this time",
-                'main_provisions': "Unable to extract main provisions at this time",
-                'obligations': "Unable to extract obligations at this time",
-                'penalties': "Unable to extract penalties at this time"
-            }
-        
-        # Attempt to extract structured information
+        # Convert to structured format
         analysis = {
-            'full_analysis': response,
-            'title': self._extract_section(response, 'full title', 'date of enactment'),
-            'purpose': self._extract_section(response, 'purpose and scope', 'key definitions'),
-            'key_definitions': self._extract_section(response, 'key definitions', 'main provisions'),
-            'main_provisions': self._extract_section(response, 'main provisions', 'obligations'),
-            'obligations': self._extract_section(response, 'obligations', 'penalties'),
-            'penalties': self._extract_section(response, 'penalties', 'related regulations')
+            "title": self._extract_section(analysis_text, "Full Title", "Date of Enactment"),
+            "enactment_date": self._extract_section(analysis_text, "Date of Enactment", "Purpose and Scope"),
+            "purpose": self._extract_section(analysis_text, "Purpose and Scope", "Key Definitions"),
+            "definitions": self._extract_section(analysis_text, "Key Definitions", "Main Provisions"),
+            "provisions": self._extract_section(analysis_text, "Main Provisions", "Obligations Created"),
+            "obligations": self._extract_section(analysis_text, "Obligations Created", "Penalties or Consequences"),
+            "penalties": self._extract_section(analysis_text, "Penalties or Consequences", "Related Regulations"),
+            "related_regulations": self._extract_section(analysis_text, "Related Regulations", ""),
+            "full_analysis": analysis_text
         }
         
         return analysis
@@ -672,41 +1016,42 @@ class LegalAssistant:
         Returns:
             Legal research memorandum
         """
-        cases_text = "\n\n".join([
-            f"Case: {case.get('title', 'Untitled')}\nCitation: {case.get('citation', 'N/A')}\nSummary: {case.get('summary', 'No summary available')}"
+        # Format cases and statutes as string
+        cases_str = "\n\n".join([
+            f"Case: {case.get('citation', 'Unknown')}\n" +
+            f"Holding: {case.get('decision', 'Unknown')}\n" +
+            f"Reasoning: {case.get('reasoning', 'Unknown')}"
             for case in relevant_cases
         ])
         
-        statutes_text = "\n\n".join([
-            f"Statute: {statute.get('title', 'Untitled')}\nSummary: {statute.get('summary', 'No summary available')}"
+        statutes_str = "\n\n".join([
+            f"Statute: {statute.get('title', 'Unknown')}\n" +
+            f"Purpose: {statute.get('purpose', 'Unknown')}\n" +
+            f"Key Provisions: {statute.get('provisions', 'Unknown')}"
             for statute in relevant_statutes
         ])
         
         prompt = f"""
-        Please draft a comprehensive legal research memorandum on the following topic under Kenyan law:
+        Generate a legal research memorandum on the following topic for the Kenyan legal system.
         
-        TOPIC: {topic}
+        TOPIC:
+        {topic}
         
         RELEVANT CASES:
-        {cases_text}
+        {cases_str}
         
         RELEVANT STATUTES:
-        {statutes_text}
+        {statutes_str}
         
-        The memorandum should include:
+        Format your response as a formal legal research memorandum with the following sections:
         1. Introduction and Statement of the Legal Issue
         2. Brief Statement of the Conclusion
-        3. Statement of Facts (synthesized from the available information)
+        3. Statement of Facts
         4. Discussion of Applicable Law
-           a. Relevant statutory provisions
-           b. Relevant case law
-           c. Analysis of how the law applies to the facts
         5. Conclusion and Recommendations
-        
-        Please format this as a professional legal memorandum following Kenyan legal standards.
         """
         
-        return self.llm_client.generate(prompt, temperature=0.3, max_tokens=3000)
+        return self.llm_client.generate(prompt)
     
     def generate_case_summary(self, case_text: str) -> str:
         """
@@ -719,24 +1064,22 @@ class LegalAssistant:
             Concise case summary
         """
         prompt = f"""
-        Please provide a concise summary of the following Kenyan legal case:
+        Please summarize the following Kenyan legal case in a concise and structured format.
         
-        {case_text[:5000]}... [truncated]
+        {case_text}
         
-        Your summary should include:
-        1. The case citation
-        2. The parties involved
-        3. The court that decided the case
-        4. The key facts
-        5. The legal issue(s) presented
-        6. The court's holding
-        7. The key reasoning
-        8. The significance of the decision
-        
-        Limit your summary to approximately 300-500 words.
+        Format your response as a structured summary with the following sections:
+        1. Citation
+        2. Parties Involved
+        3. Court
+        4. Key Facts
+        5. Legal Issues Presented
+        6. Court's Holding
+        7. Key Reasoning
+        8. Significance of the Decision
         """
         
-        return self.llm_client.generate(prompt, temperature=0.2, max_tokens=800)
+        return self.llm_client.generate(prompt)
     
     def generate_contract_clause(self, contract_type: str, clause_purpose: str, specific_requirements: str) -> str:
         """
@@ -751,24 +1094,18 @@ class LegalAssistant:
             Generated contract clause
         """
         prompt = f"""
-        Please draft a legal clause for a {contract_type} contract under Kenyan law.
+        Generate a contract clause for a {contract_type} under Kenyan law.
         
-        PURPOSE OF THE CLAUSE: {clause_purpose}
+        PURPOSE OF THE CLAUSE:
+        {clause_purpose}
         
         SPECIFIC REQUIREMENTS:
         {specific_requirements}
         
-        The clause should:
-        1. Be legally sound under Kenyan contract law
-        2. Use precise and unambiguous language
-        3. Address the specific purpose and requirements provided
-        4. Follow standard legal drafting conventions
-        5. Be enforceable in Kenyan courts
-        
-        Draft only the specific clause, not the entire contract.
+        Please draft a comprehensive, legally sound clause that would be suitable for inclusion in a formal contract under Kenyan law.
         """
         
-        return self.llm_client.generate(prompt, temperature=0.3, max_tokens=800)
+        return self.llm_client.generate(prompt)
     
     def _extract_section(self, text: str, section_start: str, section_end: str) -> str:
         """
@@ -782,28 +1119,44 @@ class LegalAssistant:
         Returns:
             Extracted section
         """
-        # Case insensitive search
-        text_lower = text.lower()
-        start_pos = text_lower.find(section_start.lower())
-        
-        if start_pos == -1:
+        try:
+            # Find the start of the section
+            start_index = text.find(section_start)
+            if start_index == -1:
+                # Try with a number prefix (e.g., "1. Citation")
+                for i in range(1, 11):
+                    start_index = text.find(f"{i}. {section_start}")
+                    if start_index != -1:
+                        start_index = text.find(section_start, start_index)
+                        break
+            
+            if start_index == -1:
+                return ""
+            
+            # Move to the end of the section title
+            start_index = text.find("\n", start_index)
+            if start_index == -1:
+                return ""
+            
+            start_index += 1  # Skip the newline
+            
+            # Find the end of the section
+            end_index = text.find(section_end, start_index)
+            if section_end == "":
+                end_index = len(text)
+            elif end_index == -1:
+                # Try with a number prefix
+                for i in range(1, 11):
+                    end_index = text.find(f"{i}. {section_end}", start_index)
+                    if end_index != -1:
+                        break
+                if end_index == -1:
+                    end_index = len(text)
+            
+            # Extract and clean the section
+            section_text = text[start_index:end_index].strip()
+            return section_text
+            
+        except Exception as e:
+            logger.error(f"Error extracting section {section_start}: {str(e)}")
             return ""
-        
-        # Find the actual start of content after the header
-        content_start = text.find(":", start_pos)
-        if content_start == -1:
-            content_start = start_pos + len(section_start)
-        else:
-            content_start += 1
-        
-        # Find the end position
-        if section_end:
-            end_pos = text_lower.find(section_end.lower(), content_start)
-            if end_pos == -1:
-                section = text[content_start:]
-            else:
-                section = text[content_start:end_pos]
-        else:
-            section = text[content_start:]
-        
-        return section.strip()
