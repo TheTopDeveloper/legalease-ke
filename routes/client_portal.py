@@ -4,12 +4,12 @@ Routes for client portal functionality, allowing clients to access shared docume
 
 from datetime import datetime, timedelta
 import uuid
-from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
 from app import db
 from utils.permissions import Permissions
-from models import ClientPortalUser, Client, Document, Case, Event
+from models import ClientPortalUser, Client, Document, Case, Event, CaseMilestone
 
 client_portal_bp = Blueprint('client_portal_bp', __name__, url_prefix='/client')
 
@@ -312,6 +312,121 @@ def generate_token():
     
     flash('New access token generated successfully.', 'success')
     return redirect(url_for('client_portal_bp.profile'))
+
+@client_portal_bp.route('/cases/<int:case_id>/milestones')
+@login_required
+def case_milestones(case_id):
+    """View milestones for a specific case"""
+    # Verify the user is a ClientPortalUser
+    if not isinstance(current_user, ClientPortalUser):
+        return redirect(url_for('auth.login'))
+    
+    # Get the case and check permissions
+    case = Case.query.get_or_404(case_id)
+    
+    # Get client details
+    client = Client.query.get(current_user.client_id)
+    
+    # Check if the case is associated with the client
+    if client not in case.clients:
+        flash('Access denied. You do not have permission to view this case.', 'danger')
+        return redirect(url_for('client_portal_bp.cases'))
+    
+    # Get milestones for this case ordered by order_index
+    milestones = CaseMilestone.query.filter_by(case_id=case_id).order_by(CaseMilestone.order_index).all()
+    
+    return render_template('client_portal/milestones.html',
+                          case=case,
+                          milestones=milestones,
+                          title=f"Milestones for {case.title}")
+
+@client_portal_bp.route('/cases/<int:case_id>/timeline')
+@login_required
+def case_timeline(case_id):
+    """View timeline for a specific case"""
+    # Verify the user is a ClientPortalUser
+    if not isinstance(current_user, ClientPortalUser):
+        return redirect(url_for('auth.login'))
+    
+    # Get the case and check permissions
+    case = Case.query.get_or_404(case_id)
+    
+    # Get client details
+    client = Client.query.get(current_user.client_id)
+    
+    # Check if the case is associated with the client
+    if client not in case.clients:
+        flash('Access denied. You do not have permission to view this case.', 'danger')
+        return redirect(url_for('client_portal_bp.cases'))
+    
+    # Get milestones for this case ordered by order_index
+    milestones = CaseMilestone.query.filter_by(case_id=case_id).order_by(CaseMilestone.order_index).all()
+    
+    # Get events for this case
+    events = Event.query.filter_by(case_id=case_id).order_by(Event.start_time).all()
+    
+    return render_template('client_portal/timeline.html',
+                          case=case,
+                          milestones=milestones,
+                          events=events,
+                          title=f"Timeline for {case.title}")
+
+@client_portal_bp.route('/api/case/<int:case_id>/milestone_stats')
+@login_required
+def milestone_stats(case_id):
+    """Return milestone statistics for a case in JSON format"""
+    # Verify the user is a ClientPortalUser
+    if not isinstance(current_user, ClientPortalUser):
+        return jsonify({"error": "Authentication required"}), 401
+    
+    # Get the case
+    case = Case.query.get_or_404(case_id)
+    
+    # Get client details
+    client = Client.query.get(current_user.client_id)
+    
+    # Check if the case is associated with the client
+    if client not in case.clients:
+        return jsonify({"error": "Permission denied"}), 403
+    
+    # Get milestone data
+    milestones = CaseMilestone.query.filter_by(case_id=case_id).all()
+    
+    # Calculate statistics
+    total_count = len(milestones)
+    completed_count = sum(1 for m in milestones if m.status == 'completed')
+    in_progress_count = sum(1 for m in milestones if m.status == 'in_progress')
+    pending_count = sum(1 for m in milestones if m.status == 'pending')
+    delayed_count = sum(1 for m in milestones if hasattr(m, 'is_delayed') and m.is_delayed())
+    critical_count = sum(1 for m in milestones if m.is_critical)
+    
+    # Prepare milestone data for timeline
+    timeline_data = []
+    for milestone in milestones:
+        milestone_data = {
+            'id': milestone.id,
+            'title': milestone.title,
+            'type': milestone.milestone_type,
+            'status': milestone.status,
+            'target_date': milestone.target_date.isoformat() if milestone.target_date else None,
+            'completion_date': milestone.completion_date.isoformat() if milestone.completion_date else None,
+            'is_critical': milestone.is_critical,
+            'is_delayed': milestone.is_delayed() if hasattr(milestone, 'is_delayed') else False,
+            'days_remaining': milestone.days_remaining() if hasattr(milestone, 'days_remaining') else None,
+            'order_index': milestone.order_index
+        }
+        timeline_data.append(milestone_data)
+    
+    return jsonify({
+        'total_count': total_count,
+        'completed_count': completed_count,
+        'in_progress_count': in_progress_count,
+        'pending_count': pending_count,
+        'delayed_count': delayed_count,
+        'critical_count': critical_count,
+        'timeline_data': timeline_data,
+        'completion_percentage': round((completed_count / total_count) * 100) if total_count > 0 else 0
+    })
 
 @client_portal_bp.route('/secure-document/<token>/<int:document_id>')
 def secure_document(token, document_id):

@@ -45,7 +45,9 @@ with app.app_context():
         # Ruling database models
         Ruling, Judge, Tag, RulingReference, RulingAnnotation, RulingAnalysis,
         # Client portal models
-        ClientPortalUser
+        ClientPortalUser,
+        # Case milestone models
+        CaseMilestone
     )
     db.create_all()
     logger.info("Database tables created")
@@ -67,6 +69,7 @@ from routes.admin import admin_bp
 from routes.rulings import rulings_bp
 from routes.client_portal import client_portal_bp
 from routes.document_sharing import document_sharing_bp
+from routes.milestone import milestone_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(cases_bp)
@@ -84,6 +87,7 @@ app.register_blueprint(admin_bp)
 app.register_blueprint(rulings_bp, url_prefix='/rulings')
 app.register_blueprint(client_portal_bp)
 app.register_blueprint(document_sharing_bp)
+app.register_blueprint(milestone_bp)
 
 # Load user loader callback
 from models import User, ClientPortalUser

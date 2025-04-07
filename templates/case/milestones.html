@@ -1,0 +1,251 @@
+{% extends 'layout.html' %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>{{ title }}</h2>
+        <div>
+            <a href="{{ url_for('milestone.create_milestone', case_id=case.id) }}" class="btn btn-primary me-2">
+                <i class="bi bi-plus-circle"></i> Add Milestone
+            </a>
+            <a href="{{ url_for('milestone.case_timeline', case_id=case.id) }}" class="btn btn-secondary">
+                <i class="bi bi-calendar-event"></i> View Timeline
+            </a>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h5 class="card-title">Case Information</h5>
+                    <p><strong>Number:</strong> {{ case.case_number }}</p>
+                    <p><strong>Court:</strong> {{ case.court_level }}</p>
+                    <p><strong>Type:</strong> {{ case.case_type }}</p>
+                    <p><strong>Status:</strong> <span class="badge bg-{{ 'success' if case.status == 'Active' else 'secondary' }}">{{ case.status }}</span></p>
+                    {% if case.next_court_date %}
+                    <p><strong>Next Date:</strong> {{ case.next_court_date.strftime('%d %b, %Y') }}</p>
+                    {% endif %}
+                    <a href="{{ url_for('case.view_case', case_id=case.id) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-arrow-left"></i> Back to Case
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Milestone Progress</h5>
+                </div>
+                <div class="card-body">
+                    <div id="milestone-stats">
+                        <div class="row text-center mb-3">
+                            <div class="col">
+                                <div class="py-2 rounded bg-primary text-white">
+                                    <h3 id="completed-count">{{ milestones|selectattr('status', 'equalto', 'completed')|list|length }}</h3>
+                                    <div>Completed</div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="py-2 rounded bg-info text-white">
+                                    <h3 id="in-progress-count">{{ milestones|selectattr('status', 'equalto', 'in_progress')|list|length }}</h3>
+                                    <div>In Progress</div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="py-2 rounded bg-warning text-white">
+                                    <h3 id="pending-count">{{ milestones|selectattr('status', 'equalto', 'pending')|list|length }}</h3>
+                                    <div>Pending</div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="py-2 rounded bg-danger text-white">
+                                    <h3 id="delayed-count">{{ milestones|selectattr('is_delayed')|list|length }}</h3>
+                                    <div>Delayed</div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="py-2 rounded bg-dark text-white">
+                                    <h3 id="critical-count">{{ milestones|selectattr('is_critical')|list|length }}</h3>
+                                    <div>Critical</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% set completed = milestones|selectattr('status', 'equalto', 'completed')|list|length %}
+                        {% set total = milestones|length %}
+                        {% set percentage = (completed / total * 100)|round|int if total > 0 else 0 %}
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ percentage }}%;" 
+                                 aria-valuenow="{{ percentage }}" aria-valuemin="0" aria-valuemax="100">
+                                {{ percentage }}% Complete
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Case Milestones</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if milestones %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" id="milestones-table">
+                            <thead>
+                                <tr>
+                                    <th>Milestone</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Target Date</th>
+                                    <th>Days Remaining</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="milestone-list" class="sortable-milestones">
+                                {% for milestone in milestones %}
+                                <tr data-milestone-id="{{ milestone.id }}" 
+                                    class="{{ 'table-success' if milestone.status == 'completed' }}
+                                           {{ 'table-info' if milestone.status == 'in_progress' }}
+                                           {{ 'table-warning' if milestone.status == 'pending' }}
+                                           {{ 'table-danger' if milestone.is_delayed() and milestone.status != 'completed' }}">
+                                    <td>
+                                        <strong>{{ milestone.title }}</strong>
+                                        {% if milestone.is_critical %}
+                                        <span class="badge bg-dark ms-1">Critical</span>
+                                        {% endif %}
+                                        {% if milestone.description %}
+                                        <div class="small text-muted">{{ milestone.description }}</div>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ milestone.milestone_type }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if milestone.status == 'completed' }}
+                                                         {{ 'info' if milestone.status == 'in_progress' }}
+                                                         {{ 'warning' if milestone.status == 'pending' }}
+                                                         {{ 'danger' if milestone.status == 'delayed' }}">
+                                            {{ milestone.status|capitalize }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if milestone.target_date %}
+                                        {{ milestone.target_date.strftime('%d %b, %Y') }}
+                                        {% else %}
+                                        <span class="text-muted">Not set</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if milestone.status == 'completed' %}
+                                        <span class="text-success">Completed</span>
+                                        {% elif milestone.days_remaining() is not none %}
+                                            {% if milestone.days_remaining() < 0 %}
+                                            <span class="text-danger">{{ milestone.days_remaining()|abs }} days overdue</span>
+                                            {% elif milestone.days_remaining() == 0 %}
+                                            <span class="text-warning">Due today</span>
+                                            {% else %}
+                                            <span class="{{ 'text-warning' if milestone.days_remaining() <= 7 else 'text-info' }}">
+                                                {{ milestone.days_remaining() }} days left
+                                            </span>
+                                            {% endif %}
+                                        {% else %}
+                                        <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            {% if milestone.status != 'completed' %}
+                                            <form method="POST" action="{{ url_for('milestone.complete_milestone', case_id=case.id, milestone_id=milestone.id) }}">
+                                                <button type="submit" class="btn btn-sm btn-success" title="Mark as completed">
+                                                    <i class="bi bi-check2"></i>
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                            <a href="{{ url_for('milestone.edit_milestone', case_id=case.id, milestone_id=milestone.id) }}" 
+                                               class="btn btn-sm btn-outline-primary ms-1" title="Edit milestone">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger ms-1" 
+                                                    data-bs-toggle="modal" data-bs-target="#deleteMilestoneModal{{ milestone.id }}"
+                                                    title="Delete milestone">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                        <!-- Delete Modal -->
+                                        <div class="modal fade" id="deleteMilestoneModal{{ milestone.id }}" tabindex="-1" aria-labelledby="deleteMilestoneModalLabel{{ milestone.id }}" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="deleteMilestoneModalLabel{{ milestone.id }}">Confirm Delete</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        Are you sure you want to delete the milestone <strong>{{ milestone.title }}</strong>?
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        <form method="POST" action="{{ url_for('milestone.delete_milestone', case_id=case.id, milestone_id=milestone.id) }}">
+                                                            <button type="submit" class="btn btn-danger">Delete</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="p-4 text-center">
+                        <p class="text-muted">No milestones have been created for this case.</p>
+                        <a href="{{ url_for('milestone.create_milestone', case_id=case.id) }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Add Your First Milestone
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Setup sortable for milestone reordering
+    if (document.getElementById('milestone-list')) {
+        const sortable = new Sortable(document.getElementById('milestone-list'), {
+            animation: 150,
+            handle: 'td:first-child',
+            ghostClass: 'sortable-ghost',
+            onEnd: function() {
+                // Get the new order of milestones
+                const milestoneOrder = Array.from(document.querySelectorAll('#milestone-list tr'))
+                    .map(row => row.getAttribute('data-milestone-id'));
+                
+                // Save the new order via AJAX
+                fetch(`/case/{{ case.id }}/milestones/reorder`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ milestone_order: milestoneOrder })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        console.error('Error reordering milestones:', data.message);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -123,6 +123,27 @@ DEFAULT_ROLE_PERMISSIONS = {
     ]
 }
 
+def check_permission(user, permission):
+    """
+    Check if a user has a specific permission.
+    
+    Args:
+        user: The user to check permissions for
+        permission: The permission to check
+        
+    Returns:
+        bool: True if user has permission, False otherwise
+    """
+    # Check if user is authenticated
+    if not user or not user.is_authenticated:
+        return False
+        
+    # Get user's role permissions
+    role_permissions = DEFAULT_ROLE_PERMISSIONS.get(user.role, [])
+    
+    # Check if permission is in role permissions
+    return permission in role_permissions
+
 def has_permission(permission):
     """
     Decorator to check if current user has a specific permission.
@@ -199,3 +220,38 @@ def admin_required(f):
             
         return f(*args, **kwargs)
     return decorated_function
+
+def check_case_access(case, user):
+    """
+    Check if a user has access to a specific case.
+    
+    Args:
+        case: The case object to check access for
+        user: The user attempting to access the case
+        
+    Returns:
+        bool: True if user has access, False otherwise
+    """
+    # Admins have access to all cases
+    if user.role == 'admin':
+        return True
+        
+    # Case owner has access
+    if case.user_id == user.id:
+        return True
+        
+    # For organization members, check if case belongs to the organization
+    if user.role == 'organization_member' and user.organization_id:
+        # Get the case owner
+        from models import User
+        case_owner = User.query.get(case.user_id)
+        
+        # Allow access if case owner is in the same organization
+        if case_owner and case_owner.organization_id == user.organization_id:
+            return True
+    
+    # For shared cases (implement this when case sharing is developed)
+    # if user.id in [shared_user.id for shared_user in case.shared_users]:
+    #     return True
+    
+    return False

@@ -1,0 +1,269 @@
+{% extends "client_portal/layout.html" %}
+
+{% block title %}{{ title }} - Client Portal{% endblock %}
+
+{% block header %}{{ case.title }} - Timeline{% endblock %}
+{% block subheader %}
+    <span class="badge 
+        {% if case.status == 'Active' %}bg-success
+        {% elif case.status == 'Pending' %}bg-warning
+        {% elif case.status == 'Closed' %}bg-secondary
+        {% else %}bg-info{% endif %}">
+        {{ case.status }}
+    </span>
+    <span class="text-muted ms-2">Case Number: {{ case.case_number }}</span>
+{% endblock %}
+
+{% block header_buttons %}
+<div class="col-md-auto">
+    <a href="{{ url_for('client_portal_bp.view_case', case_id=case.id) }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back to Case
+    </a>
+    <a href="{{ url_for('client_portal_bp.case_milestones', case_id=case.id) }}" class="btn btn-outline-primary ms-2">
+        <i class="fas fa-flag me-1"></i> View Milestones
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <!-- Case Timeline -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-stream me-2"></i> Case Timeline</h5>
+            </div>
+            <div class="card-body">
+                {% if milestones or events %}
+                <div class="timeline" id="case-timeline">
+                    <!-- Timeline will be rendered by JavaScript -->
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Loading timeline...</p>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <p class="text-muted mb-0">No timeline data available for this case.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block head %}
+<style>
+    /* Timeline styling */
+    .timeline {
+        position: relative;
+        padding: 1rem 0;
+    }
+    
+    .timeline::before {
+        content: '';
+        position: absolute;
+        height: 100%;
+        width: 2px;
+        background: #e9ecef;
+        left: 32px;
+        top: 0;
+    }
+    
+    .timeline-item {
+        position: relative;
+        padding-left: 60px;
+        padding-bottom: 2rem;
+    }
+    
+    .timeline-item:last-child {
+        padding-bottom: 0;
+    }
+    
+    .timeline-marker {
+        position: absolute;
+        width: 24px;
+        height: 24px;
+        left: 21px;
+        top: 0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+    }
+    
+    .timeline-marker i {
+        font-size: 12px;
+    }
+    
+    .timeline-content {
+        background: #fff;
+        border-radius: 0.25rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border: 1px solid rgba(0, 0, 0, 0.125);
+        position: relative;
+    }
+    
+    .timeline-date {
+        position: absolute;
+        left: -70px;
+        width: 60px;
+        text-align: right;
+        color: #6c757d;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .timeline-badge {
+        position: absolute;
+        right: 1rem;
+        top: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const timelineContainer = document.getElementById('case-timeline');
+        const milestones = [
+            {% for milestone in milestones %}
+            {
+                id: {{ milestone.id }},
+                title: "{{ milestone.title }}",
+                description: "{{ milestone.description|replace('"', '\\"') }}",
+                type: "{{ milestone.milestone_type }}",
+                status: "{{ milestone.status }}",
+                targetDate: "{{ milestone.target_date.strftime('%Y-%m-%d') if milestone.target_date else '' }}",
+                completionDate: "{{ milestone.completion_date.strftime('%Y-%m-%d') if milestone.completion_date else '' }}",
+                isCritical: {{ 'true' if milestone.is_critical else 'false' }},
+                orderIndex: {{ milestone.order_index }},
+                itemType: 'milestone'
+            },
+            {% endfor %}
+        ];
+        
+        const events = [
+            {% for event in events %}
+            {
+                id: {{ event.id }},
+                title: "{{ event.title }}",
+                description: "{{ event.description|replace('"', '\\"') if event.description else '' }}",
+                type: "{{ event.event_type }}",
+                startTime: "{{ event.start_time.strftime('%Y-%m-%d %H:%M:%S') }}",
+                location: "{{ event.location if event.location else '' }}",
+                itemType: 'event'
+            },
+            {% endfor %}
+        ];
+        
+        // Combine milestones and events and sort by date
+        const timelineItems = [...milestones, ...events].sort((a, b) => {
+            const dateA = a.itemType === 'milestone' ? (a.targetDate || '9999-12-31') : a.startTime;
+            const dateB = b.itemType === 'milestone' ? (b.targetDate || '9999-12-31') : b.startTime;
+            return new Date(dateA) - new Date(dateB);
+        });
+        
+        // Clear loading indicator
+        timelineContainer.innerHTML = '';
+        
+        // Generate timeline HTML
+        timelineItems.forEach(item => {
+            const date = item.itemType === 'milestone' 
+                ? (item.targetDate ? new Date(item.targetDate) : null)
+                : new Date(item.startTime);
+            
+            let dateDisplay = date ? date.toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            }) : 'No date';
+            
+            let timeDisplay = '';
+            if (item.itemType === 'event') {
+                timeDisplay = new Date(item.startTime).toLocaleTimeString('en-GB', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+            
+            let markerColor = '';
+            let badgeClass = '';
+            let statusText = '';
+            
+            if (item.itemType === 'milestone') {
+                // Milestone styling
+                if (item.status === 'completed') {
+                    markerColor = 'bg-success';
+                    badgeClass = 'bg-success';
+                    statusText = 'Completed';
+                } else if (item.status === 'in_progress') {
+                    markerColor = 'bg-warning';
+                    badgeClass = 'bg-warning';
+                    statusText = 'In Progress';
+                } else if (item.status === 'delayed') {
+                    markerColor = 'bg-danger';
+                    badgeClass = 'bg-danger';
+                    statusText = 'Delayed';
+                } else {
+                    markerColor = 'bg-info';
+                    badgeClass = 'bg-info';
+                    statusText = 'Pending';
+                }
+            } else {
+                // Event styling
+                if (item.type === 'Hearing') {
+                    markerColor = 'bg-danger';
+                    badgeClass = 'bg-danger';
+                } else if (item.type === 'Filing') {
+                    markerColor = 'bg-primary';
+                    badgeClass = 'bg-primary';
+                } else if (item.type === 'Deadline') {
+                    markerColor = 'bg-warning';
+                    badgeClass = 'bg-warning';
+                } else {
+                    markerColor = 'bg-secondary';
+                    badgeClass = 'bg-secondary';
+                }
+                statusText = item.type;
+            }
+            
+            const timelineItem = document.createElement('div');
+            timelineItem.className = 'timeline-item';
+            timelineItem.innerHTML = `
+                <div class="timeline-date">${dateDisplay}</div>
+                <div class="timeline-marker ${markerColor}">
+                    <i class="fas ${item.itemType === 'milestone' ? 'fa-flag' : 'fa-calendar'}"></i>
+                </div>
+                <div class="timeline-content p-3">
+                    <span class="badge ${badgeClass} timeline-badge">${statusText}</span>
+                    <h5 class="mb-1">${item.title}</h5>
+                    <p class="mb-1 small">${item.description || ''}</p>
+                    <div class="small text-muted">
+                        ${item.itemType === 'milestone' 
+                            ? `<i class="fas fa-flag me-1"></i> ${item.type || 'Milestone'}`
+                            : `<i class="fas fa-calendar me-1"></i> ${timeDisplay} ${item.location ? `| <i class="fas fa-map-marker-alt me-1"></i> ${item.location}` : ''}`
+                        }
+                        ${item.itemType === 'milestone' && item.isCritical ? '<span class="ms-2 badge bg-danger">Critical</span>' : ''}
+                    </div>
+                </div>
+            `;
+            
+            timelineContainer.appendChild(timelineItem);
+        });
+        
+        // If no items were added
+        if (timelineItems.length === 0) {
+            timelineContainer.innerHTML = `
+                <div class="text-center py-5">
+                    <p class="text-muted mb-0">No timeline data available for this case.</p>
+                </div>
+            `;
+        }
+    });
+</script>
+{% endblock %}

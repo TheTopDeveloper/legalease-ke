@@ -361,6 +361,7 @@ class Case(db.Model):
     # Relationships
     documents = db.relationship('Document', secondary=case_document_association, backref='cases')
     events = db.relationship('Event', backref='case', lazy='dynamic')
+    # Note: milestones relationship is defined in the CaseMilestone model with order_by
     
     def __repr__(self):
         return f'<Case {self.case_number}: {self.title}>'
@@ -460,8 +461,8 @@ class Event(db.Model):
     case_id = db.Column(db.Integer, db.ForeignKey('case.id'))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     
-    def __repr__(self):
-        return f'<Event {self.id}: {self.title}>'
+    # Relationships
+    milestones = db.relationship('CaseMilestone', backref='linked_event', lazy='dynamic')
     
     def get_duration_minutes(self):
         """Get event duration in minutes"""
@@ -484,6 +485,56 @@ class Event(db.Model):
         """Check if this event is related to court proceedings"""
         court_event_types = ['Court Appearance', 'Hearing', 'Mention', 'Filing']
         return self.event_type in court_event_types
+    
+    def __repr__(self):
+        return f'<Event {self.id}: {self.title}>'
+        
+        
+class CaseMilestone(db.Model):
+    """Model for tracking important milestones in a case's timeline"""
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    milestone_type = db.Column(db.String(50))  # Filing, Hearing, Decision, etc.
+    status = db.Column(db.String(20), default='pending')  # pending, in_progress, completed, delayed
+    order_index = db.Column(db.Integer, default=0)  # For ordering milestones in timeline
+    target_date = db.Column(db.DateTime)  # Expected completion date
+    completion_date = db.Column(db.DateTime)  # Actual completion date
+    is_critical = db.Column(db.Boolean, default=False)  # Whether this is a critical milestone
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Foreign keys
+    case_id = db.Column(db.Integer, db.ForeignKey('case.id'), nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('event.id'))
+    document_id = db.Column(db.Integer, db.ForeignKey('document.id'))
+    
+    # Relationships
+    case = db.relationship('Case', backref=db.backref('milestones', lazy='dynamic', order_by='CaseMilestone.order_index'))
+    linked_document = db.relationship('Document', backref='milestones')
+    
+    def is_completed(self):
+        """Check if milestone is completed"""
+        return self.status == 'completed' and self.completion_date is not None
+    
+    def days_remaining(self):
+        """Return days remaining until target date, negative if overdue"""
+        if not self.target_date:
+            return None
+        now = datetime.utcnow().date()
+        target = self.target_date.date()
+        return (target - now).days
+    
+    def is_delayed(self):
+        """Check if milestone is delayed (target date passed but not completed)"""
+        if self.status == 'completed':
+            return False
+        if not self.target_date:
+            return False
+        return self.target_date.date() < datetime.utcnow().date()
+    
+    def __repr__(self):
+        return f'<CaseMilestone {self.id}: {self.title}>'
 
 class LegalResearch(db.Model):
     """Legal research model for tracking research history and saved research"""

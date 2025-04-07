@@ -1,0 +1,359 @@
+{% extends 'layout.html' %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block head_styles %}
+<!-- Timeline CSS -->
+<style>
+  .timeline {
+    position: relative;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .timeline::after {
+    content: '';
+    position: absolute;
+    width: 6px;
+    background-color: #dee2e6;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    margin-left: -3px;
+    z-index: 1;
+  }
+  
+  .timeline-container {
+    padding: 10px 40px;
+    position: relative;
+    background-color: inherit;
+    width: 50%;
+  }
+  
+  .timeline-container.left {
+    left: 0;
+  }
+  
+  .timeline-container.right {
+    left: 50%;
+  }
+  
+  .timeline-container::after {
+    content: '';
+    position: absolute;
+    width: 25px;
+    height: 25px;
+    right: -12px;
+    background-color: white;
+    border: 4px solid #6c757d;
+    top: 22px;
+    border-radius: 50%;
+    z-index: 2;
+  }
+
+  .timeline-container.completed::after {
+    border-color: #28a745;
+  }
+
+  .timeline-container.in_progress::after {
+    border-color: #17a2b8;
+  }
+
+  .timeline-container.pending::after {
+    border-color: #ffc107;
+  }
+
+  .timeline-container.delayed::after {
+    border-color: #dc3545;
+  }
+  
+  .timeline-container.left::after {
+    right: -12px;
+  }
+  
+  .timeline-container.right::after {
+    left: -13px;
+  }
+  
+  .timeline-content {
+    padding: 20px;
+    position: relative;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    background-color: white;
+  }
+
+  .timeline-content.completed {
+    border-left: 5px solid #28a745;
+  }
+
+  .timeline-content.in_progress {
+    border-left: 5px solid #17a2b8;
+  }
+
+  .timeline-content.pending {
+    border-left: 5px solid #ffc107;
+  }
+
+  .timeline-content.delayed {
+    border-left: 5px solid #dc3545;
+  }
+
+  .timeline-container.right .timeline-content {
+    border-left: 1px solid #dee2e6;
+    border-right: 5px solid;
+  }
+
+  .timeline-container.right .timeline-content.completed {
+    border-right-color: #28a745;
+  }
+
+  .timeline-container.right .timeline-content.in_progress {
+    border-right-color: #17a2b8;
+  }
+
+  .timeline-container.right .timeline-content.pending {
+    border-right-color: #ffc107;
+  }
+
+  .timeline-container.right .timeline-content.delayed {
+    border-right-color: #dc3545;
+  }
+  
+  .timeline-date {
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  .timeline-badge {
+    display: inline-block;
+    padding: 0.25em 0.5em;
+    border-radius: 5px;
+    font-size: 0.8em;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+
+  .timeline-badge-completed {
+    background-color: #d4edda;
+    color: #155724;
+  }
+
+  .timeline-badge-pending {
+    background-color: #fff3cd;
+    color: #856404;
+  }
+
+  .timeline-badge-in_progress {
+    background-color: #d1ecf1;
+    color: #0c5460;
+  }
+
+  .timeline-badge-delayed {
+    background-color: #f8d7da;
+    color: #721c24;
+  }
+  
+  .timeline-event {
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    padding: 8px;
+    margin-top: 10px;
+    font-size: 0.9em;
+    border-left: 3px solid #6c757d;
+  }
+
+  .timeline-document {
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    padding: 8px;
+    margin-top: 10px;
+    font-size: 0.9em;
+    border-left: 3px solid #007bff;
+  }
+  
+  @media screen and (max-width: 768px) {
+    .timeline::after {
+      left: 31px;
+    }
+    
+    .timeline-container {
+      width: 100%;
+      padding-left: 70px;
+      padding-right: 25px;
+    }
+    
+    .timeline-container.right {
+      left: 0%;
+    }
+    
+    .timeline-container.left::after, .timeline-container.right::after {
+      left: 18px;
+    }
+
+    .timeline-container.right .timeline-content {
+      border-left: 5px solid;
+      border-right: 1px solid #dee2e6;
+    }
+
+    .timeline-container.right .timeline-content.completed {
+      border-left-color: #28a745;
+      border-right-color: #dee2e6;
+    }
+
+    .timeline-container.right .timeline-content.in_progress {
+      border-left-color: #17a2b8;
+      border-right-color: #dee2e6;
+    }
+
+    .timeline-container.right .timeline-content.pending {
+      border-left-color: #ffc107;
+      border-right-color: #dee2e6;
+    }
+
+    .timeline-container.right .timeline-content.delayed {
+      border-left-color: #dc3545;
+      border-right-color: #dee2e6;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>{{ title }}</h2>
+        <a href="{{ url_for('milestone.list_milestones', case_id=case.id) }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Milestones
+        </a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Case Timeline</h5>
+        </div>
+        <div class="card-body">
+            {% if milestones %}
+            <div class="timeline">
+                {% for milestone in milestones %}
+                <!-- Determine if milestone is delayed -->
+                {% set status_class = milestone.status %}
+                {% if milestone.is_delayed() and milestone.status != 'completed' %}
+                    {% set status_class = 'delayed' %}
+                {% endif %}
+
+                <div class="timeline-container {{ 'left' if loop.index is odd else 'right' }} {{ status_class }}">
+                    <div class="timeline-content {{ status_class }}">
+                        <div class="timeline-date">
+                            {% if milestone.target_date %}
+                                {{ milestone.target_date.strftime('%B %d, %Y') }}
+                            {% elif milestone.completion_date %}
+                                {{ milestone.completion_date.strftime('%B %d, %Y') }}
+                            {% else %}
+                                No date set
+                            {% endif %}
+                        </div>
+
+                        <h4>{{ milestone.title }}
+                            {% if milestone.is_critical %}
+                            <span class="badge bg-dark ms-1">Critical</span>
+                            {% endif %}
+                        </h4>
+
+                        <div class="timeline-badge timeline-badge-{{ status_class }}">
+                            {{ status_class|replace('_', ' ')|capitalize }}
+                        </div>
+
+                        {% if milestone.description %}
+                        <p>{{ milestone.description }}</p>
+                        {% endif %}
+
+                        <!-- Display linked event -->
+                        {% if milestone.event_id %}
+                        <div class="timeline-event">
+                            <strong>Event:</strong> {{ milestone.linked_event.title }}
+                            <br>
+                            <small>{{ milestone.linked_event.start_time.strftime('%d %b, %Y') }}</small>
+                        </div>
+                        {% endif %}
+
+                        <!-- Display linked document -->
+                        {% if milestone.document_id %}
+                        <div class="timeline-document">
+                            <strong>Document:</strong> {{ milestone.linked_document.title }}
+                        </div>
+                        {% endif %}
+
+                        <!-- Actions -->
+                        <div class="mt-3">
+                            <a href="{{ url_for('milestone.edit_milestone', case_id=case.id, milestone_id=milestone.id) }}" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            {% if milestone.status != 'completed' %}
+                            <form method="POST" action="{{ url_for('milestone.complete_milestone', case_id=case.id, milestone_id=milestone.id) }}" 
+                                  class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-success ms-1">
+                                    <i class="bi bi-check2"></i> Complete
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center p-5">
+                <p class="text-muted">No milestones have been created for this case.</p>
+                <a href="{{ url_for('milestone.create_milestone', case_id=case.id) }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Add Your First Milestone
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Events separate section -->
+    {% if events %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Case Events</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Type</th>
+                            <th>Date</th>
+                            <th>Location</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in events %}
+                        <tr>
+                            <td>
+                                <strong>{{ event.title }}</strong>
+                                {% if event.description %}
+                                <div class="small text-muted">{{ event.description }}</div>
+                                {% endif %}
+                            </td>
+                            <td>{{ event.event_type }}</td>
+                            <td>
+                                {{ event.start_time.strftime('%d %b, %Y') }}
+                                {% if not event.is_all_day %}
+                                <div class="small">{{ event.start_time.strftime('%H:%M') }}</div>
+                                {% endif %}
+                            </td>
+                            <td>{{ event.location }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
