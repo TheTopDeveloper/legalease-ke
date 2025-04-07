@@ -811,7 +811,7 @@ class OllamaClient:
                 },
                 "extract": lambda data: data.get("choices", [{}])[0].get("text", "")
             },
-            # Legacy Ollama API endpoints
+            # Legacy Ollama API endpoints - this is the one that works with most versions
             {
                 "url": f"{self.base_url}/api/generate",
                 "payload": {
