@@ -110,7 +110,11 @@ def view(case_id):
     # Get upcoming events
     events = Event.query.filter_by(case_id=case_id).order_by(Event.start_time).all()
     
-    return render_template('cases/view.html', case=case, documents=documents, events=events)
+    # Get case milestones
+    from models import CaseMilestone
+    milestones = CaseMilestone.query.filter_by(case_id=case_id).order_by(CaseMilestone.order_index).all()
+    
+    return render_template('cases/view.html', case=case, documents=documents, events=events, milestones=milestones)
 
 @cases_bp.route('/<int:case_id>/edit', methods=['GET', 'POST'])
 @login_required
