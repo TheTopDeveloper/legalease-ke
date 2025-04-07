@@ -177,10 +177,13 @@ class TestCourtCases(unittest.TestCase):
             document_type='Pleading',
             status='Draft',
             content='This is a test pleading document',
-            user_id=self.test_user.id,
-            case_id=test_case.id
+            user_id=self.test_user.id
         )
         db.session.add(test_document)
+        db.session.commit()
+        
+        # Associate document with case using the many-to-many relationship
+        test_case.documents.append(test_document)
         db.session.commit()
         
         # Verify document was associated with case
@@ -275,13 +278,15 @@ class TestCourtCases(unittest.TestCase):
         db.session.add(deadline_event)
         db.session.commit()
         
-        # Verify events were added
+        # Verify events were added - need to convert lazy dynamic to list first
         case = Case.query.filter_by(title='Event Test Case').first()
-        self.assertEqual(len(case.events), 2, "Case should have 2 events")
+        events = case.events.all()
+        self.assertEqual(len(events), 2, "Case should have 2 events")
         
         # Verify event details
-        self.assertEqual(case.events[0].event_type, 'Hearing', "First event should be a hearing")
-        self.assertEqual(case.events[1].event_type, 'Deadline', "Second event should be a deadline")
+        event_types = sorted([event.event_type for event in events])
+        self.assertEqual(event_types[0], 'Deadline', "Should have a Deadline event")
+        self.assertEqual(event_types[1], 'Hearing', "Should have a Hearing event")
         
         # Get upcoming events
         upcoming_events = Event.query.filter(
