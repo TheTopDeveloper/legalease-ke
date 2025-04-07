@@ -15,19 +15,23 @@ logger = logging.getLogger(__name__)
 def get_db_connection():
     """Get database connection from environment variables"""
     try:
-        # Load environment variables from .env file if it exists
-        from dotenv import load_dotenv
-        load_dotenv()
+        # Try to load environment variables from .env file if it exists
+        try:
+            from dotenv import load_dotenv
+            load_dotenv()
+            logger.info("Loaded environment variables from .env file")
+        except ImportError:
+            logger.warning("python-dotenv not installed, proceeding without loading .env file")
         
         # First try to use DATABASE_URL environment variable
         db_url = os.environ.get('DATABASE_URL')
         if db_url:
             # If DATABASE_URL is available, use it directly
-            logger.info(f"Connecting using DATABASE_URL")
+            logger.info("Connecting using DATABASE_URL")
             conn = psycopg2.connect(db_url)
         else:
             # Otherwise, fall back to individual connection parameters
-            logger.info(f"Connecting using individual database parameters")
+            logger.info("Connecting using individual database parameters")
             conn = psycopg2.connect(
                 dbname=os.environ.get('PGDATABASE'),
                 user=os.environ.get('PGUSER'),
@@ -37,23 +41,12 @@ def get_db_connection():
             )
         conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
         return conn
-    except ImportError:
-        logger.warning("python-dotenv not installed, proceeding without loading .env file")
-        try:
-            # Try connection with environment variables already set
-            db_url = os.environ.get('DATABASE_URL')
-            if db_url:
-                conn = psycopg2.connect(db_url)
-                conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-                return conn
-            else:
-                logger.error("DATABASE_URL environment variable not found")
-                return None
-        except Exception as e:
-            logger.error(f"Error connecting to database: {e}")
-            return None
     except Exception as e:
         logger.error(f"Error connecting to database: {e}")
+        # Print more details to help with debugging
+        logger.error(f"DATABASE_URL: {os.environ.get('DATABASE_URL') is not None}")
+        logger.error(f"PGDATABASE: {os.environ.get('PGDATABASE') is not None}")
+        logger.error(f"PGUSER: {os.environ.get('PGUSER') is not None}")
         return None
 
 def migrate_client_portal():
