@@ -13,7 +13,11 @@ KENYALAW_BASE_URL = "https://new.kenyalaw.org"
 
 # OLLAMA configuration
 OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
-OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3")
+OLLAMA_PRIMARY_MODEL = os.environ.get("OLLAMA_PRIMARY_MODEL", "llama3:latest")
+OLLAMA_SECONDARY_MODEL = os.environ.get("OLLAMA_SECONDARY_MODEL", "deepseek:latest")
+
+# Enable LLM counter-checking?
+ENABLE_LLM_COUNTERCHECK = os.environ.get("ENABLE_LLM_COUNTERCHECK", "True").lower() in ("true", "1", "yes")
 
 # Vector database configuration
 VECTOR_DB_PATH = os.environ.get("VECTOR_DB_PATH", "./vector_db")

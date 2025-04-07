@@ -21,8 +21,15 @@ LLM_MODELS = {
         "models": ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo"]
     },
     "ollama": {
-        "default": "llama3",
-        "models": ["llama3", "mistral", "deepseek", "gemma", "phi3", "mixtral"]
+        "default": config.OLLAMA_PRIMARY_MODEL,
+        "models": [
+            "llama3:latest", 
+            "deepseek:latest", 
+            "mistral", 
+            "gemma", 
+            "phi3", 
+            "mixtral"
+        ]
     }
 }
 
@@ -38,14 +45,27 @@ def get_llm_client():
         logger.info("Using OpenAI client")
         return OpenAIClient()
     
-    # Then try Ollama
+    # Then try Ollama with counter-checking if enabled
     try:
-        ollama_client = OllamaClient()
-        # Test connection
-        test_result = ollama_client.generate("Test connection", max_tokens=5)
-        if test_result is not None:
-            logger.info("Using Ollama client")
-            return ollama_client
+        if config.ENABLE_LLM_COUNTERCHECK:
+            # Create counter-check client with primary and secondary models
+            counter_client = CounterCheckLLMClient(
+                primary_model=config.OLLAMA_PRIMARY_MODEL,
+                secondary_model=config.OLLAMA_SECONDARY_MODEL
+            )
+            # Test connection with both models
+            test_result = counter_client.generate("Test connection", max_tokens=5)
+            if test_result is not None:
+                logger.info("Using Counter-Check LLM client with multiple models")
+                return counter_client
+        else:
+            # Use regular Ollama client with primary model only
+            ollama_client = OllamaClient()
+            # Test connection
+            test_result = ollama_client.generate("Test connection", max_tokens=5)
+            if test_result is not None:
+                logger.info("Using Ollama client with single model")
+                return ollama_client
     except Exception as e:
         logger.warning(f"Ollama not available: {str(e)}")
     
@@ -174,6 +194,187 @@ class OpenAIClient:
             logger.error(f"Error generating chat response with OpenAI: {str(e)}")
             return None
 
+class CounterCheckLLMClient:
+    """
+    Client for counter-checking responses between two different LLM models.
+    This client uses two Ollama models to generate responses and verifies they're consistent.
+    """
+    
+    def __init__(self, base_url=None, primary_model=None, secondary_model=None):
+        """
+        Initialize counter-check client with two model instances
+        
+        Args:
+            base_url: Base URL for OLLAMA API
+            primary_model: Primary model to use for generation
+            secondary_model: Secondary model to use for verification
+        """
+        self.base_url = base_url or config.OLLAMA_BASE_URL
+        self.primary_model = primary_model or config.OLLAMA_PRIMARY_MODEL
+        self.secondary_model = secondary_model or config.OLLAMA_SECONDARY_MODEL
+        
+        # Create two OllamaClient instances, one for each model
+        self.primary_client = OllamaClient(base_url=self.base_url, model=self.primary_model)
+        self.secondary_client = OllamaClient(base_url=self.base_url, model=self.secondary_model)
+        
+        logger.info(f"Initialized CounterCheck client with models: {self.primary_model} (primary) and {self.secondary_model} (secondary)")
+    
+    def generate(self, prompt: str, model: Optional[str] = None, temperature: float = 0.7, max_tokens: int = 1000) -> str:
+        """
+        Generate text completion using both models and counter-check results
+        
+        Args:
+            prompt: The prompt to generate a response for
+            model: Override model (will still use both for checking, but return this one's response)
+            temperature: Temperature for generation
+            max_tokens: Maximum tokens to generate
+            
+        Returns:
+            Generated text with confidence note
+        """
+        # Use specified model if provided, otherwise use primary
+        preferred_model = model or self.primary_model
+        
+        # Generate responses from both models
+        primary_response = self.primary_client.generate(
+            prompt=prompt, 
+            temperature=temperature, 
+            max_tokens=max_tokens
+        )
+        
+        secondary_response = self.secondary_client.generate(
+            prompt=prompt, 
+            temperature=temperature, 
+            max_tokens=max_tokens
+        )
+        
+        # If either model fails, return the successful one
+        if primary_response is None and secondary_response is None:
+            logger.error("Both LLM models failed to generate responses")
+            return None
+        
+        if primary_response is None:
+            logger.warning(f"Primary model ({self.primary_model}) failed, using secondary model response")
+            return f"{secondary_response}\n\n[Generated using only {self.secondary_model} due to primary model failure]"
+        
+        if secondary_response is None:
+            logger.warning(f"Secondary model ({self.secondary_model}) failed, using primary model response")
+            return f"{primary_response}\n\n[Generated using only {self.primary_model} due to secondary model failure]"
+        
+        # Compare responses to calculate agreement
+        agreement_score = self._calculate_agreement(primary_response, secondary_response)
+        
+        # Add information about the counter-check in a footer
+        confidence_note = f"\n\n[Agreement between models: {agreement_score:.0%}]"
+        
+        # Return the preferred model's response with the confidence note
+        if preferred_model == self.primary_model:
+            return primary_response + confidence_note
+        else:
+            return secondary_response + confidence_note
+    
+    def chat(self, messages: List[Dict[str, str]], model: Optional[str] = None, temperature: float = 0.7, max_tokens: int = 1000) -> str:
+        """
+        Generate chat completion using both models and counter-check results
+        
+        Args:
+            messages: List of message objects with 'role' and 'content' keys
+            model: Override model (will still use both for checking, but return this one's response)
+            temperature: Temperature for generation
+            max_tokens: Maximum tokens to generate
+            
+        Returns:
+            Generated response with confidence note
+        """
+        # Use specified model if provided, otherwise use primary
+        preferred_model = model or self.primary_model
+        
+        # Generate responses from both models
+        primary_response = self.primary_client.chat(
+            messages=messages, 
+            temperature=temperature, 
+            max_tokens=max_tokens
+        )
+        
+        secondary_response = self.secondary_client.chat(
+            messages=messages, 
+            temperature=temperature, 
+            max_tokens=max_tokens
+        )
+        
+        # If either model fails, return the successful one
+        if primary_response is None and secondary_response is None:
+            logger.error("Both LLM models failed to generate responses")
+            return None
+        
+        if primary_response is None:
+            logger.warning(f"Primary model ({self.primary_model}) failed, using secondary model response")
+            return f"{secondary_response}\n\n[Generated using only {self.secondary_model} due to primary model failure]"
+        
+        if secondary_response is None:
+            logger.warning(f"Secondary model ({self.secondary_model}) failed, using primary model response")
+            return f"{primary_response}\n\n[Generated using only {self.primary_model} due to secondary model failure]"
+        
+        # Compare responses to calculate agreement
+        agreement_score = self._calculate_agreement(primary_response, secondary_response)
+        
+        # Add information about the counter-check in a footer
+        confidence_note = f"\n\n[Agreement between models: {agreement_score:.0%}]"
+        
+        # Return the preferred model's response with the confidence note
+        if preferred_model == self.primary_model:
+            return primary_response + confidence_note
+        else:
+            return secondary_response + confidence_note
+    
+    def get_embedding(self, text: str, model: Optional[str] = None) -> List[float]:
+        """
+        Get embedding vector for text
+        
+        Args:
+            text: The text to get embedding for
+            model: Model to use (defaults to primary model)
+            
+        Returns:
+            List of float values representing the embedding
+        """
+        # For embeddings, just use the primary model
+        return self.primary_client.get_embedding(text, model)
+    
+    def _calculate_agreement(self, text1: str, text2: str) -> float:
+        """
+        Calculate similarity/agreement between two text responses
+        
+        Args:
+            text1: First text response
+            text2: Second text response
+            
+        Returns:
+            Float value between 0.0 and 1.0 representing agreement
+        """
+        # Simple string similarity based on word overlap for now
+        # Could be improved with embedding-based similarity in future
+        
+        # Normalize texts: lowercase, remove punctuation
+        def normalize(text):
+            # Remove common punctuation and lowercase
+            for char in '.,;:!?"\'()[]{}':
+                text = text.replace(char, ' ')
+            return text.lower()
+        
+        words1 = set(normalize(text1).split())
+        words2 = set(normalize(text2).split())
+        
+        # Calculate Jaccard similarity: intersection over union
+        intersection = len(words1.intersection(words2))
+        union = len(words1.union(words2))
+        
+        if union == 0:  # Avoid division by zero
+            return 0.0
+            
+        return intersection / union
+
+
 class OllamaClient:
     """
     Client for interacting with OLLAMA LLM API
@@ -188,7 +389,7 @@ class OllamaClient:
             model: Default model to use
         """
         self.base_url = base_url or config.OLLAMA_BASE_URL
-        self.model = model or config.OLLAMA_MODEL
+        self.model = model or config.OLLAMA_PRIMARY_MODEL
         logger.info(f"Initialized OLLAMA client with base URL: {self.base_url}, model: {self.model}")
     
     def generate(self, prompt: str, model: Optional[str] = None, temperature: float = 0.7, max_tokens: int = 1000) -> str:
