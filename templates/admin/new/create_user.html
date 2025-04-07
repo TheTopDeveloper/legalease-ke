@@ -1,0 +1,126 @@
+{% extends 'admin/new/layout.html' %}
+{% from 'admin/new/responsive_card.html' import responsive_card, info_section, form_group %}
+
+{% block title %}Create User | Admin - Kenyan Legal Assistant{% endblock %}
+
+{% block breadcrumb %}
+<li class="admin-breadcrumb-item"><a href="{{ url_for('admin.users') }}">User Management</a></li>
+<li class="admin-breadcrumb-item active" aria-current="page">Create User</li>
+{% endblock %}
+
+{% block admin_content %}
+<!-- Page header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="h2 mb-4">Create New User</h1>
+        {{ info_section('User Creation', 'Create a new user account with appropriate role and permissions.') }}
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="d-flex justify-content-md-end mb-3">
+            <a href="{{ url_for('admin.users') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i> Back to Users
+            </a>
+        </div>
+    </div>
+</div>
+
+{% call responsive_card('User Details', 'Enter new user information', null, 'user-plus') %}
+<form method="post" novalidate>
+    {{ form.hidden_tag() }}
+    
+    <div class="row">
+        <div class="col-md-6">
+            <!-- Basic Information -->
+            <h5 class="mb-3">Basic Information</h5>
+            
+            {{ form_group('Username', 'username', 
+                '<input type="text" class="form-control" id="username" name="username" value="' ~ form.username.data|default('') ~ '" required>', 
+                'Username must be unique and will be used for login.', 
+                True
+            ) }}
+            
+            {{ form_group('Email', 'email', 
+                '<input type="email" class="form-control" id="email" name="email" value="' ~ form.email.data|default('') ~ '" required>', 
+                'Must be a valid email address.', 
+                True
+            ) }}
+            
+            {{ form_group('Password', 'password', 
+                '<input type="password" class="form-control" id="password" name="password" required>', 
+                'Minimum 8 characters. Include numbers and special characters for security.', 
+                True
+            ) }}
+            
+            {{ form_group('First Name', 'first_name', 
+                '<input type="text" class="form-control" id="first_name" name="first_name" value="' ~ form.first_name.data|default('') ~ '">'
+            ) }}
+            
+            {{ form_group('Last Name', 'last_name', 
+                '<input type="text" class="form-control" id="last_name" name="last_name" value="' ~ form.last_name.data|default('') ~ '">'
+            ) }}
+        </div>
+        
+        <div class="col-md-6">
+            <!-- Role and Permissions -->
+            <h5 class="mb-3">Role & Permissions</h5>
+            
+            {{ form_group('Role', 'role', 
+                '<select class="form-select" id="role" name="role" required>
+                    <option value="individual" ' ~ ('selected' if form.role.data == 'individual' else '') ~ '>Individual</option>
+                    <option value="organization" ' ~ ('selected' if form.role.data == 'organization' else '') ~ '>Organization</option>
+                    <option value="organization_member" ' ~ ('selected' if form.role.data == 'organization_member' else '') ~ '>Organization Member</option>
+                    <option value="admin" ' ~ ('selected' if form.role.data == 'admin' else '') ~ '>Admin</option>
+                </select>', 
+                'Determines user\'s access levels and permissions.',
+                True
+            ) }}
+            
+            {{ form_group('Custom Role', 'custom_role_id', 
+                '<select class="form-select" id="custom_role_id" name="custom_role_id">
+                    <option value="">No custom role</option>
+                    {% for role in roles %}
+                    {% if role.is_custom %}
+                    <option value="{{ role.id }}" ' ~ ('selected' if form.custom_role_id and form.custom_role_id.data == role.id else '') ~ '>{{ role.name }}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select>',
+                'Optional custom role with specific permissions.'
+            ) }}
+            
+            <!-- Account Details -->
+            <h5 class="mb-3 mt-4">Account Details</h5>
+            
+            {{ form_group('Account Type', 'account_type', 
+                '<select class="form-select" id="account_type" name="account_type" required>
+                    <option value="basic" ' ~ ('selected' if form.account_type.data == 'basic' else '') ~ '>Basic</option>
+                    <option value="premium" ' ~ ('selected' if form.account_type.data == 'premium' else '') ~ '>Premium</option>
+                    <option value="enterprise" ' ~ ('selected' if form.account_type.data == 'enterprise' else '') ~ '>Enterprise</option>
+                </select>',
+                'Determines feature access and limitations.',
+                True
+            ) }}
+            
+            {{ form_group('Tokens Available', 'tokens_available', 
+                '<input type="number" class="form-control" id="tokens_available" name="tokens_available" value="' ~ form.tokens_available.data|default(0) ~ '" min="0">',
+                'Available tokens for AI-powered features.'
+            ) }}
+            
+            {{ form_group('Active Status', 'is_active', 
+                '<div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="is_active" name="is_active" ' ~ ('checked' if form.is_active.data else '') ~ '>
+                    <label class="form-check-label" for="is_active">Account is active</label>
+                </div>',
+                'Inactive accounts cannot log in.'
+            ) }}
+        </div>
+    </div>
+    
+    <div class="mt-4 d-flex justify-content-between">
+        <a href="{{ url_for('admin.users') }}" class="btn btn-outline-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-user-plus me-2"></i> Create User
+        </button>
+    </div>
+</form>
+{% endcall %}
+{% endblock %}

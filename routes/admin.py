@@ -159,7 +159,7 @@ def edit_user(user_id):
 @login_required
 @admin_required
 def create_user():
-    """Create a new user"""
+    """Create a new user with responsive mobile design"""
     roles = Role.query.all()
     form = CreateUserForm()
     
@@ -169,11 +169,11 @@ def create_user():
         # Check if user already exists
         if User.query.filter_by(username=form.username.data).first():
             flash("Username already exists", "error")
-            return render_template('admin/create_user.html', form=form, roles=roles)
+            return render_template('admin/new/create_user.html', form=form, roles=roles)
             
         if User.query.filter_by(email=form.email.data).first():
             flash("Email already exists", "error")
-            return render_template('admin/create_user.html', form=form, roles=roles)
+            return render_template('admin/new/create_user.html', form=form, roles=roles)
             
         # Create new user
         user = User(
@@ -207,7 +207,8 @@ def create_user():
             logger.error(f"Error creating user: {str(e)}")
             flash(f"Error creating user: {str(e)}", "error")
     
-    return render_template('admin/create_user.html', form=form, roles=roles)
+    # Use the new responsive template
+    return render_template('admin/new/create_user.html', form=form, roles=roles)
 
 @admin_bp.route('/users/<int:user_id>/delete', methods=['POST'])
 @login_required
