@@ -117,41 +117,44 @@ class TestCourtCases(unittest.TestCase):
             case_id=test_case.id,
             title='Case Filing',
             description='Initial case filing',
-            due_date=datetime.datetime.now(),
-            is_completed=True,
+            milestone_type='Filing',
+            status='completed',  # Using the actual status field instead of is_completed
+            target_date=datetime.datetime.now(),
             completion_date=datetime.datetime.now(),
-            user_id=self.test_user.id
+            is_critical=True
         )
         
         milestone2 = CaseMilestone(
             case_id=test_case.id,
             title='Document Submission',
             description='Submit required documents',
-            due_date=datetime.datetime.now() + datetime.timedelta(days=30),
-            is_completed=False,
-            user_id=self.test_user.id
+            milestone_type='Submission',
+            status='pending',  # Using the actual status field
+            target_date=datetime.datetime.now() + datetime.timedelta(days=30),
+            is_critical=False
         )
         
         db.session.add(milestone1)
         db.session.add(milestone2)
         db.session.commit()
         
-        # Verify milestones were added
+        # Verify milestones were added - need to convert lazy dynamic to list
         case = Case.query.filter_by(title='Milestone Test Case').first()
-        self.assertEqual(len(case.milestones), 2, "Case should have 2 milestones")
+        milestones = list(case.milestones)
+        self.assertEqual(len(milestones), 2, "Case should have 2 milestones")
         
-        # Verify milestone details
-        self.assertTrue(case.milestones[0].is_completed, "First milestone should be completed")
-        self.assertFalse(case.milestones[1].is_completed, "Second milestone should not be completed")
+        # Verify milestone details using the is_completed() method
+        self.assertTrue(milestones[0].is_completed(), "First milestone should be completed")
+        self.assertFalse(milestones[1].is_completed(), "Second milestone should not be completed")
         
-        # Update milestone status
-        milestone2.is_completed = True
+        # Update milestone status using the correct fields
+        milestone2.status = 'completed'
         milestone2.completion_date = datetime.datetime.now()
         db.session.commit()
         
         # Verify update
         updated_milestone = CaseMilestone.query.filter_by(title='Document Submission').first()
-        self.assertTrue(updated_milestone.is_completed, "Milestone should be updated to completed")
+        self.assertTrue(updated_milestone.is_completed(), "Milestone should be updated to completed")
     
     def test_case_document_association(self):
         """Test associating documents with cases"""
