@@ -47,9 +47,11 @@ def add_research_columns():
     
     columns_to_add = {
         'court_filter': 'VARCHAR(50)',
+        'result_count': 'INTEGER DEFAULT 0',
         'has_arguments': 'BOOLEAN DEFAULT FALSE',
         'has_rebuttals': 'BOOLEAN DEFAULT FALSE',
-        'tokens_used': 'INTEGER DEFAULT 0'
+        'tokens_used': 'INTEGER DEFAULT 0',
+        'updated_at': 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP'
     }
     
     for column_name, column_type in columns_to_add.items():
