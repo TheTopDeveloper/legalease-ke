@@ -27,7 +27,7 @@
                     {% if case.next_court_date %}
                     <p><strong>Next Date:</strong> {{ case.next_court_date.strftime('%d %b, %Y') }}</p>
                     {% endif %}
-                    <a href="{{ url_for('case.view_case', case_id=case.id) }}" class="btn btn-sm btn-outline-primary">
+                    <a href="{{ url_for('cases.view', case_id=case.id) }}" class="btn btn-sm btn-outline-primary">
                         <i class="bi bi-arrow-left"></i> Back to Case
                     </a>
                 </div>
