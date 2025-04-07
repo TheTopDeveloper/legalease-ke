@@ -26,7 +26,7 @@ admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 @login_required
 @admin_required
 def index():
-    """Admin dashboard with overview of system statistics"""
+    """Admin dashboard with enhanced responsive design and system statistics"""
     # Get system statistics
     user_count = User.query.count()
     active_users = User.query.filter_by(is_active=True).count()
@@ -36,22 +36,69 @@ def index():
     # Recent users
     recent_users = User.query.order_by(desc(User.created_at)).limit(10).all()
     
-    return render_template('admin/index.html', 
+    # Simulated system metrics - would be replaced with actual monitoring in production
+    cpu_usage = 38
+    memory_usage = 45
+    disk_usage = 62
+    db_size = "1.2 GB"
+    system_health = "Good"
+    
+    # Mock recent activity data
+    recent_activity = []
+    if recent_users:
+        for i, user in enumerate(recent_users[:5]):
+            actions = ["Login", "Created document", "Updated profile", "Changed settings", "Added organization"]
+            resources = ["System", "Document", "Profile", "Settings", "Organization"]
+            times = ["10 minutes ago", "1 hour ago", "3 hours ago", "5 hours ago", "Yesterday"]
+            
+            recent_activity.append([
+                f'<div class="d-flex align-items-center"><span class="admin-avatar me-2">{user.username[:1]}</span> {user.username}</div>',
+                actions[i % 5],
+                resources[i % 5],
+                times[i % 5],
+                '<a href="#" class="btn btn-sm btn-outline-info"><i class="fas fa-info-circle"></i></a>'
+            ])
+    
+    # Mock error logs
+    error_logs = []
+    for i in range(3):
+        error_types = ["Database Error", "API Error", "Authentication Error"]
+        error_messages = ["Connection timeout", "API rate limit exceeded", "Invalid authentication token"]
+        error_locations = ["database.py:45", "api_client.py:102", "auth.py:78"]
+        error_times = ["2 hours ago", "5 hours ago", "Yesterday"]
+        
+        error_logs.append({
+            "type": error_types[i],
+            "message": error_messages[i],
+            "location": error_locations[i],
+            "time": error_times[i]
+        })
+    
+    # Use the new responsive template
+    return render_template('admin/new/dashboard.html', 
                           user_count=user_count,
                           active_users=active_users,
                           admin_users=admin_users,
                           organization_count=organization_count,
-                          recent_users=recent_users)
+                          recent_users=recent_users,
+                          cpu_usage=cpu_usage,
+                          memory_usage=memory_usage,
+                          disk_usage=disk_usage,
+                          db_size=db_size,
+                          system_health=system_health,
+                          recent_activity=recent_activity,
+                          error_logs=error_logs)
 
 # User Management
 @admin_bp.route('/users')
 @login_required
 @admin_required
 def users():
-    """User management page"""
+    """User management page with responsive mobile design"""
     users = User.query.all()
     roles = Role.query.all()
-    return render_template('admin/users.html', users=users, roles=roles)
+    # Use the new responsive template
+    return render_template('admin/new/users.html', users=users, roles=roles)
 
 @admin_bp.route('/users/<int:user_id>', methods=['GET', 'POST'])
 @login_required
@@ -190,17 +237,31 @@ def delete_user(user_id):
 @login_required
 @admin_required
 def roles():
-    """Role management page"""
+    """Role management page with permission groups"""
+    from utils.permissions import Permissions
+    
     roles = Role.query.all()
     permissions = Permission.query.all()
-    return render_template('admin/roles.html', roles=roles, permissions=permissions)
+    
+    # Get permission groups from the Permissions class
+    permission_groups = Permissions.get_permission_groups()
+    
+    return render_template(
+        'admin/roles.html', 
+        roles=roles, 
+        permissions=permissions, 
+        permission_groups=permission_groups
+    )
 
 @admin_bp.route('/roles/create', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def create_role():
-    """Create a new custom role"""
+    """Create a new custom role with grouped permissions"""
+    from utils.permissions import Permissions
+    
     permissions = Permission.query.all()
+    permission_groups = Permissions.get_permission_groups()
     
     if request.method == 'POST':
         name = request.form.get('name')
@@ -208,12 +269,16 @@ def create_role():
         
         if not name:
             flash("Role name is required", "error")
-            return render_template('admin/create_role.html', permissions=permissions)
+            return render_template('admin/create_role.html', 
+                                  permissions=permissions, 
+                                  permission_groups=permission_groups)
             
         # Check if role already exists
         if Role.query.filter_by(name=name).first():
             flash("Role already exists", "error")
-            return render_template('admin/create_role.html', permissions=permissions)
+            return render_template('admin/create_role.html', 
+                                  permissions=permissions, 
+                                  permission_groups=permission_groups)
             
         # Create new role
         role = Role(
@@ -238,15 +303,20 @@ def create_role():
             logger.error(f"Error creating role: {str(e)}")
             flash(f"Error creating role: {str(e)}", "error")
     
-    return render_template('admin/create_role.html', permissions=permissions)
+    return render_template('admin/create_role.html', 
+                          permissions=permissions, 
+                          permission_groups=permission_groups)
 
 @admin_bp.route('/roles/<int:role_id>', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def edit_role(role_id):
-    """Edit a role's details and permissions"""
+    """Edit a role's details and permissions with grouped views"""
+    from utils.permissions import Permissions
+    
     role = Role.query.get_or_404(role_id)
     permissions = Permission.query.all()
+    permission_groups = Permissions.get_permission_groups()
     
     # Default roles cannot be edited
     if role.is_default:
@@ -274,7 +344,10 @@ def edit_role(role_id):
             logger.error(f"Error updating role: {str(e)}")
             flash(f"Error updating role: {str(e)}", "error")
     
-    return render_template('admin/edit_role.html', role=role, permissions=permissions)
+    return render_template('admin/edit_role.html', 
+                          role=role, 
+                          permissions=permissions, 
+                          permission_groups=permission_groups)
 
 @admin_bp.route('/roles/<int:role_id>/delete', methods=['POST'])
 @login_required

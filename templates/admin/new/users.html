@@ -1,0 +1,192 @@
+{% extends 'admin/new/layout.html' %}
+{% from 'admin/new/responsive_card.html' import responsive_card, stats_card, info_section, responsive_table, form_group, form_select %}
+
+{% block title %}User Management | Admin - Kenyan Legal Assistant{% endblock %}
+
+{% block breadcrumb %}
+<li class="admin-breadcrumb-item active" aria-current="page">User Management</li>
+{% endblock %}
+
+{% block admin_content %}
+<!-- Page header -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="h2 mb-4">User Management</h1>
+        {{ info_section('User Administration', 'Manage system users, their roles, permissions, and account settings.') }}
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="d-flex justify-content-md-end mb-3">
+            <a href="{{ url_for('admin.create_user') }}" class="btn btn-primary">
+                <i class="fas fa-user-plus me-2"></i> Add New User
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- User statistics -->
+<div class="row mb-4">
+    <div class="col-sm-6 col-md-3">
+        {{ stats_card('users', users|length, 'Total Users', null, 'primary') }}
+    </div>
+    <div class="col-sm-6 col-md-3">
+        {{ stats_card('user-check', users|selectattr('is_active', 'eq', true)|list|length, 'Active Users', null, 'success') }}
+    </div>
+    <div class="col-sm-6 col-md-3">
+        {{ stats_card('user-shield', users|selectattr('role', 'equalto', 'admin')|list|length, 'Admins', null, 'danger') }}
+    </div>
+    <div class="col-sm-6 col-md-3">
+        {{ stats_card('building', users|selectattr('role', 'search', 'organization')|list|length, 'Organization Users', null, 'info') }}
+    </div>
+</div>
+
+<!-- User search and filters -->
+{% call responsive_card('User Management', 'Manage all system users', null, 'users') %}
+<!-- Search and filters -->
+<div class="admin-filters mb-4">
+    <div class="row g-2">
+        <div class="col-md-4">
+            <div class="admin-search">
+                <span class="search-icon"><i class="fas fa-search"></i></span>
+                <input type="text" class="form-control" id="userSearch" placeholder="Search users..." onkeyup="filterUsers()">
+            </div>
+        </div>
+        <div class="col-md-4">
+            <select class="form-select" id="roleFilter" onchange="filterUsers()">
+                <option value="all">All Roles</option>
+                {% for role in roles %}
+                <option value="{{ role.name }}">{{ role.name|capitalize }}</option>
+                {% endfor %}
+                <option value="admin">Admin</option>
+                <option value="organization">Organization</option>
+                <option value="organization_member">Organization Member</option>
+                <option value="individual">Individual</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <select class="form-select" id="statusFilter" onchange="filterUsers()">
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Users table -->
+{% set user_rows = [] %}
+{% for user in users %}
+{% set user_row = [
+    '<div class="d-flex align-items-center"><div class="admin-avatar me-2">' ~ user.username[:1] ~ '</div><div><strong>' ~ user.username ~ '</strong><div class="small text-muted">' ~ user.email ~ '</div></div></div>',
+    '<span class="badge ' ~ ('bg-danger' if user.role == 'admin' else 'bg-primary' if user.role.startswith('organization') else 'bg-secondary') ~ '">' ~ user.role|capitalize ~ '</span>',
+    '<div>' ~ (user.first_name|default('') + ' ' + user.last_name|default(''))|trim ~ '</div>',
+    '<span class="badge ' ~ ('bg-success' if user.is_active else 'bg-danger') ~ '">' ~ ('Active' if user.is_active else 'Inactive') ~ '</span>',
+    '<div class="action-buttons"><a href="' ~ url_for('admin.edit_user', user_id=user.id) ~ '" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i><span class="d-none d-lg-inline"> Edit</span></a><button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal' ~ user.id ~ '"><i class="fas fa-trash"></i><span class="d-none d-lg-inline"> Delete</span></button></div>'
+] %}
+{% set _ = user_rows.append(user_row) %}
+{% endfor %}
+
+{{ responsive_table(
+    ['User', 'Role', 'Name', 'Status', 'Actions'],
+    user_rows,
+    'No users found in the system',
+    '<a href="' ~ url_for('admin.create_user') ~ '" class="btn btn-primary"><i class="fas fa-user-plus"></i> Add New User</a>',
+    'users'
+) }}
+
+<!-- Delete Modals -->
+{% for user in users %}
+<div class="modal fade" id="deleteUserModal{{ user.id }}" tabindex="-1" aria-labelledby="deleteUserModalLabel{{ user.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteUserModalLabel{{ user.id }}">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the user <strong>{{ user.username }}</strong>?</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> This action cannot be undone. All user data will be permanently deleted.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('admin.delete_user', user_id=user.id) }}" method="post">
+                    <button type="submit" class="btn btn-danger">Delete User</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endcall %}
+{% endblock %}
+
+{% block admin_scripts %}
+<script>
+// User filtering function
+function filterUsers() {
+    const searchInput = document.getElementById('userSearch').value.toLowerCase();
+    const roleFilter = document.getElementById('roleFilter').value;
+    const statusFilter = document.getElementById('statusFilter').value;
+    
+    const rows = document.querySelectorAll('#rolesTable tbody tr');
+    
+    rows.forEach(row => {
+        const userInfo = row.querySelector('td:first-child').textContent.toLowerCase();
+        const roleCell = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+        const statusCell = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+        
+        let showByRole = true;
+        if (roleFilter !== 'all') {
+            showByRole = roleCell.includes(roleFilter.toLowerCase());
+        }
+        
+        let showByStatus = true;
+        if (statusFilter !== 'all') {
+            showByStatus = (statusFilter === 'active' && statusCell.includes('active')) || 
+                          (statusFilter === 'inactive' && statusCell.includes('inactive'));
+        }
+        
+        const showBySearch = userInfo.includes(searchInput);
+        
+        if (showByRole && showByStatus && showBySearch) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Also filter mobile cards
+    const mobileCards = document.querySelectorAll('.mobile-card');
+    mobileCards.forEach(card => {
+        const userInfo = card.querySelector('.mobile-card-title').textContent.toLowerCase();
+        const roleValue = card.querySelector('.item:nth-child(1) .value').textContent.toLowerCase();
+        const statusValue = card.querySelector('.item:nth-child(3) .value').textContent.toLowerCase();
+        
+        let showByRole = true;
+        if (roleFilter !== 'all') {
+            showByRole = roleValue.includes(roleFilter.toLowerCase());
+        }
+        
+        let showByStatus = true;
+        if (statusFilter !== 'all') {
+            showByStatus = (statusFilter === 'active' && statusValue.includes('active')) || 
+                          (statusFilter === 'inactive' && statusValue.includes('inactive'));
+        }
+        
+        const showBySearch = userInfo.includes(searchInput);
+        
+        if (showByRole && showByStatus && showBySearch) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    makeTablesResponsive();
+});
+</script>
+{% endblock %}

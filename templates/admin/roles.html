@@ -19,9 +19,22 @@
     <div class="card-body">
         <!-- Section Help -->
         <div class="section-help mb-4">
-            <h6><i class="fas fa-info-circle"></i> Role Management</h6>
+            <h6><i class="fas fa-info-circle"></i> Role-Based Access Control System</h6>
             <p>Manage user roles that determine access permissions in the system. Each role contains a set of specific permissions that control what actions users with that role can perform.</p>
         </div>
+
+        <!-- Role type navigation tabs -->
+        <ul class="nav nav-tabs mb-4" id="roleTypeTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="all-roles-tab" data-bs-toggle="tab" data-bs-target="#all-roles" type="button" role="tab" aria-controls="all-roles" aria-selected="true">All Roles</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="default-roles-tab" data-bs-toggle="tab" data-bs-target="#default-roles" type="button" role="tab" aria-controls="default-roles" aria-selected="false">System Roles</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="custom-roles-tab" data-bs-toggle="tab" data-bs-target="#custom-roles" type="button" role="tab" aria-controls="custom-roles" aria-selected="false">Custom Roles</button>
+            </li>
+        </ul>
 
         <!-- Optional search filter for roles -->
         <div class="admin-filters mb-4">
@@ -30,7 +43,7 @@
                     <div class="form-group">
                         <label for="searchRoles" class="form-label">Search Roles
                             <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Search for roles by name">
-                                <i class="fas fa-question"></i>
+                                <i class="fas fa-question-circle"></i>
                             </span>
                         </label>
                         <input type="text" class="form-control" id="searchRoles" placeholder="Search roles..." onkeyup="filterRoles()">
@@ -38,282 +51,545 @@
                 </div>
                 <div class="col-md-6">
                     <div class="form-group">
-                        <label for="filterRoleType" class="form-label">Filter by Type
-                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="<b>Default</b>: System-defined roles that cannot be modified<br><b>Custom</b>: User-created roles that can be edited and deleted<br><b>Standard</b>: Pre-configured roles that can be modified">
-                                <i class="fas fa-question"></i>
+                        <label for="permissionFilter" class="form-label">Filter by Permission
+                            <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Show roles with a specific permission">
+                                <i class="fas fa-question-circle"></i>
                             </span>
                         </label>
-                        <select class="form-select" id="filterRoleType" onchange="filterRoles()">
-                            <option value="">All Role Types</option>
-                            <option value="default">Default</option>
-                            <option value="custom">Custom</option>
-                            <option value="standard">Standard</option>
+                        <select id="permissionFilter" class="form-select" onchange="filterRoles()">
+                            <option value="all">All Permissions</option>
+                            {% for permission in permissions %}
+                            <option value="{{ permission.name }}">{{ permission.name }}</option>
+                            {% endfor %}
                         </select>
                     </div>
                 </div>
             </div>
         </div>
-    
-        {% if roles %}
-        <!-- Desktop table view -->
-        <div class="admin-table-container">
-            <div class="table-responsive-mobile">
-                <table class="table table-hover" id="rolesTable">
-                    <thead>
-                        <tr>
-                            <th>Name
-                                <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="The unique name of the role in the system">
-                                    <i class="fas fa-question"></i>
-                                </span>
-                            </th>
-                            <th>Description
-                                <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Brief explanation of this role's purpose">
-                                    <i class="fas fa-question"></i>
-                                </span>
-                            </th>
-                            <th>Type
-                                <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Role category: Default (system), Custom (user-created), or Standard">
-                                    <i class="fas fa-question"></i>
-                                </span>
-                            </th>
-                            <th>Permissions
-                                <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Specific actions that users with this role can perform">
-                                    <i class="fas fa-question"></i>
-                                </span>
-                            </th>
-                            <th>Actions
-                                <span class="help-tooltip" data-bs-toggle="tooltip" data-bs-title="Available operations for this role">
-                                    <i class="fas fa-question"></i>
-                                </span>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for role in roles %}
-                        <tr data-role-name="{{ role.name|lower }}" data-role-type="{% if role.is_default %}default{% elif role.is_custom %}custom{% else %}standard{% endif %}">
-                            <td>{{ role.name }}</td>
-                            <td>{{ role.description }}</td>
-                            <td>
-                                {% if role.is_default %}
-                                <span class="badge bg-primary">Default</span>
-                                {% elif role.is_custom %}
-                                <span class="badge bg-success">Custom</span>
-                                {% else %}
-                                <span class="badge bg-secondary">Standard</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <button class="btn btn-sm btn-info" type="button" data-bs-toggle="collapse" data-bs-target="#permissions{{ role.id }}" aria-expanded="false">
-                                    View ({{ role.permissions|length }})
-                                </button>
-                                <div class="collapse mt-2" id="permissions{{ role.id }}">
-                                    {% if role.permissions %}
-                                    <div class="d-flex flex-wrap gap-1">
-                                        {% for permission in role.permissions %}
-                                        <span class="badge bg-light text-dark">{{ permission.name }}</span>
-                                        {% endfor %}
+
+        <div class="tab-content" id="roleTabsContent">
+            <!-- All Roles Tab -->
+            <div class="tab-pane fade show active" id="all-roles" role="tabpanel" aria-labelledby="all-roles-tab">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover" id="rolesTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Role</th>
+                                <th>Type</th>
+                                <th>Level</th>
+                                <th>Permissions</th>
+                                <th>Users</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for role in roles %}
+                            <tr class="role-row {% if role.is_default %}default-role{% else %}custom-role{% endif %}" 
+                                data-role-name="{{ role.name|lower }}" 
+                                data-permissions="{{ role.permissions|map(attribute='name')|join(',') }}">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <span class="role-icon {% if role.is_default %}bg-primary{% else %}bg-success{% endif %} text-white rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                            <i class="fas fa-{% if role.is_default %}shield-alt{% else %}user-tag{% endif %}"></i>
+                                        </span>
+                                        <div>
+                                            <strong>{{ role.name|capitalize }}</strong>
+                                            {% if role.description %}
+                                            <div class="small text-muted">{{ role.description }}</div>
+                                            {% endif %}
+                                        </div>
                                     </div>
+                                </td>
+                                <td>
+                                    {% if role.is_default %}
+                                    <span class="badge bg-primary">System</span>
                                     {% else %}
-                                    <span class="text-muted">No permissions assigned</span>
+                                    <span class="badge bg-success">Custom</span>
                                     {% endif %}
-                                </div>
-                            </td>
-                            <td>
-                                {% if not role.is_default %}
-                                <div class="admin-actions">
-                                    <a href="{{ url_for('admin.edit_role', role_id=role.id) }}" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-edit"></i><span class="d-none d-md-inline"> Edit</span>
-                                    </a>
-                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteRoleModal{{ role.id }}">
-                                        <i class="fas fa-trash"></i><span class="d-none d-md-inline"> Delete</span>
-                                    </button>
-                                </div>
-                                
-                                <!-- Delete Role Modal -->
-                                <div class="modal fade" id="deleteRoleModal{{ role.id }}" tabindex="-1" aria-labelledby="deleteRoleModalLabel{{ role.id }}" aria-hidden="true">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="deleteRoleModalLabel{{ role.id }}">Delete Role</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                Are you sure you want to delete the role <strong>{{ role.name }}</strong>? This action cannot be undone.
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                <form action="{{ url_for('admin.delete_role', role_id=role.id) }}" method="post">
-                                                    <button type="submit" class="btn btn-danger">Delete</button>
-                                                </form>
+                                </td>
+                                <td>
+                                    {% if role.name == 'admin' %}
+                                    <span class="badge bg-danger">System Admin</span>
+                                    {% elif role.name == 'organization_owner' %}
+                                    <span class="badge bg-warning text-dark">Organization Owner</span>
+                                    {% elif role.name == 'organization' %}
+                                    <span class="badge bg-info">Organization Manager</span>
+                                    {% elif role.name == 'organization_member' %}
+                                    <span class="badge bg-secondary">Organization Member</span>
+                                    {% elif role.name == 'organization_readonly' %}
+                                    <span class="badge bg-light text-dark">Organization Read-Only</span>
+                                    {% elif role.name == 'individual_premium' %}
+                                    <span class="badge bg-primary">Premium User</span>
+                                    {% elif role.name == 'individual' %}
+                                    <span class="badge bg-secondary">Standard User</span>
+                                    {% elif role.name == 'free' %}
+                                    <span class="badge bg-light text-dark">Free User</span>
+                                    {% else %}
+                                    <span class="badge bg-dark">Custom</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-wrap gap-1">
+                                        <span class="badge bg-secondary">{{ role.permissions|length }} permissions</span>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#permissionsModal{{ role.id }}">
+                                            <i class="fas fa-eye"></i><span class="d-none d-lg-inline"> View</span>
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Permissions Modal -->
+                                    <div class="modal fade" id="permissionsModal{{ role.id }}" tabindex="-1" aria-labelledby="permissionsModalLabel{{ role.id }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-lg">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="permissionsModalLabel{{ role.id }}">Permissions for {{ role.name|capitalize }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    {% if role.permissions %}
+                                                    <div class="accordion" id="permissionAccordion{{ role.id }}">
+                                                        {% for group_name, group_permissions in permission_groups.items() %}
+                                                        <div class="accordion-item mb-2">
+                                                            <h2 class="accordion-header" id="heading{{ role.id }}{{ loop.index }}">
+                                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ role.id }}{{ loop.index }}" aria-expanded="false" aria-controls="collapse{{ role.id }}{{ loop.index }}">
+                                                                    {{ group_name }}
+                                                                    <span class="badge bg-secondary ms-2">
+                                                                        {% set count = 0 %}
+                                                                        {% for permission in role.permissions %}
+                                                                            {% if permission.name in group_permissions %}
+                                                                                {% set count = count + 1 %}
+                                                                            {% endif %}
+                                                                        {% endfor %}
+                                                                        {{ count }}/{{ group_permissions|length }}
+                                                                    </span>
+                                                                </button>
+                                                            </h2>
+                                                            <div id="collapse{{ role.id }}{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="heading{{ role.id }}{{ loop.index }}" data-bs-parent="#permissionAccordion{{ role.id }}">
+                                                                <div class="accordion-body">
+                                                                    <div class="row g-2">
+                                                                        {% for perm_name in group_permissions %}
+                                                                        <div class="col-lg-6">
+                                                                            <div class="d-flex align-items-center p-2 border rounded {% set has_perm = false %}{% for permission in role.permissions %}{% if permission.name == perm_name %}{% set has_perm = true %}{% endif %}{% endfor %}{% if has_perm %}border-success bg-success bg-opacity-10{% else %}text-muted{% endif %}">
+                                                                                {% if has_perm %}
+                                                                                <i class="fas fa-check-circle text-success me-2"></i>
+                                                                                {% else %}
+                                                                                <i class="fas fa-times-circle text-muted me-2"></i>
+                                                                                {% endif %}
+                                                                                <div>
+                                                                                    <strong>{{ perm_name }}</strong>
+                                                                                    {% for permission in permissions %}
+                                                                                        {% if permission.name == perm_name and permission.description %}
+                                                                                        <div class="small text-muted">{{ permission.description }}</div>
+                                                                                        {% endif %}
+                                                                                    {% endfor %}
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        {% endfor %}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                    {% else %}
+                                                    <div class="alert alert-info">
+                                                        No permissions assigned to this role.
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                {% else %}
-                                <span class="text-muted">Default (cannot modify)</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <!-- Mobile card view -->
-        <div class="mobile-card-view">
-            {% for role in roles %}
-            <div class="mobile-card" 
-                 data-role-name="{{ role.name|lower }}" 
-                 data-role-type="{% if role.is_default %}default{% elif role.is_custom %}custom{% else %}standard{% endif %}">
-                <div class="mobile-card-header">
-                    <h5 class="mobile-card-title">{{ role.name }}</h5>
-                    <div>
-                        {% if role.is_default %}
-                        <span class="badge bg-primary">Default</span>
-                        {% elif role.is_custom %}
-                        <span class="badge bg-success">Custom</span>
-                        {% else %}
-                        <span class="badge bg-secondary">Standard</span>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="mobile-card-body">
-                    {% if role.description %}
-                    <div class="item">
-                        <div class="label">Description</div>
-                        <div class="value">{{ role.description }}</div>
-                    </div>
-                    {% endif %}
-                    <div class="item">
-                        <div class="label">Permissions</div>
-                        <div class="value">
-                            <button class="btn btn-sm btn-info" type="button" data-bs-toggle="collapse" data-bs-target="#permissionsMobile{{ role.id }}" aria-expanded="false">
-                                View ({{ role.permissions|length }})
-                            </button>
-                        </div>
-                    </div>
-                    <div class="collapse mt-2" id="permissionsMobile{{ role.id }}">
-                        {% if role.permissions %}
-                        <div class="d-flex flex-wrap gap-1">
-                            {% for permission in role.permissions %}
-                            <span class="badge bg-light text-dark">{{ permission.name }}</span>
+                                </td>
+                                <td>
+                                    <!-- This would ideally show a count of users with this role -->
+                                    <span class="badge bg-light text-dark">N/A</span>
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        {% if not role.is_default %}
+                                        <a href="{{ url_for('admin.edit_role', role_id=role.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i><span class="d-none d-lg-inline"> Edit</span>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ role.id }}">
+                                            <i class="fas fa-trash"></i><span class="d-none d-lg-inline"> Delete</span>
+                                        </button>
+                                        
+                                        <!-- Delete Confirmation Modal -->
+                                        <div class="modal fade" id="deleteModal{{ role.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ role.id }}" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="deleteModalLabel{{ role.id }}">Confirm Delete</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p>Are you sure you want to delete the role <strong>{{ role.name|capitalize }}</strong>?</p>
+                                                        <div class="alert alert-warning">
+                                                            <i class="fas fa-exclamation-triangle"></i> Warning: Users with this role will lose these permissions.
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        <form action="{{ url_for('admin.delete_role', role_id=role.id) }}" method="post">
+                                                            <button type="submit" class="btn btn-danger">Delete Role</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% else %}
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" disabled>
+                                            <i class="fas fa-lock"></i><span class="d-none d-lg-inline"> System Role</span>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
                             {% endfor %}
-                        </div>
-                        {% else %}
-                        <span class="text-muted">No permissions assigned</span>
-                        {% endif %}
-                    </div>
+                        </tbody>
+                    </table>
                 </div>
-                <div class="mobile-card-footer">
-                    {% if not role.is_default %}
-                    <a href="{{ url_for('admin.edit_role', role_id=role.id) }}" class="btn btn-sm btn-primary">
-                        <i class="fas fa-edit"></i> Edit
-                    </a>
-                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteRoleModalMobile{{ role.id }}">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                    
-                    <!-- Mobile Delete Role Modal -->
-                    <div class="modal fade" id="deleteRoleModalMobile{{ role.id }}" tabindex="-1" aria-labelledby="deleteRoleModalMobileLabel{{ role.id }}" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="deleteRoleModalMobileLabel{{ role.id }}">Delete Role</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <!-- Default Roles Tab -->
+            <div class="tab-pane fade" id="default-roles" role="tabpanel" aria-labelledby="default-roles-tab">
+                <div class="access-levels mb-4">
+                    <h5 class="mb-3">System Roles & Access Levels</h5>
+                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                        <!-- Admin level -->
+                        <div class="col">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-header bg-danger text-white">
+                                    <h6 class="card-title mb-0 d-flex align-items-center">
+                                        <i class="fas fa-shield-alt me-2"></i> System Administrator
+                                    </h6>
                                 </div>
-                                <div class="modal-body">
-                                    Are you sure you want to delete the role <strong>{{ role.name }}</strong>? This action cannot be undone.
+                                <div class="card-body">
+                                    <p class="card-text">Full system access with all permissions.</p>
+                                    <ul class="list-unstyled small">
+                                        <li><i class="fas fa-check-circle text-success me-2"></i> All system features</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i> All organizations management</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i> System settings</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i> User management</li>
+                                    </ul>
                                 </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                    <form action="{{ url_for('admin.delete_role', role_id=role.id) }}" method="post">
-                                        <button type="submit" class="btn btn-danger">Delete</button>
-                                    </form>
+                            </div>
+                        </div>
+                        
+                        <!-- Organization Owner level -->
+                        <div class="col">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="card-title mb-0 d-flex align-items-center">
+                                        <i class="fas fa-building me-2"></i> Organization Owner
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="card-text">Full access to manage organization.</p>
+                                    <ul class="list-unstyled small">
+                                        <li><i class="fas fa-check-circle text-success me-2"></i> Manage organization settings</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i> Manage members & roles</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i> Billing & subscription</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i> All organization resources</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Organization level -->
+                        <div class="col">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-header bg-info text-dark">
+                                    <h6 class="card-title mb-0 d-flex align-items-center">
+                                        <i class="fas fa-user-tie me-2"></i> Organization Manager
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="card-text">Management access to organization resources.</p>
+                                    <ul class="list-unstyled small">
+                                        <li><i class="fas fa-check-circle text-success me-2"></i> View organization analytics</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i> Manage cases & documents</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i> View all organization resources</li>
+                                        <li><i class="fas fa-times-circle text-danger me-2"></i> Cannot manage members or billing</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Member level -->
+                        <div class="col">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-header bg-secondary text-white">
+                                    <h6 class="card-title mb-0 d-flex align-items-center">
+                                        <i class="fas fa-user me-2"></i> Organization Member
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="card-text">Standard access to organization resources.</p>
+                                    <ul class="list-unstyled small">
+                                        <li><i class="fas fa-check-circle text-success me-2"></i> Create & edit own cases</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i> Create & edit documents</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i> Access research tools</li>
+                                        <li><i class="fas fa-times-circle text-danger me-2"></i> Limited organization management</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Read-only level -->
+                        <div class="col">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-header bg-light text-dark">
+                                    <h6 class="card-title mb-0 d-flex align-items-center">
+                                        <i class="fas fa-eye me-2"></i> Read-only Member
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="card-text">View-only access to organization resources.</p>
+                                    <ul class="list-unstyled small">
+                                        <li><i class="fas fa-check-circle text-success me-2"></i> View cases & documents</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i> View templates</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i> Basic research</li>
+                                        <li><i class="fas fa-times-circle text-danger me-2"></i> Cannot edit or create resources</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Individual premium level -->
+                        <div class="col">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="card-title mb-0 d-flex align-items-center">
+                                        <i class="fas fa-star me-2"></i> Premium Individual
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="card-text">Full access to individual resources.</p>
+                                    <ul class="list-unstyled small">
+                                        <li><i class="fas fa-check-circle text-success me-2"></i> Full case management</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i> Advanced research tools</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i> Document sharing</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i> Analytics features</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Standard individual level -->
+                        <div class="col">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-header bg-secondary text-white">
+                                    <h6 class="card-title mb-0 d-flex align-items-center">
+                                        <i class="fas fa-user me-2"></i> Standard Individual
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="card-text">Standard access to individual resources.</p>
+                                    <ul class="list-unstyled small">
+                                        <li><i class="fas fa-check-circle text-success me-2"></i> Basic case management</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i> Document generation</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i> Writing assistant</li>
+                                        <li><i class="fas fa-times-circle text-danger me-2"></i> Limited research capabilities</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Free level -->
+                        <div class="col">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-header bg-light text-dark">
+                                    <h6 class="card-title mb-0 d-flex align-items-center">
+                                        <i class="fas fa-unlock me-2"></i> Free User
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="card-text">Limited access to basic features.</p>
+                                    <ul class="list-unstyled small">
+                                        <li><i class="fas fa-check-circle text-success me-2"></i> Basic case creation</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i> View templates</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i> Limited document editing</li>
+                                        <li><i class="fas fa-times-circle text-danger me-2"></i> No advanced features</li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    {% else %}
-                    <span class="text-muted">Default (cannot modify)</span>
-                    {% endif %}
                 </div>
             </div>
-            {% endfor %}
+            
+            <!-- Custom Roles Tab -->
+            <div class="tab-pane fade" id="custom-roles" role="tabpanel" aria-labelledby="custom-roles-tab">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="mb-0">Custom Role Management</h5>
+                    <a href="{{ url_for('admin.create_role') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create New Role
+                    </a>
+                </div>
+                
+                <!-- Custom roles table -->
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Role Name</th>
+                                <th>Description</th>
+                                <th>Permissions</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for role in roles %}
+                            {% if not role.is_default %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <span class="role-icon bg-success text-white rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                            <i class="fas fa-user-tag"></i>
+                                        </span>
+                                        <strong>{{ role.name|capitalize }}</strong>
+                                    </div>
+                                </td>
+                                <td>{{ role.description }}</td>
+                                <td>
+                                    <div class="d-flex flex-wrap gap-1">
+                                        <span class="badge bg-secondary">{{ role.permissions|length }} permissions</span>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#permissionsModal{{ role.id }}">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{{ url_for('admin.edit_role', role_id=role.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ role.id }}">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Empty state for custom roles -->
+                {% set has_custom_roles = false %}
+                {% for role in roles %}
+                    {% if not role.is_default %}
+                        {% set has_custom_roles = true %}
+                    {% endif %}
+                {% endfor %}
+                
+                {% if not has_custom_roles %}
+                <div class="text-center py-5">
+                    <div class="empty-state-icon mb-3">
+                        <i class="fas fa-user-tag fa-3x text-muted"></i>
+                    </div>
+                    <h5>No Custom Roles Found</h5>
+                    <p class="text-muted mb-4">Create custom roles to define specific permission sets for your users.</p>
+                    <a href="{{ url_for('admin.create_role') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create New Role
+                    </a>
+                </div>
+                {% endif %}
+            </div>
         </div>
-        {% else %}
-        <div class="alert alert-info">
-            No roles found. Click the button above to create your first role.
-        </div>
-        {% endif %}
     </div>
 </div>
 
-<div class="card admin-card">
+<!-- Permission Documentation -->
+<div class="card admin-card mb-4">
     <div class="card-header">
-        <h5 class="card-title"><i class="fas fa-key me-2"></i> Available Permissions</h5>
+        <h5 class="card-title"><i class="fas fa-key me-2"></i> Permission Reference</h5>
     </div>
     <div class="card-body">
-        {% if permissions %}
-        <div class="row g-3">
-            {% for permission in permissions %}
-            <div class="col-xl-3 col-lg-4 col-md-6">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h6 class="card-title text-truncate" title="{{ permission.name }}">{{ permission.name }}</h6>
-                        <p class="card-text small text-muted mb-0">{{ permission.description }}</p>
+        <div class="section-help mb-4">
+            <h6><i class="fas fa-info-circle"></i> System Permissions</h6>
+            <p>This is a reference of all available permissions in the system. These permissions can be assigned to different roles.</p>
+        </div>
+        
+        <!-- Grouped permissions -->
+        <div class="accordion" id="permissionAccordion">
+            {% for group_name, group_permissions in permission_groups.items() %}
+            <div class="accordion-item mb-3">
+                <h2 class="accordion-header" id="heading{{ loop.index }}">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}" aria-expanded="false" aria-controls="collapse{{ loop.index }}">
+                        <i class="fas fa-folder me-2"></i> {{ group_name }}
+                        <span class="badge bg-secondary ms-2">{{ group_permissions|length }} permissions</span>
+                    </button>
+                </h2>
+                <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="heading{{ loop.index }}" data-bs-parent="#permissionAccordion">
+                    <div class="accordion-body">
+                        <div class="row g-3">
+                            {% for perm_name in group_permissions %}
+                            <div class="col-md-6 col-lg-4">
+                                <div class="d-flex align-items-center p-2 border rounded">
+                                    <i class="fas fa-key text-primary me-2"></i>
+                                    <div>
+                                        <strong>{{ perm_name }}</strong>
+                                        {% for permission in permissions %}
+                                            {% if permission.name == perm_name and permission.description %}
+                                            <div class="small text-muted">{{ permission.description }}</div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
                     </div>
                 </div>
             </div>
             {% endfor %}
         </div>
-        {% else %}
-        <div class="alert alert-info">
-            No permissions available in the system.
-        </div>
-        {% endif %}
     </div>
 </div>
 {% endblock %}
 
-{% block admin_scripts %}
+{% block page_scripts %}
 <script>
-// Filter roles by search term and role type
-function filterRoles() {
-    const searchTerm = document.getElementById('searchRoles').value.toLowerCase();
-    const roleTypeFilter = document.getElementById('filterRoleType').value.toLowerCase();
+    // Define permission groups for the UI
+    const permissionGroups = {{ permission_groups|tojson }};
     
-    // Filter table rows
-    const tableRows = document.querySelectorAll('#rolesTable tbody tr');
-    tableRows.forEach(row => {
-        const roleName = row.getAttribute('data-role-name');
-        const roleType = row.getAttribute('data-role-type');
+    function filterRoles() {
+        const searchInput = document.getElementById('searchRoles').value.toLowerCase();
+        const permissionFilter = document.getElementById('permissionFilter').value;
+        const rows = document.querySelectorAll('#rolesTable tbody tr');
         
-        const matchesSearch = roleName.includes(searchTerm);
-        const matchesType = roleTypeFilter === '' || roleType === roleTypeFilter;
-        
-        if (matchesSearch && matchesType) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
-    });
+        rows.forEach(row => {
+            const roleName = row.getAttribute('data-role-name');
+            const rolePermissions = row.getAttribute('data-permissions').split(',');
+            
+            let showByPermission = true;
+            if (permissionFilter !== 'all') {
+                showByPermission = rolePermissions.includes(permissionFilter);
+            }
+            
+            const showBySearch = roleName.includes(searchInput);
+            
+            if (showByPermission && showBySearch) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
     
-    // Filter mobile cards
-    const mobileCards = document.querySelectorAll('.mobile-card');
-    mobileCards.forEach(card => {
-        const roleName = card.getAttribute('data-role-name');
-        const roleType = card.getAttribute('data-role-type');
-        
-        const matchesSearch = roleName.includes(searchTerm);
-        const matchesType = roleTypeFilter === '' || roleType === roleTypeFilter;
-        
-        if (matchesSearch && matchesType) {
-            card.style.display = '';
-        } else {
-            card.style.display = 'none';
-        }
+    // Initialize tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
     });
-}
 </script>
 {% endblock %}

@@ -6,70 +6,154 @@
 {% endblock %}
 
 {% block content %}
-<div class="container mb-4">
-    <!-- Admin Breadcrumbs -->
-    <nav aria-label="breadcrumb" class="admin-breadcrumb-wrapper mb-4">
-        <ol class="admin-breadcrumb">
-            <li class="admin-breadcrumb-item"><a href="{{ url_for('admin.index') }}">Admin</a></li>
-            {% block breadcrumb %}{% endblock %}
-            <li class="admin-breadcrumb-back">
-                <a href="{{ url_for('admin.index') }}" class="btn btn-sm btn-outline-secondary">
-                    <i class="fas fa-arrow-left"></i> Back to Dashboard
-                </a>
-            </li>
-        </ol>
-    </nav>
+<div class="admin-wrapper">
+    <!-- Admin Header -->
+    <header class="admin-header">
+        <div class="container-fluid">
+            <div class="admin-header-content">
+                <div class="admin-header-left">
+                    <button class="btn admin-sidebar-toggle d-md-none" id="sidebarToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 class="admin-title">Admin Panel</h1>
+                </div>
+                <div class="admin-header-right">
+                    <div class="admin-user-info dropdown">
+                        <button class="btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="admin-avatar">{{ current_user.username[:1] }}</span>
+                            <span class="admin-username d-none d-sm-inline">{{ current_user.username }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('dashboard.index') }}"><i class="fas fa-columns me-2"></i> Main Dashboard</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}"><i class="fas fa-user-circle me-2"></i> My Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
 
-    <div class="row">
-        <!-- Mobile Admin Navigation -->
-        <div class="col-12 mobile-admin-nav">
-            <div class="card admin-card">
-                <div class="card-body p-2">
-                    <select id="mobileAdminNav" class="form-select" onchange="if(this.value) window.location.href=this.value;">
-                        <option value="{{ url_for('admin.index') }}" {% if request.endpoint == 'admin.index' %}selected{% endif %}>Admin Dashboard</option>
-                        <option value="{{ url_for('admin.users') }}" {% if request.endpoint == 'admin.users' %}selected{% endif %}>User Management</option>
-                        <option value="{{ url_for('admin.roles') }}" {% if request.endpoint == 'admin.roles' %}selected{% endif %}>Role Management</option>
-                        <option value="{{ url_for('admin.organizations') }}" {% if request.endpoint == 'admin.organizations' %}selected{% endif %}>Organizations</option>
-                        <option value="{{ url_for('admin.system_settings') }}" {% if request.endpoint == 'admin.system_settings' %}selected{% endif %}>System Settings</option>
-                        <option value="{{ url_for('billing.admin_subscriptions') }}" {% if request.endpoint == 'billing.admin_subscriptions' %}selected{% endif %}>Subscription Plans</option>
-                        <option value="{{ url_for('billing.admin_tokens') }}" {% if request.endpoint == 'billing.admin_tokens' %}selected{% endif %}>Token Packages</option>
-                    </select>
+    <div class="container-fluid admin-container">
+        <div class="row g-0">
+            <!-- Admin Sidebar (Desktop) -->
+            <aside class="col-md-3 col-lg-2 admin-sidebar-wrapper">
+                <div class="admin-sidebar" id="adminSidebar">
+                    <!-- Admin Nav Header - Mobile only -->
+                    <div class="admin-sidebar-header d-md-none">
+                        <h5>Admin Navigation</h5>
+                        <button type="button" class="btn-close admin-sidebar-close" aria-label="Close"></button>
+                    </div>
+                    
+                    <!-- Admin Navigation -->
+                    <nav class="admin-nav">
+                        <div class="list-group">
+                            <a href="{{ url_for('admin.index') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'admin.index' %}active{% endif %}">
+                                <i class="fas fa-tachometer-alt me-2"></i>
+                                <span>Dashboard</span>
+                            </a>
+                            <a href="{{ url_for('admin.users') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'admin.users' %}active{% endif %}">
+                                <i class="fas fa-users me-2"></i>
+                                <span>User Management</span>
+                            </a>
+                            <a href="{{ url_for('admin.roles') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'admin.roles' %}active{% endif %}">
+                                <i class="fas fa-user-tag me-2"></i>
+                                <span>Role Management</span>
+                            </a>
+                            <a href="{{ url_for('admin.organizations') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'admin.organizations' %}active{% endif %}">
+                                <i class="fas fa-building me-2"></i>
+                                <span>Organizations</span>
+                            </a>
+                            
+                            <!-- System Group -->
+                            <div class="admin-nav-group">
+                                <div class="admin-nav-group-header">
+                                    <span>System</span>
+                                </div>
+                                <a href="{{ url_for('admin.system_settings') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'admin.system_settings' %}active{% endif %}">
+                                    <i class="fas fa-cogs me-2"></i>
+                                    <span>System Settings</span>
+                                </a>
+                            </div>
+                            
+                            <!-- Billing Group -->
+                            <div class="admin-nav-group">
+                                <div class="admin-nav-group-header">
+                                    <span>Billing</span>
+                                </div>
+                                <a href="{{ url_for('billing.admin_subscriptions') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'billing.admin_subscriptions' %}active{% endif %}">
+                                    <i class="fas fa-credit-card me-2"></i>
+                                    <span>Subscription Plans</span>
+                                </a>
+                                <a href="{{ url_for('billing.admin_tokens') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'billing.admin_tokens' %}active{% endif %}">
+                                    <i class="fas fa-coins me-2"></i>
+                                    <span>Token Packages</span>
+                                </a>
+                            </div>
+                        </div>
+                    </nav>
+                    
+                    <!-- Admin Sidebar Footer -->
+                    <div class="admin-sidebar-footer">
+                        <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary btn-sm w-100">
+                            <i class="fas fa-arrow-left me-1"></i> Back to Main Site
+                        </a>
+                    </div>
                 </div>
-            </div>
-        </div>
-        
-        <!-- Sidebar Navigation -->
-        <div class="col-md-3">
-            <div class="admin-sidebar mb-4">
-                <div class="list-group">
-                    <a href="{{ url_for('admin.index') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'admin.index' %}active{% endif %}">
-                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
-                    </a>
-                    <a href="{{ url_for('admin.users') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'admin.users' %}active{% endif %}">
-                        <i class="fas fa-users me-2"></i> User Management
-                    </a>
-                    <a href="{{ url_for('admin.roles') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'admin.roles' %}active{% endif %}">
-                        <i class="fas fa-user-tag me-2"></i> Role Management
-                    </a>
-                    <a href="{{ url_for('admin.organizations') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'admin.organizations' %}active{% endif %}">
-                        <i class="fas fa-building me-2"></i> Organizations
-                    </a>
-                    <a href="{{ url_for('admin.system_settings') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'admin.system_settings' %}active{% endif %}">
-                        <i class="fas fa-cogs me-2"></i> System Settings
-                    </a>
-                    <a href="{{ url_for('billing.admin_subscriptions') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'billing.admin_subscriptions' %}active{% endif %}">
-                        <i class="fas fa-credit-card me-2"></i> Subscription Plans
-                    </a>
-                    <a href="{{ url_for('billing.admin_tokens') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'billing.admin_tokens' %}active{% endif %}">
-                        <i class="fas fa-coins me-2"></i> Token Packages
-                    </a>
+            </aside>
+            
+            <!-- Main Content Area -->
+            <main class="col-md-9 col-lg-10 admin-main">
+                <!-- Mobile Admin Navigation -->
+                <div class="mobile-admin-nav d-md-none mb-3">
+                    <div class="card admin-card">
+                        <div class="card-body p-2">
+                            <select id="mobileAdminNav" class="form-select" onchange="if(this.value) window.location.href=this.value;">
+                                <option value="{{ url_for('admin.index') }}" {% if request.endpoint == 'admin.index' %}selected{% endif %}>Dashboard</option>
+                                <option value="{{ url_for('admin.users') }}" {% if request.endpoint == 'admin.users' %}selected{% endif %}>User Management</option>
+                                <option value="{{ url_for('admin.roles') }}" {% if request.endpoint == 'admin.roles' %}selected{% endif %}>Role Management</option>
+                                <option value="{{ url_for('admin.organizations') }}" {% if request.endpoint == 'admin.organizations' %}selected{% endif %}>Organizations</option>
+                                <option value="{{ url_for('admin.system_settings') }}" {% if request.endpoint == 'admin.system_settings' %}selected{% endif %}>System Settings</option>
+                                <option value="{{ url_for('billing.admin_subscriptions') }}" {% if request.endpoint == 'billing.admin_subscriptions' %}selected{% endif %}>Subscription Plans</option>
+                                <option value="{{ url_for('billing.admin_tokens') }}" {% if request.endpoint == 'billing.admin_tokens' %}selected{% endif %}>Token Packages</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-        
-        <!-- Main Content -->
-        <div class="col-md-9">
-            {% block admin_content %}{% endblock %}
+                
+                <!-- Admin Breadcrumbs -->
+                <nav aria-label="breadcrumb" class="admin-breadcrumb-wrapper mb-3">
+                    <ol class="admin-breadcrumb">
+                        <li class="admin-breadcrumb-item"><a href="{{ url_for('admin.index') }}">Admin</a></li>
+                        {% block breadcrumb %}{% endblock %}
+                        <li class="admin-breadcrumb-back">
+                            <a href="{{ url_for('admin.index') }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> <span class="d-none d-sm-inline">Back to Dashboard</span>
+                            </a>
+                        </li>
+                    </ol>
+                </nav>
+                
+                <!-- Admin Content -->
+                <div class="admin-content">
+                    {% block admin_content %}{% endblock %}
+                </div>
+                
+                <!-- Admin Footer -->
+                <footer class="admin-footer">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="admin-footer-text">&copy; {{ now.year }} Kenyan Legal Assistant</p>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <p class="admin-footer-text">Admin Panel v1.0</p>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </main>
         </div>
     </div>
 </div>
@@ -77,8 +161,48 @@
 
 {% block scripts %}
 <script>
-// Mobile Admin Navigation
+// Mobile Admin Sidebar Toggle
 document.addEventListener('DOMContentLoaded', function() {
+    // Mobile sidebar toggle
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const adminSidebar = document.getElementById('adminSidebar');
+    const sidebarClose = document.querySelector('.admin-sidebar-close');
+    const overlay = document.createElement('div');
+    overlay.className = 'admin-sidebar-overlay';
+    
+    if (sidebarToggle && adminSidebar) {
+        sidebarToggle.addEventListener('click', function() {
+            document.body.appendChild(overlay);
+            adminSidebar.classList.add('show');
+            document.body.classList.add('sidebar-open');
+            
+            // Add fade-in effect to overlay
+            setTimeout(() => {
+                overlay.classList.add('show');
+            }, 10);
+        });
+        
+        if (sidebarClose) {
+            sidebarClose.addEventListener('click', closeSidebar);
+        }
+        
+        overlay.addEventListener('click', closeSidebar);
+        
+        function closeSidebar() {
+            adminSidebar.classList.remove('show');
+            document.body.classList.remove('sidebar-open');
+            overlay.classList.remove('show');
+            
+            // Remove overlay after animation
+            setTimeout(() => {
+                if (overlay.parentNode) {
+                    overlay.parentNode.removeChild(overlay);
+                }
+            }, 300);
+        }
+    }
+    
+    // Mobile admin navigation
     const mobileAdminNav = document.getElementById('mobileAdminNav');
     if (mobileAdminNav) {
         mobileAdminNav.addEventListener('change', function() {
@@ -90,6 +214,26 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize Bootstrap tooltips for help elements
     initializeHelpTooltips();
+    
+    // Collapsible mobile card sections
+    const cardToggles = document.querySelectorAll('.mobile-card-header');
+    cardToggles.forEach(toggle => {
+        toggle.addEventListener('click', function() {
+            const content = this.nextElementSibling;
+            this.classList.toggle('active');
+            
+            if (content.style.maxHeight) {
+                content.style.maxHeight = null;
+                this.querySelector('.toggle-icon').classList.replace('fa-chevron-up', 'fa-chevron-down');
+            } else {
+                content.style.maxHeight = content.scrollHeight + 'px';
+                this.querySelector('.toggle-icon').classList.replace('fa-chevron-down', 'fa-chevron-up');
+            }
+        });
+    });
+    
+    // Add responsive table handling
+    makeTablesResponsive();
 });
 
 // Initialize Bootstrap tooltips
@@ -113,7 +257,7 @@ function initializeHelpTooltips() {
             tooltipEl.className = 'help-tooltip';
             tooltipEl.setAttribute('data-bs-toggle', 'tooltip');
             tooltipEl.setAttribute('data-bs-title', content);
-            tooltipEl.innerHTML = '<i class="fas fa-question"></i>';
+            tooltipEl.innerHTML = '<i class="fas fa-question-circle"></i>';
             element.appendChild(tooltipEl);
             
             // Initialize the new tooltip
@@ -125,6 +269,74 @@ function initializeHelpTooltips() {
             });
         }
     };
+}
+
+// Make tables responsive on small screens
+function makeTablesResponsive() {
+    const tables = document.querySelectorAll('.admin-table');
+    
+    tables.forEach(table => {
+        // Create the container for mobile cards
+        const mobileCardsContainer = document.createElement('div');
+        mobileCardsContainer.className = 'mobile-card-view';
+        table.parentNode.insertBefore(mobileCardsContainer, table.nextSibling);
+        
+        // Get the header cells
+        const headerCells = table.querySelectorAll('thead th');
+        const headerLabels = Array.from(headerCells).map(cell => cell.textContent.trim());
+        
+        // Process each row
+        const rows = table.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            
+            // Create a mobile card for this row
+            const card = document.createElement('div');
+            card.className = 'mobile-card';
+            
+            // Create card header (usually from the first column)
+            const cardHeader = document.createElement('div');
+            cardHeader.className = 'mobile-card-header';
+            cardHeader.innerHTML = `
+                <h6 class="mobile-card-title">${cells[0].innerHTML}</h6>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            `;
+            
+            // Create card body
+            const cardBody = document.createElement('div');
+            cardBody.className = 'mobile-card-body';
+            cardBody.style.maxHeight = null;
+            
+            // Add remaining cells as labeled items
+            for (let i = 1; i < cells.length - 1; i++) {
+                if (headerLabels[i]) {
+                    const item = document.createElement('div');
+                    item.className = 'item';
+                    item.innerHTML = `
+                        <div class="label">${headerLabels[i]}</div>
+                        <div class="value">${cells[i].innerHTML}</div>
+                    `;
+                    cardBody.appendChild(item);
+                }
+            }
+            
+            // Create card footer with actions from the last column
+            const cardFooter = document.createElement('div');
+            cardFooter.className = 'mobile-card-footer';
+            
+            // Get the last cell (usually contains actions)
+            const lastCell = cells[cells.length - 1];
+            cardFooter.innerHTML = lastCell.innerHTML;
+            
+            // Assemble the card
+            card.appendChild(cardHeader);
+            card.appendChild(cardBody);
+            card.appendChild(cardFooter);
+            
+            // Add the card to the container
+            mobileCardsContainer.appendChild(card);
+        });
+    });
 }
 </script>
 {% block admin_scripts %}{% endblock %}

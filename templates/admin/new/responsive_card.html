@@ -1,0 +1,221 @@
+{% macro responsive_card(title, subtitle, actions_html, icon) %}
+<div class="card admin-card mb-4">
+    <div class="card-header">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                {% if icon %}
+                <div class="admin-card-icon me-3">
+                    <i class="fas fa-{{ icon }}"></i>
+                </div>
+                {% endif %}
+                <div>
+                    <h4 class="card-title mb-0">{{ title }}</h4>
+                    {% if subtitle %}
+                    <div class="card-subtitle text-muted small">{{ subtitle }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            {% if actions_html %}
+            <div class="card-actions">
+                {{ actions_html | safe }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card-body">
+        {{ caller() }}
+    </div>
+</div>
+{% endmacro %}
+
+{% macro stats_card(icon, number, title, subtitle, color) %}
+<div class="card admin-stats-card mb-4">
+    <div class="card-body">
+        <div class="d-flex align-items-center">
+            <div class="admin-stats-icon bg-{{ color }} me-3">
+                <i class="fas fa-{{ icon }}"></i>
+            </div>
+            <div>
+                <div class="admin-stats-number">{{ number }}</div>
+                <div class="admin-stats-title">{{ title }}</div>
+                {% if subtitle %}
+                <div class="admin-stats-subtitle text-muted small">{{ subtitle }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro info_section(title, content) %}
+<div class="admin-info-section mb-4">
+    <div class="d-flex align-items-center mb-2">
+        <div class="admin-info-icon me-2">
+            <i class="fas fa-info-circle"></i>
+        </div>
+        <h5 class="mb-0">{{ title }}</h5>
+    </div>
+    <p class="text-muted mb-0">{{ content }}</p>
+</div>
+{% endmacro %}
+
+{% macro responsive_table(headers, rows, empty_message, empty_action_html, table_id='dataTable') %}
+<div class="admin-responsive-table">
+    <div class="admin-table-container">
+        {% if rows and rows|length > 0 %}
+        <table class="table table-striped" id="{{ table_id }}">
+            <thead>
+                <tr>
+                    {% for header in headers %}
+                    <th>{{ header }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                <tr>
+                    {% for cell in row %}
+                    <td>{{ cell | safe }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <!-- Mobile cards version (hidden on desktop) -->
+        <div class="admin-mobile-cards d-md-none">
+            {% for row in rows %}
+            <div class="mobile-card">
+                <div class="mobile-card-header">
+                    <div class="mobile-card-title">{{ row[0] | safe }}</div>
+                    <div class="mobile-card-actions">
+                        {{ row[-1] | safe }}
+                    </div>
+                </div>
+                <div class="mobile-card-body">
+                    {% for i in range(1, row|length - 1) %}
+                    <div class="item">
+                        <div class="label">{{ headers[i] }}</div>
+                        <div class="value">{{ row[i] | safe }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="admin-empty-state">
+            <div class="admin-empty-icon">
+                <i class="fas fa-inbox"></i>
+            </div>
+            <h5>{{ empty_message }}</h5>
+            {% if empty_action_html %}
+            <div class="mt-3">
+                {{ empty_action_html | safe }}
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function makeTablesResponsive() {
+    // This function is called on page load to ensure the table display is correct
+    const tableContainers = document.querySelectorAll('.admin-responsive-table');
+    tableContainers.forEach(container => {
+        const table = container.querySelector('table');
+        const mobileCards = container.querySelector('.admin-mobile-cards');
+        
+        if (table && mobileCards) {
+            // Mobile cards are already handled with CSS display classes
+            // This function can be extended for additional functionality
+        }
+    });
+}
+</script>
+{% endmacro %}
+
+{% macro form_group(label, id, input_html, help_text=None, required=False) %}
+<div class="mb-3">
+    <label for="{{ id }}" class="form-label">
+        {{ label }}
+        {% if required %}<span class="text-danger">*</span>{% endif %}
+    </label>
+    {{ input_html | safe }}
+    {% if help_text %}
+    <div class="form-text text-muted">{{ help_text }}</div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro form_select(label, id, options, selected=None, help_text=None, required=False) %}
+<div class="mb-3">
+    <label for="{{ id }}" class="form-label">
+        {{ label }}
+        {% if required %}<span class="text-danger">*</span>{% endif %}
+    </label>
+    <select class="form-select" id="{{ id }}" name="{{ id }}" {% if required %}required{% endif %}>
+        {% for option in options %}
+        <option value="{{ option.value }}" {% if selected and selected == option.value %}selected{% endif %}>
+            {{ option.label }}
+        </option>
+        {% endfor %}
+    </select>
+    {% if help_text %}
+    <div class="form-text text-muted">{{ help_text }}</div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro progress_bar(value, max_value, color='primary', label=None, size='default') %}
+<div class="admin-progress mb-3">
+    {% if label %}
+    <div class="d-flex justify-content-between mb-1">
+        <span>{{ label }}</span>
+        <span>{{ value }}/{{ max_value }}</span>
+    </div>
+    {% endif %}
+    <div class="progress {% if size == 'sm' %}progress-sm{% elif size == 'lg' %}progress-lg{% endif %}">
+        <div
+            class="progress-bar bg-{{ color }}"
+            role="progressbar"
+            style="width: {{ (value / max_value * 100) if max_value > 0 else 0 }}%"
+            aria-valuenow="{{ value }}"
+            aria-valuemin="0"
+            aria-valuemax="{{ max_value }}">
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro status_badge(status, statuses) %}
+{% set status_info = statuses.get(status, {'label': status, 'color': 'secondary'}) %}
+<span class="badge bg-{{ status_info.color }}">{{ status_info.label }}</span>
+{% endmacro %}
+
+{% macro action_buttons(actions) %}
+<div class="admin-action-buttons">
+    {% for action in actions %}
+    <a href="{{ action.url }}" 
+       class="btn btn-{{ action.color|default('primary') }} {{ action.size|default('btn-sm') }} {{ action.class|default('') }}"
+       {% if action.id %}id="{{ action.id }}"{% endif %}
+       {% if action.data %}
+         {% for key, value in action.data.items() %}
+         data-{{ key }}="{{ value }}"
+         {% endfor %}
+       {% endif %}
+       {% if action.tooltip %}title="{{ action.tooltip }}"{% endif %}>
+        {% if action.icon %}<i class="fas fa-{{ action.icon }} {% if action.label %}me-1{% endif %}"></i>{% endif %}
+        {% if action.label %}{{ action.label }}{% endif %}
+    </a>
+    {% endfor %}
+</div>
+{% endmacro %}
+
+{% macro date_badge(date, format='%b %d, %Y') %}
+<div class="admin-date-badge">
+    <i class="far fa-calendar-alt me-1"></i>
+    {{ date.strftime(format) if date else 'N/A' }}
+</div>
+{% endmacro %}

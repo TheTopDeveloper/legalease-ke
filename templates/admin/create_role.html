@@ -1,58 +1,313 @@
-{% extends "base.html" %}
+{% extends 'admin/layout.html' %}
 
-{% block header %}Create New Role{% endblock %}
+{% block title %}Create New Role | Admin - Kenyan Legal Assistant{% endblock %}
 
-{% block content %}
-<div class="row mb-4">
-    <div class="col">
-        <a href="{{ url_for('admin.roles') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Back to Roles
-        </a>
-    </div>
-</div>
+{% block breadcrumb %}
+<li class="admin-breadcrumb-item"><a href="{{ url_for('admin.roles') }}">Role Management</a></li>
+<li class="admin-breadcrumb-item active" aria-current="page">Create New Role</li>
+{% endblock %}
 
-<div class="card shadow">
+{% block admin_content %}
+<div class="card admin-card mb-4">
     <div class="card-header">
-        <h5 class="card-title mb-0">Create New Role</h5>
+        <h5 class="card-title"><i class="fas fa-plus-circle me-2"></i> Create New Role</h5>
     </div>
     <div class="card-body">
+        <!-- Section Help -->
+        <div class="section-help mb-4">
+            <h6><i class="fas fa-info-circle"></i> Create Custom Role</h6>
+            <p>Create a new custom role with specific permissions. Custom roles can be assigned to users to control their access to system features.</p>
+        </div>
+
         <form method="post">
-            <div class="mb-3">
-                <label for="name" class="form-label">Role Name</label>
-                <input type="text" class="form-control" id="name" name="name" required>
-                <div class="form-text">A unique name for this role</div>
-            </div>
-            
-            <div class="mb-3">
-                <label for="description" class="form-label">Description</label>
-                <textarea class="form-control" id="description" name="description" rows="3"></textarea>
-                <div class="form-text">Brief description of this role and its purpose</div>
-            </div>
-            
-            <h5 class="mt-4 mb-3">Role Permissions</h5>
-            <div class="alert alert-info">
-                Select the permissions that users with this role will have
-            </div>
-            
-            <div class="row">
-                {% for permission in permissions %}
-                <div class="col-md-4 mb-3">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="permission_{{ permission.id }}" id="permission_{{ permission.id }}">
-                        <label class="form-check-label" for="permission_{{ permission.id }}">
-                            <strong>{{ permission.name }}</strong>
-                            <p class="text-muted small mb-0">{{ permission.description }}</p>
-                        </label>
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Role Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                        <div class="form-text">A unique name for this role</div>
                     </div>
                 </div>
-                {% endfor %}
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                        <div class="form-text">Brief description of this role and its purpose</div>
+                    </div>
+                </div>
             </div>
             
-            <div class="mt-4">
-                <button type="submit" class="btn btn-primary">Create Role</button>
+            <h5 class="mb-3">Role Permissions</h5>
+            
+            <!-- Permission selection tabs -->
+            <div class="permission-selector mb-4">
+                <!-- Permission group tabs -->
+                <ul class="nav nav-tabs mb-3" id="permissionTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="all-permissions-tab" data-bs-toggle="tab" data-bs-target="#all-permissions" type="button" role="tab" aria-controls="all-permissions" aria-selected="true">All Permissions</button>
+                    </li>
+                    {% for group_name in permission_groups.keys() %}
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="{{ group_name|lower|replace(' ', '-') }}-tab" data-bs-toggle="tab" data-bs-target="#{{ group_name|lower|replace(' ', '-') }}" type="button" role="tab" aria-controls="{{ group_name|lower|replace(' ', '-') }}" aria-selected="false">{{ group_name }}</button>
+                    </li>
+                    {% endfor %}
+                </ul>
+                
+                <!-- Tab content -->
+                <div class="tab-content" id="permissionTabsContent">
+                    <!-- All permissions tab -->
+                    <div class="tab-pane fade show active" id="all-permissions" role="tabpanel" aria-labelledby="all-permissions-tab">
+                        <div class="permission-controls mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="selectAllPermissions">
+                                    <label class="form-check-label" for="selectAllPermissions">
+                                        <strong>Select All Permissions</strong>
+                                    </label>
+                                </div>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" id="expandAllGroups">
+                                        <i class="fas fa-plus-square"></i> Expand All
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="collapseAllGroups">
+                                        <i class="fas fa-minus-square"></i> Collapse All
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion" id="permissionAccordion">
+                            {% for group_name, group_permissions in permission_groups.items() %}
+                            <div class="accordion-item mb-2">
+                                <h2 class="accordion-header" id="heading{{ loop.index }}">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}" aria-expanded="false" aria-controls="collapse{{ loop.index }}">
+                                        <div class="d-flex align-items-center w-100">
+                                            <div class="form-check me-2">
+                                                <input class="form-check-input group-select" type="checkbox" id="selectGroup{{ loop.index }}" data-group="{{ group_name|lower|replace(' ', '-') }}">
+                                            </div>
+                                            <div>
+                                                <strong>{{ group_name }}</strong>
+                                                <span class="badge bg-secondary ms-2">{{ group_permissions|length }} permissions</span>
+                                            </div>
+                                        </div>
+                                    </button>
+                                </h2>
+                                <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="heading{{ loop.index }}" data-bs-parent="#permissionAccordion">
+                                    <div class="accordion-body">
+                                        <div class="row g-3">
+                                            {% for perm_name in group_permissions %}
+                                            {% for permission in permissions %}
+                                            {% if permission.name == perm_name %}
+                                            <div class="col-md-6 mb-1">
+                                                <div class="form-check permission-item">
+                                                    <input class="form-check-input permission-check" type="checkbox" name="permission_{{ permission.id }}" id="permission_{{ permission.id }}" data-group="{{ group_name|lower|replace(' ', '-') }}">
+                                                    <label class="form-check-label d-flex flex-column" for="permission_{{ permission.id }}">
+                                                        <strong>{{ permission.name }}</strong>
+                                                        {% if permission.description %}
+                                                        <span class="text-muted small">{{ permission.description }}</span>
+                                                        {% endif %}
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                            {% endfor %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Group-specific tabs -->
+                    {% for group_name, group_permissions in permission_groups.items() %}
+                    <div class="tab-pane fade" id="{{ group_name|lower|replace(' ', '-') }}" role="tabpanel" aria-labelledby="{{ group_name|lower|replace(' ', '-') }}-tab">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="form-check">
+                                    <input class="form-check-input select-group-tab" type="checkbox" id="selectAll{{ group_name|lower|replace(' ', '-') }}" data-group="{{ group_name|lower|replace(' ', '-') }}">
+                                    <label class="form-check-label" for="selectAll{{ group_name|lower|replace(' ', '-') }}">
+                                        <strong>Select All {{ group_name }} Permissions</strong>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    {% for perm_name in group_permissions %}
+                                    {% for permission in permissions %}
+                                    {% if permission.name == perm_name %}
+                                    <div class="col-md-6 mb-1">
+                                        <div class="form-check permission-item">
+                                            <input class="form-check-input permission-check" type="checkbox" name="permission_{{ permission.id }}" id="tab_permission_{{ permission.id }}" data-group="{{ group_name|lower|replace(' ', '-') }}">
+                                            <label class="form-check-label d-flex flex-column" for="tab_permission_{{ permission.id }}">
+                                                <strong>{{ permission.name }}</strong>
+                                                {% if permission.description %}
+                                                <span class="text-muted small">{{ permission.description }}</span>
+                                                {% endif %}
+                                            </label>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    {% endfor %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="mt-4 d-flex justify-content-between">
                 <a href="{{ url_for('admin.roles') }}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">Create Role</button>
             </div>
         </form>
     </div>
 </div>
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle select all permissions
+        document.getElementById('selectAllPermissions').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.permission-check');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            
+            // Also update the group selectors
+            const groupCheckboxes = document.querySelectorAll('.group-select');
+            groupCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            
+            // And the tab group selectors
+            const tabGroupCheckboxes = document.querySelectorAll('.select-group-tab');
+            tabGroupCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+        
+        // Handle group select checkboxes
+        document.querySelectorAll('.group-select').forEach(groupCheckbox => {
+            groupCheckbox.addEventListener('change', function() {
+                const group = this.dataset.group;
+                const checkboxes = document.querySelectorAll(`.permission-check[data-group="${group}"]`);
+                
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+                
+                // Also update the tab group selector
+                const tabGroupCheckbox = document.querySelector(`.select-group-tab[data-group="${group}"]`);
+                if (tabGroupCheckbox) {
+                    tabGroupCheckbox.checked = this.checked;
+                }
+                
+                // Check if all groups are selected
+                updateSelectAllCheckbox();
+            });
+        });
+        
+        // Handle tab group select checkboxes
+        document.querySelectorAll('.select-group-tab').forEach(tabGroupCheckbox => {
+            tabGroupCheckbox.addEventListener('change', function() {
+                const group = this.dataset.group;
+                const checkboxes = document.querySelectorAll(`.permission-check[data-group="${group}"]`);
+                
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+                
+                // Also update the accordion group selector
+                const groupCheckbox = document.querySelector(`.group-select[data-group="${group}"]`);
+                if (groupCheckbox) {
+                    groupCheckbox.checked = this.checked;
+                }
+                
+                // Check if all groups are selected
+                updateSelectAllCheckbox();
+            });
+        });
+        
+        // Expand/collapse all groups
+        document.getElementById('expandAllGroups').addEventListener('click', function() {
+            const accordionButtons = document.querySelectorAll('.accordion-button.collapsed');
+            accordionButtons.forEach(button => {
+                button.click();
+            });
+        });
+        
+        document.getElementById('collapseAllGroups').addEventListener('click', function() {
+            const accordionButtons = document.querySelectorAll('.accordion-button:not(.collapsed)');
+            accordionButtons.forEach(button => {
+                button.click();
+            });
+        });
+        
+        // Update individual checkboxes
+        document.querySelectorAll('.permission-check').forEach(permCheckbox => {
+            permCheckbox.addEventListener('change', function() {
+                const group = this.dataset.group;
+                
+                // Check if all permissions in this group are checked
+                updateGroupCheckbox(group);
+                
+                // Check if all permissions are checked
+                updateSelectAllCheckbox();
+            });
+        });
+        
+        // Helper function to update group checkbox state
+        function updateGroupCheckbox(group) {
+            const groupCheckboxes = document.querySelectorAll(`.permission-check[data-group="${group}"]`);
+            const groupSelector = document.querySelector(`.group-select[data-group="${group}"]`);
+            const tabGroupSelector = document.querySelector(`.select-group-tab[data-group="${group}"]`);
+            
+            let allChecked = true;
+            let allUnchecked = true;
+            
+            groupCheckboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    allUnchecked = false;
+                } else {
+                    allChecked = false;
+                }
+            });
+            
+            if (groupSelector) {
+                groupSelector.checked = allChecked;
+                groupSelector.indeterminate = !allChecked && !allUnchecked;
+            }
+            
+            if (tabGroupSelector) {
+                tabGroupSelector.checked = allChecked;
+                tabGroupSelector.indeterminate = !allChecked && !allUnchecked;
+            }
+        }
+        
+        // Helper function to update select all checkbox state
+        function updateSelectAllCheckbox() {
+            const allCheckboxes = document.querySelectorAll('.permission-check');
+            const selectAllCheckbox = document.getElementById('selectAllPermissions');
+            
+            let allChecked = true;
+            let allUnchecked = true;
+            
+            allCheckboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    allUnchecked = false;
+                } else {
+                    allChecked = false;
+                }
+            });
+            
+            selectAllCheckbox.checked = allChecked;
+            selectAllCheckbox.indeterminate = !allChecked && !allUnchecked;
+        }
+    });
+</script>
 {% endblock %}
