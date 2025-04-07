@@ -1,0 +1,72 @@
+2025-04-07 18:01:49,200 - __main__ - INFO - Starting migration to add advanced calendar features...
+2025-04-07 18:01:49,312 - app - INFO - Database tables created
+2025-04-07 18:01:50,081 - utils.notification_service - INFO - Using Mock SMS service for notifications
+2025-04-07 18:01:50,082 - utils.llm - INFO - Initialized OLLAMA client with base URL: http://localhost:11434, model: llama3:latest
+2025-04-07 18:01:50,082 - utils.llm - INFO - Legal Assistant initialized
+2025-04-07 18:01:50,092 - utils.llm - INFO - Initialized Mock LLM client (fallback responses)
+2025-04-07 18:01:50,092 - utils.llm - INFO - Attempting to connect to Ollama at base URL: http://localhost:11434
+2025-04-07 18:01:50,092 - utils.llm - INFO - Testing Ollama API endpoint: http://localhost:11434/api/version
+2025-04-07 18:01:50,094 - utils.llm - INFO - Response from http://localhost:11434/api/version: status code 200
+2025-04-07 18:01:50,094 - utils.llm - INFO - Ollama server detected at http://localhost:11434/api/version (status: 200)
+2025-04-07 18:01:50,094 - utils.llm - INFO - Initialized OLLAMA client with base URL: http://localhost:11434, model: llama3:latest
+2025-04-07 18:01:50,094 - utils.llm - INFO - Initialized OLLAMA client with base URL: http://localhost:11434, model: deepseek:latest
+2025-04-07 18:01:50,094 - utils.llm - INFO - Initialized CounterCheck client with models: llama3:latest (primary) and deepseek:latest (secondary)
+2025-04-07 18:01:50,094 - utils.llm - INFO - Using Ollama version: 0.6.4
+2025-04-07 18:01:50,094 - utils.llm - INFO - Trying Ollama endpoint: http://localhost:11434/v1/chat/completions
+2025-04-07 18:01:50,161 - utils.llm - INFO - Successfully generated text using http://localhost:11434/v1/chat/completions
+2025-04-07 18:01:50,161 - utils.llm - INFO - Using Ollama version: 0.6.4
+2025-04-07 18:01:50,161 - utils.llm - INFO - Trying Ollama endpoint: http://localhost:11434/v1/chat/completions
+2025-04-07 18:01:50,162 - utils.llm - WARNING - Error with http://localhost:11434/v1/chat/completions: 404 Client Error: Not Found for url: http://localhost:11434/v1/chat/completions
+2025-04-07 18:01:50,162 - utils.llm - INFO - Trying Ollama endpoint: http://localhost:11434/v1/completions
+2025-04-07 18:01:50,163 - utils.llm - WARNING - Error with http://localhost:11434/v1/completions: 404 Client Error: Not Found for url: http://localhost:11434/v1/completions
+2025-04-07 18:01:50,163 - utils.llm - INFO - Trying Ollama endpoint: http://localhost:11434/api/generate
+2025-04-07 18:01:50,164 - utils.llm - WARNING - Error with http://localhost:11434/api/generate: 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-04-07 18:01:50,164 - utils.llm - INFO - Trying Ollama endpoint: http://localhost:11434/api/chat
+2025-04-07 18:01:50,164 - utils.llm - WARNING - Error with http://localhost:11434/api/chat: 404 Client Error: Not Found for url: http://localhost:11434/api/chat
+2025-04-07 18:01:50,165 - utils.llm - ERROR - Error generating text with OLLAMA - all endpoints failed
+2025-04-07 18:01:50,165 - utils.llm - INFO - Using Counter-Check LLM client with multiple models
+2025-04-07 18:01:50,165 - utils.llm - INFO - Legal Assistant initialized
+2025-04-07 18:01:50,193 - __main__ - INFO - Successfully imported app
+2025-04-07 18:01:50,193 - __main__ - INFO - DATABASE_URL not found in environment, will try to get from app.config
+2025-04-07 18:01:50,194 - __main__ - INFO - Entered app context
+2025-04-07 18:01:50,194 - __main__ - INFO - Using database URL from app.config: Valid URL but hiding details
+2025-04-07 18:01:50,195 - __main__ - ERROR - Migration failed: (sqlite3.OperationalError) no such table: event
+[SQL: ALTER TABLE event ADD COLUMN is_flexible BOOLEAN DEFAULT FALSE]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-04-07 18:01:50,196 - __main__ - ERROR - Traceback (most recent call last):
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1964, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 945, in do_execute
+    cursor.execute(statement, parameters)
+sqlite3.OperationalError: no such table: event
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/prodai/Desktop/legalease-ke/migrations_calendar.py", line 162, in main
+    add_calendar_fields()
+  File "/home/prodai/Desktop/legalease-ke/migrations_calendar.py", line 106, in add_calendar_fields
+    connection.execute(query)
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1416, in execute
+    return meth(
+           ^^^^^
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 523, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1638, in _execute_clauseelement
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1843, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1983, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2352, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1964, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 945, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such table: event
+[SQL: ALTER TABLE event ADD COLUMN is_flexible BOOLEAN DEFAULT FALSE]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)

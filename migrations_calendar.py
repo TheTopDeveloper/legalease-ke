@@ -25,8 +25,11 @@ def get_db_connection():
             db_url = app.config.get('SQLALCHEMY_DATABASE_URI')
     
     if not db_url:
-        raise ValueError("Database URL not found. Make sure DATABASE_URL environment variable is set.")
-        
+        # As a fallback, try connecting to the SQLite database directly
+        db_url = 'sqlite:///instance/kenyalaw.db'
+        logger.info(f"Using fallback SQLite database at {db_url}")
+    
+    logger.info(f"Database URL: {db_url.split(':')[0]}")
     return create_engine(db_url)
 
 def is_postgres():
@@ -36,7 +39,12 @@ def is_postgres():
         from app import app
         with app.app_context():
             db_url = app.config.get('SQLALCHEMY_DATABASE_URI', '')
-    return 'postgresql' in db_url.lower() if db_url else False
+    
+    if not db_url:
+        # Fallback to SQLite if no db_url is found
+        return False
+        
+    return 'postgresql' in db_url.lower()
 
 def is_sqlite():
     """Check if the database is SQLite"""
@@ -45,7 +53,12 @@ def is_sqlite():
         from app import app
         with app.app_context():
             db_url = app.config.get('SQLALCHEMY_DATABASE_URI', '')
-    return 'sqlite' in db_url.lower() if db_url else False
+    
+    if not db_url:
+        # Fallback to SQLite if no db_url is found
+        return True
+        
+    return 'sqlite' in db_url.lower()
 
 def check_column_exists(table_name, column_name):
     """Check if a column exists in the database table"""
@@ -62,8 +75,16 @@ def check_column_exists(table_name, column_name):
             return bool(result.fetchone())
     
     elif is_sqlite():
-        query = text(f"PRAGMA table_info({table_name})")
+        # First check if the table exists
+        check_table_query = text(f"SELECT name FROM sqlite_master WHERE type='table' AND name=:table_name")
         with engine.connect() as connection:
+            result = connection.execute(check_table_query, {'table_name': table_name})
+            if not result.fetchone():
+                logger.warning(f"Table {table_name} does not exist in SQLite database")
+                return False
+            
+            # Table exists, now check the column
+            query = text(f"PRAGMA table_info({table_name})")
             result = connection.execute(query)
             columns = [row['name'] for row in result]
             return column_name in columns
