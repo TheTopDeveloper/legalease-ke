@@ -290,18 +290,30 @@ def add_event(case_id):
         end_time_str = request.form.get('end_time')
         location = request.form.get('location')
         
+        # Get new calendar fields
+        court_reference_number = request.form.get('court_reference_number')
+        travel_time_minutes = request.form.get('travel_time_minutes', '0')
+        buffer_before = request.form.get('buffer_before', '0')
+        buffer_after = request.form.get('buffer_after', '0')
+        participants = request.form.get('participants')
+        is_flexible = '1' if request.form.get('is_flexible') else '0'
+        
         # Validate form data
         if not title or not event_type or not start_time_str:
             flash('Title, event type, and start time are required', 'error')
-            return render_template('cases/add_event.html', case=case)
+            return render_template('cases/add_event.html', case=case, now=datetime.now())
         
-        # Parse dates
+        # Parse dates and numeric fields
         try:
             start_time = datetime.strptime(start_time_str, '%Y-%m-%dT%H:%M')
             end_time = datetime.strptime(end_time_str, '%Y-%m-%dT%H:%M') if end_time_str else None
+            travel_time_minutes = int(travel_time_minutes)
+            buffer_before = int(buffer_before)
+            buffer_after = int(buffer_after)
+            is_flexible = bool(int(is_flexible))
         except ValueError:
-            flash('Invalid date format', 'error')
-            return render_template('cases/add_event.html', case=case)
+            flash('Invalid date or numeric format', 'error')
+            return render_template('cases/add_event.html', case=case, now=datetime.now())
         
         # Create new event
         new_event = Event(
@@ -312,7 +324,14 @@ def add_event(case_id):
             end_time=end_time,
             location=location,
             case_id=case.id,
-            user_id=current_user.id
+            user_id=current_user.id,
+            # Add new calendar fields
+            court_reference_number=court_reference_number,
+            travel_time_minutes=travel_time_minutes,
+            buffer_before=buffer_before,
+            buffer_after=buffer_after,
+            participants=participants,
+            is_flexible=is_flexible
         )
         
         # Save to database
@@ -333,7 +352,7 @@ def add_event(case_id):
             logger.error(f"Error adding event: {str(e)}")
             flash(f'Error adding event: {str(e)}', 'error')
     
-    return render_template('cases/add_event.html', case=case)
+    return render_template('cases/add_event.html', case=case, now=datetime.now())
 
 @cases_bp.route('/clients', methods=['GET', 'POST'])
 @login_required

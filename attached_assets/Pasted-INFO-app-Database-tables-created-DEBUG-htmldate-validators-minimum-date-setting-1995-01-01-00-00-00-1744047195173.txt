@@ -1,0 +1,62 @@
+INFO:app:Database tables created
+DEBUG:htmldate.validators:minimum date setting: 1995-01-01 00:00:00
+INFO:utils.notification_service:Using Mock SMS service for notifications
+INFO:utils.llm:Initialized OLLAMA client with base URL: http://localhost:11434, model: llama3:latest
+INFO:utils.llm:Legal Assistant initialized
+INFO:utils.llm:Initialized Mock LLM client (fallback responses)
+INFO:utils.llm:Attempting to connect to Ollama at base URL: http://localhost:11434
+INFO:utils.llm:Testing Ollama API endpoint: http://localhost:11434/api/version
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): localhost:11434
+DEBUG:urllib3.connectionpool:http://localhost:11434 "GET /api/version HTTP/1.1" 200 19
+INFO:utils.llm:Response from http://localhost:11434/api/version: status code 200
+INFO:utils.llm:Ollama server detected at http://localhost:11434/api/version (status: 200)
+INFO:utils.llm:Initialized OLLAMA client with base URL: http://localhost:11434, model: llama3:latest
+INFO:utils.llm:Initialized OLLAMA client with base URL: http://localhost:11434, model: deepseek:latest
+INFO:utils.llm:Initialized CounterCheck client with models: llama3:latest (primary) and deepseek:latest (secondary)
+INFO:utils.llm:Using Ollama version: 0.6.4
+INFO:utils.llm:Trying Ollama endpoint: http://localhost:11434/v1/chat/completions
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): localhost:11434
+DEBUG:urllib3.connectionpool:http://localhost:11434 "POST /v1/chat/completions HTTP/1.1" 200 309
+INFO:utils.llm:Successfully generated text using http://localhost:11434/v1/chat/completions
+INFO:utils.llm:Using Ollama version: 0.6.4
+INFO:utils.llm:Trying Ollama endpoint: http://localhost:11434/v1/chat/completions
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): localhost:11434
+DEBUG:urllib3.connectionpool:http://localhost:11434 "POST /v1/chat/completions HTTP/1.1" 404 126
+WARNING:utils.llm:Error with http://localhost:11434/v1/chat/completions: 404 Client Error: Not Found for url: http://localhost:11434/v1/chat/completions
+INFO:utils.llm:Trying Ollama endpoint: http://localhost:11434/v1/completions
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): localhost:11434
+DEBUG:urllib3.connectionpool:http://localhost:11434 "POST /v1/completions HTTP/1.1" 404 102
+WARNING:utils.llm:Error with http://localhost:11434/v1/completions: 404 Client Error: Not Found for url: http://localhost:11434/v1/completions
+INFO:utils.llm:Trying Ollama endpoint: http://localhost:11434/api/generate
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): localhost:11434
+DEBUG:urllib3.connectionpool:http://localhost:11434 "POST /api/generate HTTP/1.1" 404 45
+WARNING:utils.llm:Error with http://localhost:11434/api/generate: 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+INFO:utils.llm:Trying Ollama endpoint: http://localhost:11434/api/chat
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): localhost:11434
+DEBUG:urllib3.connectionpool:http://localhost:11434 "POST /api/chat HTTP/1.1" 404 69
+WARNING:utils.llm:Error with http://localhost:11434/api/chat: 404 Client Error: Not Found for url: http://localhost:11434/api/chat
+ERROR:utils.llm:Error generating text with OLLAMA - all endpoints failed
+INFO:utils.llm:Using Counter-Check LLM client with multiple models
+INFO:utils.llm:Legal Assistant initialized
+INFO:__main__:Starting migration to add advanced calendar features...
+Traceback (most recent call last):
+  File "/home/prodai/Desktop/legalease-ke/migrations_calendar.py", line 118, in <module>
+    main()
+  File "/home/prodai/Desktop/legalease-ke/migrations_calendar.py", line 113, in main
+    add_calendar_fields()
+  File "/home/prodai/Desktop/legalease-ke/migrations_calendar.py", line 51, in add_calendar_fields
+    engine = get_db_connection()
+             ^^^^^^^^^^^^^^^^^^^
+  File "/home/prodai/Desktop/legalease-ke/migrations_calendar.py", line 16, in get_db_connection
+    return create_engine(db_url)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 2, in create_engine
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
+    return fn(*args, **kwargs)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/engine/create.py", line 549, in create_engine
+    u = _url.make_url(url)
+        ^^^^^^^^^^^^^^^^^^
+  File "/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/engine/url.py", line 860, in make_url
+    raise exc.ArgumentError(
+sqlalchemy.exc.ArgumentError: Expected string or URL object, got None

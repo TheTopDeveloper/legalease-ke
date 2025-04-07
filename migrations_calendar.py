@@ -4,24 +4,48 @@ This script adds new fields for better conflict detection and automated scheduli
 """
 import logging
 import os
-from datetime import datetime
-from app import app
+import sys
+import traceback
+from datetime import datetime, timedelta
+
 from sqlalchemy import create_engine, text
 
+# Set up logging
+logging.basicConfig(level=logging.INFO, 
+                   format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 def get_db_connection():
     """Get database connection from environment variables"""
     db_url = os.environ.get('DATABASE_URL')
+    if not db_url:
+        # If DATABASE_URL is not set, use the one from app.config
+        from app import app
+        with app.app_context():
+            db_url = app.config.get('SQLALCHEMY_DATABASE_URI')
+    
+    if not db_url:
+        raise ValueError("Database URL not found. Make sure DATABASE_URL environment variable is set.")
+        
     return create_engine(db_url)
 
 def is_postgres():
     """Check if the database is PostgreSQL"""
-    return 'postgresql' in os.environ.get('DATABASE_URL', '')
+    db_url = os.environ.get('DATABASE_URL')
+    if not db_url:
+        from app import app
+        with app.app_context():
+            db_url = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+    return 'postgresql' in db_url.lower() if db_url else False
 
 def is_sqlite():
     """Check if the database is SQLite"""
-    return 'sqlite' in os.environ.get('DATABASE_URL', '')
+    db_url = os.environ.get('DATABASE_URL')
+    if not db_url:
+        from app import app
+        with app.app_context():
+            db_url = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+    return 'sqlite' in db_url.lower() if db_url else False
 
 def check_column_exists(table_name, column_name):
     """Check if a column exists in the database table"""
@@ -108,11 +132,43 @@ def add_calendar_fields():
 
 def main():
     """Main function to run migration"""
-    logger.info("Starting migration to add advanced calendar features...")
-    with app.app_context():
-        add_calendar_fields()
-    logger.info("Migration completed successfully")
+    try:
+        logger.info("Starting migration to add advanced calendar features...")
+        
+        # Import app here to avoid circular imports
+        from app import app
+        logger.info("Successfully imported app")
+        
+        # Print database URL for debugging (without exposing credentials)
+        db_url = os.environ.get('DATABASE_URL', '')
+        if db_url:
+            # Split only if @ is in the string, to safely handle connection strings
+            url_for_log = db_url.split('@')[0] + '...' if '@' in db_url else 'Valid URL but hiding details'
+            logger.info(f"Using DATABASE_URL from environment: {url_for_log}")
+        else:
+            logger.info("DATABASE_URL not found in environment, will try to get from app.config")
+            
+        with app.app_context():
+            logger.info("Entered app context")
+            db_url = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+            if db_url:
+                # Split only if @ is in the string
+                url_for_log = db_url.split('@')[0] + '...' if '@' in db_url else 'Valid URL but hiding details'
+                logger.info(f"Using database URL from app.config: {url_for_log}")
+            else:
+                logger.warning("No database URL found in app.config either!")
+                
+            # Now perform the actual migration
+            add_calendar_fields()
+            
+        logger.info("Migration completed successfully")
+        
+    except Exception as e:
+        logger.error(f"Migration failed: {str(e)}")
+        logger.error(traceback.format_exc())
+        sys.exit(1)
 
 if __name__ == '__main__':
+    # This will be overridden by the earlier basicConfig
     logging.basicConfig(level=logging.INFO)
     main()

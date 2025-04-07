@@ -54,17 +54,61 @@
                         <div class="form-text">For court events, include courtroom number and building (e.g., "Court 3, Milimani Law Courts")</div>
                     </div>
                     
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="court_reference_number" class="form-label">Court Reference Number</label>
+                            <input type="text" class="form-control" id="court_reference_number" name="court_reference_number">
+                            <div class="form-text">For court events, include the case/file reference number</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="travel_time_minutes" class="form-label">Travel Time (minutes)</label>
+                            <input type="number" class="form-control" id="travel_time_minutes" name="travel_time_minutes" min="0" value="0">
+                            <div class="form-text">Estimated travel time to the event location</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="buffer_before" class="form-label">Buffer Before (minutes)</label>
+                            <input type="number" class="form-control" id="buffer_before" name="buffer_before" min="0" value="0">
+                            <div class="form-text">Preparation time needed before the event</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="buffer_after" class="form-label">Buffer After (minutes)</label>
+                            <input type="number" class="form-control" id="buffer_after" name="buffer_after" min="0" value="0">
+                            <div class="form-text">Wind-down time needed after the event</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="participants" class="form-label">Participants</label>
+                            <input type="text" class="form-control" id="participants" name="participants" placeholder="Names separated by commas">
+                            <div class="form-text">List of people attending this event</div>
+                        </div>
+                    </div>
+                    
                     <div class="mb-3">
                         <label for="description" class="form-label">Description</label>
                         <textarea class="form-control" id="description" name="description" rows="3"></textarea>
                         <div class="form-text">Include any relevant details about the event (e.g., "Witness examination", "Submit application")</div>
                     </div>
                     
-                    <div class="form-check mb-4">
-                        <input class="form-check-input" type="checkbox" value="1" id="notify" name="notify">
-                        <label class="form-check-label" for="notify">
-                            Set reminder notification for this event
-                        </label>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="1" id="notify" name="notify">
+                                <label class="form-check-label" for="notify">
+                                    Set reminder notification for this event
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="1" id="is_flexible" name="is_flexible">
+                                <label class="form-check-label" for="is_flexible">
+                                    This event has flexible timing
+                                </label>
+                                <div class="form-text">Check this if the event can be rescheduled if needed</div>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
@@ -162,6 +206,27 @@
                 const eventType = eventTypeInput.value;
                 if (['Court Appearance', 'Hearing', 'Mention'].includes(eventType) && !locationInput.value) {
                     locationInput.value = 'Milimani Law Courts';
+                }
+            });
+        }
+        
+        // Set buffer times based on event type
+        if (eventTypeInput) {
+            const bufferBeforeInput = document.getElementById('buffer_before');
+            const bufferAfterInput = document.getElementById('buffer_after');
+            const travelTimeInput = document.getElementById('travel_time_minutes');
+            
+            eventTypeInput.addEventListener('change', function() {
+                const eventType = eventTypeInput.value;
+                // For court events, set default buffer times
+                if (['Court Appearance', 'Hearing', 'Mention'].includes(eventType)) {
+                    bufferBeforeInput.value = '30';  // 30 minutes prep time
+                    bufferAfterInput.value = '15';   // 15 minutes wind-down time
+                    travelTimeInput.value = '45';    // 45 minutes travel time
+                } else if (eventType === 'Client Meeting') {
+                    bufferBeforeInput.value = '15';  // 15 minutes prep time
+                    bufferAfterInput.value = '15';   // 15 minutes wind-down time
+                    travelTimeInput.value = '20';    // 20 minutes travel time
                 }
             });
         }

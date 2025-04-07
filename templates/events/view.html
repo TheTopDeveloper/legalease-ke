@@ -202,7 +202,15 @@
                                     <div class="row mt-2">
                                         <div class="col-md-3 fw-bold">Participants:</div>
                                         <div class="col-md-9">
-                                            {{ event.participants }}
+                                            {% if event.get_participants_list()|length > 0 %}
+                                                <ul class="mb-0">
+                                                {% for participant in event.get_participants_list() %}
+                                                    <li>{{ participant }}</li>
+                                                {% endfor %}
+                                                </ul>
+                                            {% else %}
+                                                {{ event.participants }}
+                                            {% endif %}
                                         </div>
                                     </div>
                                     {% endif %}
@@ -287,69 +295,93 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a href="{{ url_for('events.calendar', date=event.start_time.strftime('%Y-%m-%d'), view='day') }}" class="btn btn-outline-primary">
-                            <i class="fas fa-calendar-day"></i> View Day in Calendar
+                        <a href="{{ url_for('events.calendar', date=event.start_time.strftime('%Y-%m-%d')) }}" class="btn btn-outline-primary">
+                            <i class="fas fa-calendar"></i> View in Calendar
                         </a>
+                        
+                        {% if event.is_court_related() %}
+                        <a href="{{ url_for('courts.search_rulings') }}" class="btn btn-outline-info">
+                            <i class="fas fa-gavel"></i> Search Related Rulings
+                        </a>
+                        {% endif %}
                         
                         {% if event.case %}
-                        <a href="{{ url_for('cases.view', case_id=event.case.id) }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-briefcase"></i> View Case Details
+                        <a href="{{ url_for('cases.add_document', case_id=event.case.id) }}" class="btn btn-outline-success">
+                            <i class="fas fa-file-alt"></i> Add Document to Case
                         </a>
                         {% endif %}
                         
-                        {% if event.is_court_related() and event.case %}
-                        <a href="{{ url_for('documents.create') }}?case_id={{ event.case.id }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-file-alt"></i> Create Related Document
-                        </a>
-                        {% endif %}
+                        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="fas fa-share-alt"></i> Share
+                        </button>
+                        <ul class="dropdown-menu w-100">
+                            <li><a class="dropdown-item" href="#" data-action="share-email">
+                                <i class="fas fa-envelope"></i> Share via Email
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" data-action="share-calendar">
+                                <i class="fas fa-calendar-plus"></i> Add to External Calendar
+                            </a></li>
+                        </ul>
                         
-                        {% if event.location %}
-                        <a href="https://www.google.com/maps/search/?api=1&query={{ event.location|urlencode }}" target="_blank" class="btn btn-outline-secondary">
-                            <i class="fas fa-map-marker-alt"></i> View on Map
+                        <a href="{{ url_for('events.reschedule', event_id=event.id) }}" class="btn btn-outline-warning">
+                            <i class="fas fa-clock"></i> Reschedule
                         </a>
-                        {% endif %}
                     </div>
                 </div>
             </div>
             
-            <div class="card">
+            {% if similar_events %}
+            <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0">Recommended Actions</h5>
+                    <h5 class="mb-0">Similar Events</h5>
                 </div>
-                <div class="card-body">
-                    <ul class="list-group list-group-flush">
-                        {% if event.is_court_related() %}
-                        <li class="list-group-item">
-                            <i class="fas fa-gavel text-primary"></i> Review case law before appearance
-                        </li>
-                        <li class="list-group-item">
-                            <i class="fas fa-file-alt text-primary"></i> Prepare necessary documents
-                        </li>
-                        <li class="list-group-item">
-                            <i class="fas fa-user-tie text-primary"></i> Brief client on expectations
-                        </li>
-                        {% endif %}
-                        
-                        {% if event.event_type == 'Client Meeting' %}
-                        <li class="list-group-item">
-                            <i class="fas fa-clipboard-list text-primary"></i> Prepare agenda for meeting
-                        </li>
-                        <li class="list-group-item">
-                            <i class="fas fa-file-contract text-primary"></i> Review client documents
-                        </li>
-                        {% endif %}
-                        
-                        {% if event.event_type == 'Document Preparation' %}
-                        <li class="list-group-item">
-                            <i class="fas fa-search text-primary"></i> Research relevant precedents
-                        </li>
-                        <li class="list-group-item">
-                            <i class="fas fa-file-alt text-primary"></i> Check document templates
-                        </li>
-                        {% endif %}
-                    </ul>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for similar in similar_events %}
+                        <a href="{{ url_for('events.view', event_id=similar.id) }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ similar.title }}</h6>
+                                <small>{{ similar.start_time.strftime('%d %b') }}</small>
+                            </div>
+                            <small>
+                                <i class="fas fa-map-marker-alt"></i> {{ similar.location or 'No location' }}
+                                {% if similar.event_type %}
+                                | <span class="badge bg-info">{{ similar.event_type }}</span>
+                                {% endif %}
+                            </small>
+                        </a>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
+            {% endif %}
+            
+            {% if event.case %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Case Timeline</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for timeline_event in case_timeline %}
+                        <div class="list-group-item {% if timeline_event.id == event.id %}active{% endif %}">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ timeline_event.title }}</h6>
+                                <small>{{ timeline_event.start_time.strftime('%d %b %Y') }}</small>
+                            </div>
+                            <small>
+                                {% if timeline_event.id != event.id %}
+                                <a href="{{ url_for('events.view', event_id=timeline_event.id) }}">View</a>
+                                {% else %}
+                                <span class="badge bg-light text-dark">Current</span>
+                                {% endif %}
+                            </small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -363,16 +395,11 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                Are you sure you want to delete this event: <strong>{{ event.title }}</strong>? This action cannot be undone.
-                {% if event.is_recurring %}
-                <div class="alert alert-warning mt-3">
-                    <i class="fas fa-exclamation-triangle"></i> This is a recurring event. This will only delete this specific occurrence, not the entire series.
-                </div>
-                {% endif %}
+                Are you sure you want to delete <strong>{{ event.title }}</strong>? This action cannot be undone.
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form action="{{ url_for('events.delete', event_id=event.id) }}" method="POST" style="display: inline;">
+                <form action="{{ url_for('events.delete', event_id=event.id) }}" method="post">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-danger">Delete Event</button>
                 </form>
@@ -380,4 +407,38 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Share via email functionality
+        const shareEmailLink = document.querySelector('[data-action="share-email"]');
+        if (shareEmailLink) {
+            shareEmailLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                const subject = encodeURIComponent('Event: {{ event.title }}');
+                const body = encodeURIComponent(
+                    'Event Details:\n' +
+                    'Title: {{ event.title }}\n' +
+                    'Date: {{ event.start_time.strftime("%A, %B %d, %Y") }}\n' +
+                    'Time: {{ event.start_time.strftime("%H:%M") }}{% if event.end_time %} - {{ event.end_time.strftime("%H:%M") }}{% endif %}\n' +
+                    'Location: {{ event.location or "No location specified" }}\n' +
+                    '{% if event.description %}Description: {{ event.description }}{% endif %}'
+                );
+                window.location.href = `mailto:?subject=${subject}&body=${body}`;
+            });
+        }
+        
+        // Add to external calendar functionality is just a placeholder for now
+        // In a real application, this would generate an .ics file or link to Google Calendar
+        const addToCalendarLink = document.querySelector('[data-action="share-calendar"]');
+        if (addToCalendarLink) {
+            addToCalendarLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                alert('This feature would generate a calendar file (.ics) or redirect to add to Google Calendar.');
+            });
+        }
+    });
+</script>
 {% endblock %}
