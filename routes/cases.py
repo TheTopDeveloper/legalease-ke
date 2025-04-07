@@ -14,7 +14,7 @@ cases_bp = Blueprint('cases', __name__, url_prefix='/cases')
 @login_required
 def index():
     """List all cases"""
-    cases = Case.query.filter_by(user_id=current_user.id).order_by(Case.created_at.desc()).all()
+    cases = db.session.query(Case).filter_by(user_id=current_user.id).order_by(Case.created_at.desc()).all()
     return render_template('cases/index.html', cases=cases)
 
 @cases_bp.route('/create', methods=['GET', 'POST'])
@@ -69,7 +69,7 @@ def create():
         # Add clients if selected
         client_ids = request.form.getlist('clients')
         if client_ids:
-            clients = Client.query.filter(Client.id.in_(client_ids)).all()
+            clients = db.session.query(Client).filter(Client.id.in_(client_ids)).all()
             new_case.clients.extend(clients)
         
         # Save to database
@@ -85,7 +85,7 @@ def create():
             flash(f'Error creating case: {str(e)}', 'error')
     
     # Get clients for selection
-    clients = Client.query.all()
+    clients = db.session.query(Client).all()
     
     return render_template('cases/create.html',
                           court_levels=config.COURT_LEVELS,
@@ -97,7 +97,7 @@ def create():
 @login_required
 def view(case_id):
     """View a specific case"""
-    case = Case.query.get_or_404(case_id)
+    case = db.session.get_or_404(Case, case_id)
     
     # Check permission
     if case.user_id != current_user.id:
@@ -108,11 +108,11 @@ def view(case_id):
     documents = case.documents
     
     # Get upcoming events
-    events = Event.query.filter_by(case_id=case_id).order_by(Event.start_time).all()
+    events = db.session.query(Event).filter_by(case_id=case_id).order_by(Event.start_time).all()
     
     # Get case milestones
     from models import CaseMilestone
-    milestones = CaseMilestone.query.filter_by(case_id=case_id).order_by(CaseMilestone.order_index).all()
+    milestones = db.session.query(CaseMilestone).filter_by(case_id=case_id).order_by(CaseMilestone.order_index).all()
     
     return render_template('cases/view.html', case=case, documents=documents, events=events, milestones=milestones)
 
@@ -120,7 +120,7 @@ def view(case_id):
 @login_required
 def edit(case_id):
     """Edit a case"""
-    case = Case.query.get_or_404(case_id)
+    case = db.session.get_or_404(Case, case_id)
     
     # Check permission
     if case.user_id != current_user.id:
@@ -167,7 +167,7 @@ def edit(case_id):
         # Update clients
         client_ids = request.form.getlist('clients')
         if client_ids:
-            clients = Client.query.filter(Client.id.in_(client_ids)).all()
+            clients = db.session.query(Client).filter(Client.id.in_(client_ids)).all()
             case.clients = clients
         else:
             case.clients = []
@@ -185,7 +185,7 @@ def edit(case_id):
             flash(f'Error updating case: {str(e)}', 'error')
     
     # Get clients for selection
-    clients = Client.query.all()
+    clients = db.session.query(Client).all()
     case_client_ids = [client.id for client in case.clients]
     
     return render_template('cases/edit.html', 
@@ -200,7 +200,7 @@ def edit(case_id):
 @login_required
 def delete(case_id):
     """Delete a case"""
-    case = Case.query.get_or_404(case_id)
+    case = db.session.get_or_404(Case, case_id)
     
     # Check permission
     if case.user_id != current_user.id:
@@ -223,7 +223,7 @@ def delete(case_id):
 @login_required
 def add_document(case_id):
     """Add a document to a case"""
-    case = Case.query.get_or_404(case_id)
+    case = db.session.get_or_404(Case, case_id)
     
     # Check permission
     if case.user_id != current_user.id:
@@ -275,7 +275,7 @@ def add_document(case_id):
 @login_required
 def add_event(case_id):
     """Add an event to a case"""
-    case = Case.query.get_or_404(case_id)
+    case = db.session.get_or_404(Case, case_id)
     
     # Check permission
     if case.user_id != current_user.id:
@@ -372,7 +372,7 @@ def clients():
             flash(f'Error creating client: {str(e)}', 'error')
     
     # Get all clients
-    clients = Client.query.order_by(Client.name).all()
+    clients = db.session.query(Client).order_by(Client.name).all()
     
     return render_template('cases/clients.html', clients=clients)
 
@@ -380,7 +380,7 @@ def clients():
 @login_required
 def edit_client(client_id):
     """Edit a client"""
-    client = Client.query.get_or_404(client_id)
+    client = db.session.get_or_404(Client, client_id)
     
     if request.method == 'POST':
         client.name = request.form.get('name')
@@ -406,7 +406,7 @@ def edit_client(client_id):
 @login_required
 def delete_client(client_id):
     """Delete a client"""
-    client = Client.query.get_or_404(client_id)
+    client = db.session.get_or_404(Client, client_id)
     
     try:
         # Note: This will not delete associated cases, just remove the association
