@@ -6,6 +6,7 @@ from utils.research_assistant import LegalResearchAssistant
 from utils.scraper import KenyaLawScraper
 from utils.vector_db import VectorDatabase
 import json
+import config
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +17,7 @@ research_bp = Blueprint('research', __name__, url_prefix='/research')
 @login_required
 def index():
     """Legal research dashboard"""
-    research_history = LegalResearch.query.filter_by(user_id=current_user.id).order_by(LegalResearch.created_at.desc()).all()
+    research_history = db.session.query(LegalResearch).filter(LegalResearch.user_id == current_user.id).order_by(LegalResearch.created_at.desc()).all()
     return render_template('research/index.html', research_history=research_history)
 
 @research_bp.route('/search', methods=['GET', 'POST'])
@@ -76,7 +77,7 @@ def search():
         # Save to database if case_id is provided
         case_id = request.args.get('case_id')
         if case_id:
-            case = Case.query.get(case_id)
+            case = db.session.get(Case, case_id)
             if case and case.user_id == current_user.id:
                 search_history.case_id = case_id
         
@@ -89,7 +90,7 @@ def search():
             logger.error(f"Error saving search to history: {str(e)}")
     
     # Get cases for selection
-    cases = Case.query.filter_by(user_id=current_user.id).all()
+    cases = db.session.query(Case).filter(Case.user_id == current_user.id).all()
     selected_case_id = request.args.get('case_id')
     
     # Get court levels for filtering
@@ -170,7 +171,7 @@ def research_issue():
             
             # Associate with case if selected
             if case_id:
-                case = Case.query.get(case_id)
+                case = db.session.get(Case, case_id)
                 if case and case.user_id == current_user.id:
                     research_history.case_id = case_id
             
@@ -189,7 +190,7 @@ def research_issue():
             db.session.commit()
     
     # Get cases for selection
-    cases = Case.query.filter_by(user_id=current_user.id).all()
+    cases = db.session.query(Case).filter(Case.user_id == current_user.id).all()
     
     # Get court levels for filtering
     try:
@@ -263,7 +264,7 @@ def analyze_document():
             
             # Associate with case if selected
             if case_id:
-                case = Case.query.get(case_id)
+                case = db.session.get(Case, case_id)
                 if case and case.user_id == current_user.id:
                     research_history.case_id = case_id
             
@@ -282,7 +283,7 @@ def analyze_document():
             db.session.commit()
     
     # Get cases for selection
-    cases = Case.query.filter_by(user_id=current_user.id).all()
+    cases = db.session.query(Case).filter(Case.user_id == current_user.id).all()
     
     # Check if user has enough tokens
     has_enough_tokens = current_user.tokens_available >= 15  # Example token cost for document analysis
@@ -349,7 +350,7 @@ def precedents():
             
             # Associate with case if selected
             if case_id:
-                case = Case.query.get(case_id)
+                case = db.session.get(Case, case_id)
                 if case and case.user_id == current_user.id:
                     research_history.case_id = case_id
             
@@ -368,7 +369,7 @@ def precedents():
             db.session.commit()
     
     # Get cases for selection
-    cases = Case.query.filter_by(user_id=current_user.id).all()
+    cases = db.session.query(Case).filter(Case.user_id == current_user.id).all()
     
     # Get court levels for selection
     try:
@@ -446,7 +447,7 @@ def legal_arguments():
             
             # Associate with case if selected
             if case_id:
-                case = Case.query.get(case_id)
+                case = db.session.get(Case, case_id)
                 if case and case.user_id == current_user.id:
                     research_history.case_id = case_id
             
@@ -468,7 +469,7 @@ def legal_arguments():
             db.session.commit()
     
     # Get cases for selection
-    cases = Case.query.filter_by(user_id=current_user.id).all()
+    cases = db.session.query(Case).filter(Case.user_id == current_user.id).all()
     
     # Check if user has enough tokens
     has_enough_tokens = current_user.tokens_available >= 25  # Example token cost for argument generation
@@ -483,14 +484,17 @@ def legal_arguments():
 @login_required
 def history():
     """View research history"""
-    research_history = LegalResearch.query.filter_by(user_id=current_user.id).order_by(LegalResearch.created_at.desc()).all()
+    research_history = db.session.query(LegalResearch).filter(LegalResearch.user_id == current_user.id).order_by(LegalResearch.created_at.desc()).all()
     return render_template('research/history.html', research_history=research_history)
 
 @research_bp.route('/history/<int:research_id>')
 @login_required
 def view_research(research_id):
     """View a specific research item"""
-    research = LegalResearch.query.get_or_404(research_id)
+    research = db.session.get(LegalResearch, research_id)
+    if not research:
+        flash('Research not found', 'error')
+        return redirect(url_for('research.history'))
     
     # Check permission
     if research.user_id != current_user.id:
@@ -510,7 +514,7 @@ def view_research(research_id):
     # Get related case if available
     related_case = None
     if research.case_id:
-        related_case = Case.query.get(research.case_id)
+        related_case = db.session.get(Case, research.case_id)
     
     # Get formatted context for template
     context = {
@@ -528,7 +532,10 @@ def view_research(research_id):
 @login_required
 def delete_research(research_id):
     """Delete a research item"""
-    research = LegalResearch.query.get_or_404(research_id)
+    research = db.session.get(LegalResearch, research_id)
+    if not research:
+        flash('Research not found', 'error')
+        return redirect(url_for('research.history'))
     
     # Check permission
     if research.user_id != current_user.id:
@@ -547,5 +554,4 @@ def delete_research(research_id):
     
     return redirect(url_for('research.history'))
 
-# Import here to avoid circular imports
-import config
+# config is now imported at the top of the file
