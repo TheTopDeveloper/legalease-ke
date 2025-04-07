@@ -4,12 +4,25 @@ This adds the Ruling, Judge, Tag, RulingReference, RulingAnnotation, and RulingA
 """
 import os
 import sys
+import logging
 import psycopg2
 from datetime import datetime
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, 
+                   format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 def get_db_connection():
     """Get database connection from environment variables"""
     try:
+        # First try to use the DATABASE_URL environment variable
+        database_url = os.environ.get('DATABASE_URL')
+        if database_url:
+            conn = psycopg2.connect(database_url)
+            return conn
+        
+        # Fallback to individual connection parameters
         conn = psycopg2.connect(
             host=os.environ.get('PGHOST'),
             database=os.environ.get('PGDATABASE'),
@@ -19,8 +32,8 @@ def get_db_connection():
         )
         return conn
     except Exception as e:
-        print(f"Error connecting to the database: {e}")
-        sys.exit(1)
+        logger.error(f"Error connecting to the database: {e}")
+        return None
 
 def migrate_ruling_database():
     """Create tables for ruling database and judicial trend analysis"""
@@ -28,6 +41,10 @@ def migrate_ruling_database():
     try:
         # Connect to the database
         conn = get_db_connection()
+        if conn is None:
+            logger.error("Failed to establish database connection")
+            return False
+            
         cursor = conn.cursor()
         
         # Create the tables using SQL
@@ -141,16 +158,28 @@ def migrate_ruling_database():
         
         # Commit the transaction
         conn.commit()
-        print("Successfully created ruling database tables")
+        logger.info("Successfully created ruling database tables")
+        return True
         
     except Exception as e:
-        print(f"Error during migration: {e}")
-        if conn:
-            conn.rollback()
-        sys.exit(1)
+        logger.error(f"Error during migration: {e}")
+        if conn is not None:
+            try:
+                conn.rollback()
+            except Exception as rollback_error:
+                logger.error(f"Error during rollback: {rollback_error}")
+        return False
     finally:
-        if conn:
-            conn.close()
+        if conn is not None:
+            try:
+                conn.close()
+            except Exception as close_error:
+                logger.error(f"Error closing connection: {close_error}")
 
 if __name__ == "__main__":
-    migrate_ruling_database()
+    logger.info("Running rulings database migration...")
+    success = migrate_ruling_database()
+    if success:
+        logger.info("Rulings database migration completed successfully!")
+    else:
+        logger.error("Rulings database migration failed!")

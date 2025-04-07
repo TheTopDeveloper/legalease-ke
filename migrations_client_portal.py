@@ -15,23 +15,35 @@ logger = logging.getLogger(__name__)
 def get_db_connection():
     """Get database connection from environment variables"""
     try:
-        conn = psycopg2.connect(
-            dbname=os.environ.get('PGDATABASE'),
-            user=os.environ.get('PGUSER'),
-            password=os.environ.get('PGPASSWORD'),
-            host=os.environ.get('PGHOST'),
-            port=os.environ.get('PGPORT')
-        )
+        # First try to use DATABASE_URL environment variable
+        db_url = os.environ.get('DATABASE_URL')
+        if db_url:
+            # If DATABASE_URL is available, use it directly
+            conn = psycopg2.connect(db_url)
+        else:
+            # Otherwise, fall back to individual connection parameters
+            conn = psycopg2.connect(
+                dbname=os.environ.get('PGDATABASE'),
+                user=os.environ.get('PGUSER'),
+                password=os.environ.get('PGPASSWORD'),
+                host=os.environ.get('PGHOST'),
+                port=os.environ.get('PGPORT')
+            )
         conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
         return conn
     except Exception as e:
         logger.error(f"Error connecting to database: {e}")
-        raise
+        return None
 
 def migrate_client_portal():
     """Create tables for client portal and update Client model"""
+    conn = None
     try:
         conn = get_db_connection()
+        if conn is None:
+            logger.error("Failed to establish database connection")
+            return False
+            
         cursor = conn.cursor()
         
         # 1. Add has_portal_access column to Client model
@@ -67,15 +79,24 @@ def migrate_client_portal():
         );
         """)
         
-        # 4. Update document_sharing_association foreign key
-        logger.info("Updating document_sharing_association foreign key...")
+        # 4. Check if constraint exists before adding it
+        logger.info("Checking and updating document_sharing_association foreign key...")
         cursor.execute("""
-        ALTER TABLE document_sharing_association
-        ADD CONSTRAINT fk_client_portal_user 
-        FOREIGN KEY (client_portal_user_id) 
-        REFERENCES client_portal_user(id) 
-        ON DELETE CASCADE;
+        SELECT 1 FROM pg_constraint WHERE conname = 'fk_client_portal_user';
         """)
+        constraint_exists = cursor.fetchone()
+        
+        if not constraint_exists:
+            logger.info("Adding foreign key constraint fk_client_portal_user...")
+            cursor.execute("""
+            ALTER TABLE document_sharing_association
+            ADD CONSTRAINT fk_client_portal_user 
+            FOREIGN KEY (client_portal_user_id) 
+            REFERENCES client_portal_user(id) 
+            ON DELETE CASCADE;
+            """)
+        else:
+            logger.info("Foreign key constraint fk_client_portal_user already exists")
         
         # Add index on client portal user email
         logger.info("Adding index on client_portal_user email...")
@@ -97,9 +118,13 @@ def migrate_client_portal():
         return True
     except Exception as e:
         logger.error(f"Error in client portal migration: {e}")
-        if 'conn' in locals() and conn:
-            conn.rollback()
-            conn.close()
+        # Handle connection cleanup if it exists and is not None
+        if conn is not None:
+            try:
+                conn.rollback()
+                conn.close()
+            except Exception as close_err:
+                logger.error(f"Error during connection cleanup: {close_err}")
         return False
 
 if __name__ == "__main__":
