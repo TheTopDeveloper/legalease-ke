@@ -64,6 +64,9 @@ class MinimalCase(db.Model):
     status = db.Column(db.String(20))
     description = db.Column(db.Text)
     user_id = db.Column(db.Integer, db.ForeignKey('minimal_user.id'))
+    # Add the columns from migrations_case.py that might be required
+    outcome = db.Column(db.String(100))
+    closing_date = db.Column(db.DateTime)
     
     # Define the relationship with clients through the association table
     clients = db.relationship('MinimalClient', secondary='minimal_case_client_association',

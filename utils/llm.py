@@ -454,6 +454,7 @@ class OpenAIClient:
             self.client = None
         else:
             try:
+                from openai import OpenAI
                 self.client = OpenAI(api_key=self.api_key)
                 logger.info(f"Initialized OpenAI client with model: {self.model}")
             except Exception as e:
@@ -575,9 +576,11 @@ class CounterCheckLLMClient:
             primary_model: Primary model to use for generation
             secondary_model: Secondary model to use for verification
         """
-        self.base_url = base_url or config.OLLAMA_BASE_URL
-        self.primary_model = primary_model or config.OLLAMA_PRIMARY_MODEL
-        self.secondary_model = secondary_model or config.OLLAMA_SECONDARY_MODEL
+        # Import config here to avoid potential scope issues
+        import config as config_module
+        self.base_url = base_url or config_module.OLLAMA_BASE_URL
+        self.primary_model = primary_model or config_module.OLLAMA_PRIMARY_MODEL
+        self.secondary_model = secondary_model or config_module.OLLAMA_SECONDARY_MODEL
         
         # Create two OllamaClient instances, one for each model
         self.primary_client = OllamaClient(base_url=self.base_url, model=self.primary_model)
@@ -754,8 +757,10 @@ class OllamaClient:
             base_url: Base URL for OLLAMA API
             model: Default model to use
         """
-        self.base_url = base_url or config.OLLAMA_BASE_URL
-        self.model = model or config.OLLAMA_PRIMARY_MODEL
+        # Import config here to avoid potential scope issues
+        import config as config_module
+        self.base_url = base_url or config_module.OLLAMA_BASE_URL
+        self.model = model or config_module.OLLAMA_PRIMARY_MODEL
         logger.info(f"Initialized OLLAMA client with base URL: {self.base_url}, model: {self.model}")
     
     def generate(self, prompt: str, model: Optional[str] = None, temperature: float = 0.7, max_tokens: int = 1000) -> str:
@@ -774,7 +779,9 @@ class OllamaClient:
         model = model or self.model
         
         # Get Ollama version to determine which endpoints to prioritize
-        ollama_version = config.OLLAMA_VERSION
+        # Import config here to avoid potential scope issues
+        import config as config_module
+        ollama_version = config_module.OLLAMA_VERSION
         logger.info(f"Using Ollama version: {ollama_version}")
         
         # Configure API endpoints based on Ollama version
@@ -901,7 +908,9 @@ class OllamaClient:
             List of float values representing the embedding or fallback embedding
         """
         model = model or self.model
-        ollama_version = config.OLLAMA_VERSION
+        # Import config here to avoid potential scope issues
+        import config as config_module
+        ollama_version = config_module.OLLAMA_VERSION
         logger.info(f"Getting embeddings with Ollama version: {ollama_version}")
         
         try:
@@ -993,7 +1002,9 @@ class OllamaClient:
             Generated response
         """
         model = model or self.model
-        ollama_version = config.OLLAMA_VERSION
+        # Import config here to avoid potential scope issues
+        import config as config_module
+        ollama_version = config_module.OLLAMA_VERSION
         logger.info(f"Using chat with Ollama version: {ollama_version}")
         
         # Format messages into a single prompt for models that don't support chat format natively
