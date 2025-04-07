@@ -122,15 +122,15 @@ class Organization(db.Model):
     owner = db.relationship('User', foreign_keys=[owner_id], backref='owned_organizations')
     members = db.relationship('User', secondary=user_organization_association, 
                              backref=db.backref('organizations', lazy='dynamic'))
+                             
+    def is_subscription_active(self):
+        """Check if the organization has an active subscription"""
+        if not self.subscription_end:
+            return False
+        return self.subscription_end > datetime.utcnow() and self.is_active
     
     def __repr__(self):
         return f'<Organization {self.name}>'
-    
-    def is_subscription_active(self):
-        """Check if organization's subscription is active"""
-        if not self.subscription_end:
-            return False
-        return self.subscription_end > datetime.utcnow()
 
 class User(UserMixin, db.Model):
     """User model representing legal professionals in the system"""
@@ -244,6 +244,15 @@ class User(UserMixin, db.Model):
         if not self.active_organization:
             return False
         return self.active_organization.owner_id == self.id
+        
+    def get_full_name(self):
+        """Get user's full name or username if not available"""
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        elif self.first_name:
+            return self.first_name
+        else:
+            return self.username
         
     def __repr__(self):
         return f'<User {self.username}>'

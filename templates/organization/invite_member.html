@@ -1,0 +1,86 @@
+{% extends 'layout.html' %}
+{% block title %}Invite Member - {{ organization.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-user-plus me-2"></i> Invite Member
+        </h2>
+        <div>
+            <a href="{{ url_for('org_roles.index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Organization Roles
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user-plus me-2"></i> Invite New Member to {{ organization.name }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-4">
+                        <h6 class="alert-heading"><i class="fas fa-info-circle me-2"></i> How it works</h6>
+                        <p class="mb-0">
+                            New members will receive an email invitation with login instructions.
+                            Existing users will be added directly to your organization.
+                        </p>
+                    </div>
+                    
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.email.label(class="form-label") }}
+                            {{ form.email(class="form-control") }}
+                            {% if form.email.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.email.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                If this email already exists in the system, the user will be added to your organization.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.first_name.label(class="form-label") }}
+                            {{ form.first_name(class="form-control") }}
+                            {% if form.first_name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.first_name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.last_name.label(class="form-label") }}
+                            {{ form.last_name(class="form-control") }}
+                            {% if form.last_name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.last_name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            {{ form.submit(class="btn btn-primary") }}
+                            <a href="{{ url_for('org_roles.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -70,6 +70,8 @@ from routes.rulings import rulings_bp
 from routes.client_portal import client_portal_bp
 from routes.document_sharing import document_sharing_bp
 from routes.milestone import milestone_bp
+from routes.org_roles import org_roles
+from routes.organization import organization
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(cases_bp)
@@ -88,6 +90,8 @@ app.register_blueprint(rulings_bp, url_prefix='/rulings')
 app.register_blueprint(client_portal_bp)
 app.register_blueprint(document_sharing_bp)
 app.register_blueprint(milestone_bp)
+app.register_blueprint(org_roles)
+app.register_blueprint(organization)
 
 # Load user loader callback
 from models import User, ClientPortalUser

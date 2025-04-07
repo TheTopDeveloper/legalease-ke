@@ -48,6 +48,23 @@
                     <i class="fas fa-search"></i> Legal Research
                 </a>
             </div>
+            
+            {% if current_user.role in ['organization', 'organization_member'] %}
+            <h5 class="mt-4">Organization</h5>
+            <div class="nav flex-column">
+                <a href="{{ url_for('organization.overview') }}" class="nav-link">
+                    <i class="fas fa-building"></i> Overview
+                </a>
+                {% if current_user.is_organization_owner() %}
+                <a href="{{ url_for('organization.invite_member') }}" class="nav-link">
+                    <i class="fas fa-user-plus"></i> Invite Member
+                </a>
+                <a href="{{ url_for('org_roles.roles') }}" class="nav-link">
+                    <i class="fas fa-user-tag"></i> Manage Roles
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
         </div>
     </div>
     
