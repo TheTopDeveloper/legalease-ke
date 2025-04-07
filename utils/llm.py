@@ -363,14 +363,35 @@ def get_llm_client():
     
     # Then try Ollama with counter-checking if enabled
     try:
-        # Test OLLAMA connectivity first with a quick simple request
-        try:
-            url = f"{config.OLLAMA_BASE_URL}/api/version"
-            response = requests.get(url, timeout=2)
-            response.raise_for_status()
-            logger.info(f"Ollama server detected at {config.OLLAMA_BASE_URL}")
-        except Exception as e:
-            logger.warning(f"Ollama server not available at {config.OLLAMA_BASE_URL}: {str(e)}")
+        # List of potential Ollama API endpoints to check
+        endpoints_to_check = [
+            "/api/version",  # Standard version endpoint
+            "/",             # Root endpoint (some Ollama versions respond here)
+            "/api",          # API root
+            "/v1/models",    # OpenAI-compatible endpoint some versions support
+        ]
+        
+        # Log the configured Ollama URL for debugging
+        logger.info(f"Attempting to connect to Ollama at base URL: {config.OLLAMA_BASE_URL}")
+        
+        ollama_detected = False
+        for endpoint in endpoints_to_check:
+            try:
+                url = f"{config.OLLAMA_BASE_URL}{endpoint}"
+                logger.info(f"Testing Ollama API endpoint: {url}")
+                response = requests.get(url, timeout=2)
+                status = response.status_code
+                logger.info(f"Response from {url}: status code {status}")
+                
+                if status < 400:  # Any non-error response means the server is up
+                    logger.info(f"Ollama server detected at {url} (status: {status})")
+                    ollama_detected = True
+                    break
+            except Exception as e:
+                logger.warning(f"Endpoint {url} not available: {str(e)}")
+        
+        if not ollama_detected:
+            logger.warning(f"Ollama server not available at {config.OLLAMA_BASE_URL} - tried multiple endpoints")
             logger.info("Using Mock LLM client instead")
             return mock_client
         
@@ -423,14 +444,21 @@ class OpenAIClient:
             model: Default model to use
         """
         self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
-        self.model = model or "gpt-3.5-turbo"
+        # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
+        # do not change this unless explicitly requested by the user
+        self.model = model or "gpt-4o"  
+        self.embedding_model = "text-embedding-3-small"
         
         if not self.api_key:
             logger.warning("No OpenAI API key provided. Set OPENAI_API_KEY environment variable.")
             self.client = None
         else:
-            self.client = OpenAI(api_key=self.api_key)
-            logger.info(f"Initialized OpenAI client with model: {self.model}")
+            try:
+                self.client = OpenAI(api_key=self.api_key)
+                logger.info(f"Initialized OpenAI client with model: {self.model}")
+            except Exception as e:
+                logger.error(f"Failed to initialize OpenAI client: {str(e)}")
+                self.client = None
     
     def generate(self, prompt: str, model: Optional[str] = None, temperature: float = 0.7, max_tokens: int = 1000) -> str:
         """
@@ -483,7 +511,8 @@ class OpenAIClient:
             logger.error("OpenAI client not initialized. API key missing.")
             return []
             
-        embedding_model = model or "text-embedding-ada-002"
+        # Use the latest text-embedding-3-small model (released after knowledge cutoff)
+        embedding_model = model or self.embedding_model
         
         try:
             response = self.client.embeddings.create(
@@ -744,49 +773,83 @@ class OllamaClient:
         """
         model = model or self.model
         
-        try:
-            # First try the standard Ollama API endpoint
-            url = f"{self.base_url}/api/generate"
-            payload = {
-                "model": model,
-                "prompt": prompt,
-                "stream": False,
-                "options": {
+        # Try multiple API endpoints in sequence from most specific to fallbacks
+        api_configs = [
+            # Standard Ollama API
+            {
+                "url": f"{self.base_url}/api/generate",
+                "payload": {
+                    "model": model,
+                    "prompt": prompt,
+                    "stream": False,
+                    "options": {
+                        "temperature": temperature,
+                        "num_predict": max_tokens
+                    }
+                },
+                "extract": lambda data: data.get("response", "")
+            },
+            # Newer Ollama chat API
+            {
+                "url": f"{self.base_url}/api/chat",
+                "payload": {
+                    "model": model,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "stream": False,
+                    "options": {
+                        "temperature": temperature,
+                        "num_predict": max_tokens
+                    }
+                },
+                "extract": lambda data: data.get("message", {}).get("content", "")
+            },
+            # OpenAI-compatible endpoint (newer Ollama versions)
+            {
+                "url": f"{self.base_url}/v1/chat/completions",
+                "payload": {
+                    "model": model,
+                    "messages": [{"role": "user", "content": prompt}],
                     "temperature": temperature,
-                    "num_predict": max_tokens
-                }
+                    "max_tokens": max_tokens
+                },
+                "extract": lambda data: data.get("choices", [{}])[0].get("message", {}).get("content", "")
+            },
+            # OpenAI-compatible completions endpoint (fallback)
+            {
+                "url": f"{self.base_url}/v1/completions",
+                "payload": {
+                    "model": model,
+                    "prompt": prompt,
+                    "temperature": temperature,
+                    "max_tokens": max_tokens
+                },
+                "extract": lambda data: data.get("choices", [{}])[0].get("text", "")
             }
-            
+        ]
+        
+        errors = []
+        for config in api_configs:
             try:
-                response = requests.post(url, json=payload, timeout=30)
+                logger.info(f"Trying Ollama endpoint: {config['url']}")
+                response = requests.post(
+                    config["url"], 
+                    json=config["payload"], 
+                    timeout=30
+                )
                 response.raise_for_status()
                 data = response.json()
-                return data.get("response", "")
-            except requests.exceptions.HTTPError as e:
-                if e.response.status_code == 404:
-                    # If 404, try the newer Ollama API format (Ollama v0.1.14+)
-                    logger.info(f"Trying newer Ollama API format (404 on {url})")
-                    url = f"{self.base_url}/api/chat"
-                    payload = {
-                        "model": model,
-                        "messages": [{"role": "user", "content": prompt}],
-                        "stream": False,
-                        "options": {
-                            "temperature": temperature,
-                            "num_predict": max_tokens
-                        }
-                    }
-                    response = requests.post(url, json=payload, timeout=30)
-                    response.raise_for_status()
-                    data = response.json()
-                    return data.get("message", {}).get("content", "")
-                else:
-                    raise
-            
-        except Exception as e:
-            error_msg = f"Error generating response with OLLAMA: {str(e)}"
-            logger.error(f"Error generating text with OLLAMA: {str(e)}")
-            return error_msg
+                result = config["extract"](data)
+                logger.info(f"Successfully generated text using {config['url']}")
+                return result
+            except Exception as e:
+                error_msg = f"Error with {config['url']}: {str(e)}"
+                logger.warning(error_msg)
+                errors.append(error_msg)
+        
+        # If we've tried all endpoints and none worked, return a consolidated error
+        error_msg = f"Error generating response with OLLAMA - all endpoints failed: {'; '.join(errors)}"
+        logger.error(f"Error generating text with OLLAMA - all endpoints failed")
+        return error_msg
     
     def get_embedding(self, text: str, model: Optional[str] = None) -> List[float]:
         """
