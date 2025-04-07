@@ -42,10 +42,15 @@ class VectorDatabase:
     def _create_collections(self):
         """Create collections for different document types"""
         try:
-            # Define embedding function using OLLAMA
-            self.embedding_function = embedding_functions.UserDefinedEmbeddingFunction(
-                lambda texts: [self.llm_client.get_embedding(text) for text in texts]
-            )
+            # Define custom embedding function using our LLM client
+            class CustomEmbeddingFunction(embedding_functions.EmbeddingFunction):
+                def __init__(self, llm_client):
+                    self.llm_client = llm_client
+                
+                def __call__(self, texts):
+                    return [self.llm_client.get_embedding(text) for text in texts]
+                
+            self.embedding_function = CustomEmbeddingFunction(self.llm_client)
             
             # Create collections for different document types
             self.case_collection = self._get_or_create_collection("cases")

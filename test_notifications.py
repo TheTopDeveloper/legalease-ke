@@ -1,123 +1,327 @@
 """
-Test script for notification functionality.
-Run this script to verify that SMS notifications are working correctly.
+Test script for the notification system.
+This script tests the functionality of SMS and email notifications.
 """
+import unittest
+from unittest.mock import patch, MagicMock
 import os
-import sys
-from datetime import datetime, timedelta
-from app import app, db
-from models import User, Case, Event, Document
-from utils.notification_service import notification_service
-from utils.send_message import send_twilio_message
+import json
+import datetime
 
-def test_notifications():
-    """Test notification functionality"""
-    print("=== Notification System Test ===")
+# Import the necessary modules
+from app import db, app
+from models import User, Notification, Case, Event, Client
+from utils.notifications import (
+    SMSNotifier,
+    EmailNotifier,
+    NotificationManager,
+    NotificationType
+)
+
+class TestNotifications(unittest.TestCase):
+    """Test case for the notification system"""
     
-    # Check which SMS service is being used
-    service_type = type(notification_service.sms_service).__name__
-    print(f"Using SMS service: {service_type}")
+    def setUp(self):
+        """Set up test environment before each test"""
+        # Configure Flask app for testing
+        app.config['TESTING'] = True
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+        
+        # Create app context
+        self.app_context = app.app_context()
+        self.app_context.push()
+        
+        # Create database tables
+        db.create_all()
+        
+        # Create test user
+        self.test_user = User(
+            username='testuser',
+            email='test@example.com',
+            phone='1234567890'
+        )
+        self.test_user.set_password('testpassword')
+        db.session.add(self.test_user)
+        
+        # Create test client
+        self.test_client = Client(
+            name='Test Client',
+            email='client@example.com',
+            phone='0987654321',
+            address='123 Test Street',
+            user_id=1
+        )
+        db.session.add(self.test_client)
+        
+        # Create test case
+        self.test_case = Case(
+            title='Notification Test Case',
+            case_number='CV-2023-007',
+            court='Supreme Court',
+            filing_date=datetime.datetime.now(),
+            status='Active',
+            description='This is a test case for notifications',
+            client_id=1,
+            user_id=1
+        )
+        db.session.add(self.test_case)
+        
+        # Create test event
+        self.test_event = Event(
+            title='Test Hearing',
+            event_type='Hearing',
+            start_time=datetime.datetime.now() + datetime.timedelta(days=1),
+            end_time=datetime.datetime.now() + datetime.timedelta(days=1, hours=2),
+            location='Court Room 5',
+            description='Test hearing for notification',
+            case_id=1,
+            user_id=1
+        )
+        db.session.add(self.test_event)
+        db.session.commit()
     
-    if service_type == "MockSMSService":
-        print("NOTE: Using mock SMS service for testing (Twilio unavailable or not configured)")
-        print("To use Twilio, set the following environment variables:")
-        print("  - TWILIO_ACCOUNT_SID")
-        print("  - TWILIO_AUTH_TOKEN")
-        print("  - TWILIO_PHONE_NUMBER")
+    def tearDown(self):
+        """Clean up after each test"""
+        # Remove database tables
+        db.session.remove()
+        db.drop_all()
+        
+        # Remove app context
+        self.app_context.pop()
     
-    # Test if we have any users in the system
-    print("\nChecking for existing users...")
-    with app.app_context():
-        user_count = User.query.count()
-        print(f"Found {user_count} users in the system")
+    @patch('utils.notifications.SMSNotifier.send_sms')
+    def test_sms_notification(self, mock_send_sms):
+        """Test sending SMS notifications"""
+        # Configure mock
+        mock_send_sms.return_value = True
         
-        # Get or create a test user
-        test_user = User.query.filter_by(username="test").first()
-        if not test_user:
-            print("Creating test user...")
-            from werkzeug.security import generate_password_hash
-            test_user = User(
-                username="test",
-                email="test@example.com",
-                password_hash=generate_password_hash("test123"),
-                role="individual",
-                account_type="basic",
-                first_name="Test",
-                last_name="User",
-                phone="0700123456"  # Kenyan mobile format
-            )
-            db.session.add(test_user)
-            db.session.commit()
-            print("Test user created successfully")
-        else:
-            print(f"Using existing test user: {test_user.username}")
-            
-            # Ensure test user has a phone number
-            if not test_user.phone:
-                test_user.phone = "0700123456"
-                db.session.commit()
-                print("Added phone number to test user")
+        # Create SMS notifier
+        sms_notifier = SMSNotifier()
         
-        # Create test case if needed
-        test_case = Case.query.filter_by(user_id=test_user.id).first()
-        if not test_case:
-            print("Creating test case...")
-            test_case = Case(
-                case_number="TEST-001",
-                title="Test Legal Case",
-                description="This is a test case for notification testing",
-                court_level="High Court",
-                case_type="Civil",
-                practice_area="Commercial",
-                filing_date=datetime.utcnow().date(),
-                status="Active",
-                court_stage="Mention",
-                next_court_date=datetime.utcnow() + timedelta(days=7),
-                user_id=test_user.id
-            )
-            db.session.add(test_case)
-            db.session.commit()
-            print("Test case created successfully")
+        # Send test notification
+        result = sms_notifier.send_notification(
+            recipient=self.test_user.phone,
+            subject="Test Notification",
+            message="This is a test SMS notification"
+        )
         
-        # Create test event if needed
-        test_event = Event.query.filter_by(case_id=test_case.id).first()
-        if not test_event:
-            print("Creating test event...")
-            test_event = Event(
-                title="Test Court Appearance",
-                description="Test court appearance for notification testing",
-                event_type="Court Appearance",
-                start_time=datetime.utcnow() + timedelta(days=2),
-                end_time=datetime.utcnow() + timedelta(days=2, hours=2),
-                location="Nairobi High Court",
-                case_id=test_case.id,
-                user_id=test_user.id
-            )
-            db.session.add(test_event)
-            db.session.commit()
-            print("Test event created successfully")
+        # Verify notification was sent
+        self.assertTrue(result, "SMS notification should be sent successfully")
+        mock_send_sms.assert_called_once_with(
+            to_phone=self.test_user.phone,
+            message="This is a test SMS notification"
+        )
+    
+    @patch('utils.notifications.EmailNotifier.send_email')
+    def test_email_notification(self, mock_send_email):
+        """Test sending email notifications"""
+        # Configure mock
+        mock_send_email.return_value = True
         
-        # Send a test notification
-        print("\nSending test court reminder...")
-        result = notification_service.send_court_date_reminder(test_user, test_case, test_event)
+        # Create email notifier
+        email_notifier = EmailNotifier()
         
-        if result.get('success', False):
-            print(f"✓ Notification sent successfully (ID: {result.get('message_id')})")
-        else:
-            print(f"✗ Failed to send notification: {result.get('error', 'Unknown error')}")
+        # Send test notification
+        result = email_notifier.send_notification(
+            recipient=self.test_user.email,
+            subject="Test Email Notification",
+            message="This is a test email notification",
+            attachments=None
+        )
         
-        # Get sent messages
-        sent_messages = notification_service.sms_service.get_sent_messages(test_user.phone)
-        print(f"\nSent messages ({len(sent_messages)}):")
+        # Verify notification was sent
+        self.assertTrue(result, "Email notification should be sent successfully")
+        mock_send_email.assert_called_once_with(
+            to_email=self.test_user.email,
+            subject="Test Email Notification",
+            message="This is a test email notification",
+            attachments=None
+        )
+    
+    @patch('utils.notifications.SMSNotifier.send_sms')
+    @patch('utils.notifications.EmailNotifier.send_email')
+    def test_notification_manager(self, mock_send_email, mock_send_sms):
+        """Test notification manager with different notification types"""
+        # Configure mocks
+        mock_send_sms.return_value = True
+        mock_send_email.return_value = True
         
-        for msg in sent_messages:
-            print(f"  - To: {msg['to']}")
-            print(f"    Message: {msg['message']}")
-            print(f"    Sent at: {msg['timestamp']}")
-            print(f"    ID: {msg['message_id']}")
-            print()
+        # Create notification manager
+        notification_manager = NotificationManager()
         
-        print("Test completed successfully!")
+        # Test SMS notification
+        notification_manager.send_notification(
+            notification_type=NotificationType.SMS,
+            recipient=self.test_user.phone,
+            subject="Test SMS",
+            message="This is a test SMS notification"
+        )
+        
+        # Verify SMS was sent
+        mock_send_sms.assert_called_once()
+        
+        # Test email notification
+        notification_manager.send_notification(
+            notification_type=NotificationType.EMAIL,
+            recipient=self.test_user.email,
+            subject="Test Email",
+            message="This is a test email notification"
+        )
+        
+        # Verify email was sent
+        mock_send_email.assert_called_once()
+    
+    def test_notification_model(self):
+        """Test creating and retrieving notifications in the database"""
+        # Create a test notification
+        test_notification = Notification(
+            user_id=self.test_user.id,
+            case_id=self.test_case.id,
+            title="Database Notification Test",
+            message="This is a test notification stored in the database",
+            notification_type="SYSTEM",
+            is_read=False
+        )
+        db.session.add(test_notification)
+        db.session.commit()
+        
+        # Retrieve notification
+        saved_notification = Notification.query.filter_by(title="Database Notification Test").first()
+        
+        # Verify notification details
+        self.assertIsNotNone(saved_notification, "Notification should be saved to database")
+        self.assertEqual(saved_notification.user_id, self.test_user.id, "User ID should match")
+        self.assertEqual(saved_notification.case_id, self.test_case.id, "Case ID should match")
+        self.assertEqual(saved_notification.message, "This is a test notification stored in the database", "Message should match")
+        self.assertEqual(saved_notification.notification_type, "SYSTEM", "Type should match")
+        self.assertFalse(saved_notification.is_read, "Notification should be unread")
+        
+        # Test marking as read
+        saved_notification.is_read = True
+        db.session.commit()
+        
+        # Verify update
+        updated_notification = Notification.query.get(saved_notification.id)
+        self.assertTrue(updated_notification.is_read, "Notification should be marked as read")
+    
+    @patch('utils.notifications.NotificationManager.send_notification')
+    def test_event_reminder_notification(self, mock_send_notification):
+        """Test sending event reminder notifications"""
+        # Configure mock
+        mock_send_notification.return_value = True
+        
+        # Create notification manager with mocked methods
+        notification_manager = NotificationManager()
+        
+        # Send event reminder
+        notification_manager.send_event_reminder(
+            event=self.test_event,
+            user=self.test_user,
+            notification_type=NotificationType.EMAIL
+        )
+        
+        # Verify notification was sent with correct details
+        mock_send_notification.assert_called_once()
+        args = mock_send_notification.call_args[1]
+        
+        self.assertEqual(args['notification_type'], NotificationType.EMAIL, "Notification type should be EMAIL")
+        self.assertEqual(args['recipient'], self.test_user.email, "Recipient should be user email")
+        self.assertIn('Test Hearing', args['subject'], "Subject should include event title")
+        self.assertIn('Court Room 5', args['message'], "Message should include event location")
+        
+        # Test saving reminder to database
+        notification = Notification(
+            user_id=self.test_user.id,
+            event_id=self.test_event.id,
+            case_id=self.test_case.id,
+            title=f"Reminder: {self.test_event.title}",
+            message=f"Reminder for your event: {self.test_event.title} at {self.test_event.location}",
+            notification_type="EVENT_REMINDER",
+            is_read=False
+        )
+        db.session.add(notification)
+        db.session.commit()
+        
+        # Verify notification was saved
+        saved_reminder = Notification.query.filter_by(event_id=self.test_event.id).first()
+        self.assertIsNotNone(saved_reminder, "Event reminder should be saved to database")
+        self.assertEqual(saved_reminder.notification_type, "EVENT_REMINDER", "Type should be EVENT_REMINDER")
+    
+    @patch('utils.notifications.NotificationManager.send_notification')
+    def test_case_status_notification(self, mock_send_notification):
+        """Test sending case status change notifications"""
+        # Configure mock
+        mock_send_notification.return_value = True
+        
+        # Create notification manager with mocked methods
+        notification_manager = NotificationManager()
+        
+        # Update case status
+        old_status = self.test_case.status
+        new_status = "Postponed"
+        self.test_case.status = new_status
+        db.session.commit()
+        
+        # Send case status notification
+        notification_manager.send_case_status_notification(
+            case=self.test_case,
+            old_status=old_status,
+            new_status=new_status,
+            user=self.test_user,
+            notification_type=NotificationType.SMS
+        )
+        
+        # Verify notification was sent with correct details
+        mock_send_notification.assert_called_once()
+        args = mock_send_notification.call_args[1]
+        
+        self.assertEqual(args['notification_type'], NotificationType.SMS, "Notification type should be SMS")
+        self.assertEqual(args['recipient'], self.test_user.phone, "Recipient should be user phone")
+        self.assertIn('Status Update', args['subject'], "Subject should indicate status update")
+        self.assertIn('Postponed', args['message'], "Message should include new status")
+        
+        # Test saving status notification to database
+        notification = Notification(
+            user_id=self.test_user.id,
+            case_id=self.test_case.id,
+            title=f"Status Update: {self.test_case.title}",
+            message=f"Case status changed from {old_status} to {new_status}",
+            notification_type="STATUS_CHANGE",
+            is_read=False
+        )
+        db.session.add(notification)
+        db.session.commit()
+        
+        # Verify notification was saved
+        saved_notification = Notification.query.filter_by(notification_type="STATUS_CHANGE").first()
+        self.assertIsNotNone(saved_notification, "Status notification should be saved to database")
+        self.assertEqual(saved_notification.case_id, self.test_case.id, "Case ID should match")
+    
+    @patch('utils.notifications.NotificationManager.send_notification')
+    def test_client_notification(self, mock_send_notification):
+        """Test sending notifications to clients"""
+        # Configure mock
+        mock_send_notification.return_value = True
+        
+        # Create notification manager with mocked methods
+        notification_manager = NotificationManager()
+        
+        # Send notification to client
+        notification_manager.send_client_notification(
+            client=self.test_client,
+            subject="Document Shared",
+            message="A new document has been shared with you",
+            notification_type=NotificationType.EMAIL
+        )
+        
+        # Verify notification was sent with correct details
+        mock_send_notification.assert_called_once()
+        args = mock_send_notification.call_args[1]
+        
+        self.assertEqual(args['notification_type'], NotificationType.EMAIL, "Notification type should be EMAIL")
+        self.assertEqual(args['recipient'], self.test_client.email, "Recipient should be client email")
+        self.assertEqual(args['subject'], "Document Shared", "Subject should match")
+        self.assertEqual(args['message'], "A new document has been shared with you", "Message should match")
 
 if __name__ == "__main__":
-    test_notifications()
+    unittest.main()
