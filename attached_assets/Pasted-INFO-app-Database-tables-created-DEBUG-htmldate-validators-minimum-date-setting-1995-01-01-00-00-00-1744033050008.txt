@@ -1,0 +1,48 @@
+INFO:app:Database tables created
+DEBUG:htmldate.validators:minimum date setting: 1995-01-01 00:00:00
+INFO:utils.notification_service:Using Mock SMS service for notifications
+INFO:utils.llm:Initialized OLLAMA client with base URL: http://localhost:11434, model: llama3:latest
+INFO:utils.llm:Legal Assistant initialized
+INFO:utils.llm:Initialized Mock LLM client (fallback responses)
+INFO:utils.llm:Attempting to connect to Ollama at base URL: http://localhost:11434
+INFO:utils.llm:Testing Ollama API endpoint: http://localhost:11434/api/version
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): localhost:11434
+DEBUG:urllib3.connectionpool:http://localhost:11434 "GET /api/version HTTP/1.1" 200 19
+INFO:utils.llm:Response from http://localhost:11434/api/version: status code 200
+INFO:utils.llm:Ollama server detected at http://localhost:11434/api/version (status: 200)
+INFO:utils.llm:Initialized OLLAMA client with base URL: http://localhost:11434, model: llama3:latest
+INFO:utils.llm:Initialized OLLAMA client with base URL: http://localhost:11434, model: deepseek:latest
+INFO:utils.llm:Initialized CounterCheck client with models: llama3:latest (primary) and deepseek:latest (secondary)
+INFO:utils.llm:Using Ollama version: 0.6.4
+INFO:utils.llm:Trying Ollama endpoint: http://localhost:11434/api/generate
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): localhost:11434
+DEBUG:urllib3.connectionpool:http://localhost:11434 "POST /api/generate HTTP/1.1" 404 43
+WARNING:utils.llm:Error with http://localhost:11434/api/generate: 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+INFO:utils.llm:Trying Ollama endpoint: http://localhost:11434/api/chat
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): localhost:11434
+DEBUG:urllib3.connectionpool:http://localhost:11434 "POST /api/chat HTTP/1.1" 404 67
+WARNING:utils.llm:Error with http://localhost:11434/api/chat: 404 Client Error: Not Found for url: http://localhost:11434/api/chat
+ERROR:utils.llm:Error generating text with OLLAMA - all endpoints failed
+INFO:utils.llm:Using Ollama version: 0.6.4
+INFO:utils.llm:Trying Ollama endpoint: http://localhost:11434/api/generate
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): localhost:11434
+DEBUG:urllib3.connectionpool:http://localhost:11434 "POST /api/generate HTTP/1.1" 404 45
+WARNING:utils.llm:Error with http://localhost:11434/api/generate: 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+INFO:utils.llm:Trying Ollama endpoint: http://localhost:11434/api/chat
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): localhost:11434
+DEBUG:urllib3.connectionpool:http://localhost:11434 "POST /api/chat HTTP/1.1" 404 69
+WARNING:utils.llm:Error with http://localhost:11434/api/chat: 404 Client Error: Not Found for url: http://localhost:11434/api/chat
+ERROR:utils.llm:Error generating text with OLLAMA - all endpoints failed
+INFO:utils.llm:Using Counter-Check LLM client with multiple models
+INFO:utils.llm:Legal Assistant initialized
+/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/sqlalchemy/sql/schema.py:3625: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  return util.wrap_callable(lambda ctx: fn(), fn)  # type: ignore
+INFO:utils.llm:Initialized Mock LLM client (fallback responses)
+Document association test passed!
+/home/prodai/Desktop/legalease-ke/env/lib/python3.12/site-packages/flask_sqlalchemy/extension.py:881: SAWarning: Can't sort tables for DROP; an unresolvable foreign key dependency exists between tables: organization, user; and backend does not support ALTER.  To restore at least a partial sort, apply use_alter=True to ForeignKey and ForeignKeyConstraint objects involved in the cycle to mark these as known cycles that will be ignored.
+  getattr(metadata, op_name)(bind=engine)
+.
+----------------------------------------------------------------------
+Ran 1 test in 0.243s
+
+OK

@@ -785,10 +785,32 @@ class OllamaClient:
         logger.info(f"Using Ollama version: {ollama_version}")
         
         # Configure API endpoints based on Ollama version
-        # For version 0.6.x, prioritize standard endpoints
+        # For version 0.6.4+, prioritize OpenAI-compatible endpoints
         if ollama_version.startswith("0.6"):
             api_configs = [
-                # Standard Ollama API for 0.6.x - primary endpoint for text generation
+                # OpenAI-compatible endpoint for 0.6.4+ (primary)
+                {
+                    "url": f"{self.base_url}/v1/chat/completions",
+                    "payload": {
+                        "model": model,
+                        "messages": [{"role": "user", "content": prompt}],
+                        "temperature": temperature,
+                        "max_tokens": max_tokens
+                    },
+                    "extract": lambda data: data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                },
+                # OpenAI-compatible completions endpoint (fallback)
+                {
+                    "url": f"{self.base_url}/v1/completions",
+                    "payload": {
+                        "model": model,
+                        "prompt": prompt,
+                        "temperature": temperature,
+                        "max_tokens": max_tokens
+                    },
+                    "extract": lambda data: data.get("choices", [{}])[0].get("text", "")
+                },
+                # Legacy API for older 0.6.x versions - only as fallback
                 {
                     "url": f"{self.base_url}/api/generate",
                     "payload": {
@@ -802,7 +824,7 @@ class OllamaClient:
                     },
                     "extract": lambda data: data.get("response", "")
                 },
-                # Chat API for 0.6.x - alternative endpoint
+                # Legacy chat API for older 0.6.x versions - only as fallback
                 {
                     "url": f"{self.base_url}/api/chat",
                     "payload": {
@@ -914,31 +936,57 @@ class OllamaClient:
         logger.info(f"Getting embeddings with Ollama version: {ollama_version}")
         
         try:
-            # For Ollama 0.6.x
+            # For Ollama 0.6.x - 0.6.4+ uses OpenAI-compatible endpoints
             if ollama_version.startswith("0.6"):
-                # In 0.6.4, embeddings are accessed via /api/embeddings with 'prompt' field
-                url = f"{self.base_url}/api/embeddings"
-                logger.info(f"Using Ollama 0.6.x embeddings endpoint: {url}")
+                # Try multiple embedding endpoints in order of preference
+                embedding_endpoints = [
+                    # OpenAI-compatible endpoint for 0.6.4+
+                    {
+                        "url": f"{self.base_url}/v1/embeddings",
+                        "payload": {
+                            "model": model,
+                            "input": text
+                        },
+                        "extract": lambda data: data.get("data", [{}])[0].get("embedding", None)
+                    },
+                    # Legacy endpoint with 'prompt' field
+                    {
+                        "url": f"{self.base_url}/api/embeddings",
+                        "payload": {
+                            "model": model,
+                            "prompt": text
+                        },
+                        "extract": lambda data: data.get("embedding", None)
+                    },
+                    # Legacy endpoint with 'input' field
+                    {
+                        "url": f"{self.base_url}/api/embeddings",
+                        "payload": {
+                            "model": model,
+                            "input": text
+                        },
+                        "extract": lambda data: data.get("embedding", None)
+                    }
+                ]
                 
-                # The 'prompt' field is used in 0.6.x
-                payload = {
-                    "model": model,
-                    "prompt": text
-                }
+                for endpoint in embedding_endpoints:
+                    try:
+                        logger.info(f"Trying embeddings endpoint: {endpoint['url']}")
+                        response = requests.post(endpoint["url"], json=endpoint["payload"], timeout=10)
+                        response.raise_for_status()
+                        data = response.json()
+                        embedding = endpoint["extract"](data)
+                        if embedding:
+                            logger.info(f"Successfully retrieved embedding from {endpoint['url']}")
+                            return embedding
+                        else:
+                            logger.warning(f"No embedding data found in response from {endpoint['url']}")
+                    except Exception as e:
+                        logger.warning(f"Error with embeddings endpoint {endpoint['url']}: {str(e)}")
                 
-                try:
-                    response = requests.post(url, json=payload, timeout=10)
-                    response.raise_for_status()
-                    data = response.json()
-                    if "embedding" in data:
-                        logger.info(f"Successfully retrieved embedding from {url} (embedding field)")
-                        return data["embedding"]
-                    else:
-                        logger.warning(f"Unexpected response format from {url}: missing 'embedding' field")
-                        return [0.0] * 384  # Return zero vector as fallback
-                except Exception as e:
-                    logger.error(f"Error with Ollama 0.6.x embeddings: {str(e)}")
-                    return [0.0] * 384  # Return zero vector as fallback
+                # If all endpoints fail, return a fallback vector
+                logger.error("All embedding endpoints failed - returning fallback vector")
+                return [0.0] * 384  # Return zero vector as fallback
             
             # For other Ollama versions - try various formats
             # Try standard Ollama embeddings API first
@@ -1010,10 +1058,21 @@ class OllamaClient:
         # Format messages into a single prompt for models that don't support chat format natively
         prompt = self._format_chat_messages(messages)
         
-        # For Ollama 0.6.x, try specific endpoints in order
+        # For Ollama 0.6.4+, prioritize OpenAI-compatible endpoints
         if ollama_version.startswith("0.6"):
             api_configs = [
-                # Chat API for 0.6.x - primary endpoint for chat
+                # OpenAI-compatible endpoint for 0.6.4+ (primary)
+                {
+                    "url": f"{self.base_url}/v1/chat/completions",
+                    "payload": {
+                        "model": model,
+                        "messages": messages,
+                        "temperature": temperature,
+                        "max_tokens": max_tokens
+                    },
+                    "extract": lambda data: data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                },
+                # Legacy chat API for older 0.6.x versions (fallback)
                 {
                     "url": f"{self.base_url}/api/chat",
                     "payload": {
@@ -1027,7 +1086,18 @@ class OllamaClient:
                     },
                     "extract": lambda data: data.get("message", {}).get("content", "")
                 },
-                # Fallback to generate API for 0.6.x
+                # Fallback to OpenAI-compatible completions API
+                {
+                    "url": f"{self.base_url}/v1/completions",
+                    "payload": {
+                        "model": model,
+                        "prompt": prompt,
+                        "temperature": temperature,
+                        "max_tokens": max_tokens
+                    },
+                    "extract": lambda data: data.get("choices", [{}])[0].get("text", "")
+                },
+                # Final fallback to generate API for older 0.6.x
                 {
                     "url": f"{self.base_url}/api/generate",
                     "payload": {
