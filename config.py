@@ -13,6 +13,7 @@ KENYALAW_BASE_URL = "https://new.kenyalaw.org"
 
 # OLLAMA configuration
 OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")  # Make sure this matches your Ollama server address
+OLLAMA_VERSION = os.environ.get("OLLAMA_VERSION", "0.6.4")  # Current version running on your server
 OLLAMA_PRIMARY_MODEL = os.environ.get("OLLAMA_PRIMARY_MODEL", "llama3:latest")  # Change to the model name you have installed
 OLLAMA_SECONDARY_MODEL = os.environ.get("OLLAMA_SECONDARY_MODEL", "deepseek:latest")  # Change to an alternative model you have installed
 

@@ -773,59 +773,97 @@ class OllamaClient:
         """
         model = model or self.model
         
-        # Try multiple API endpoints in sequence from most specific to fallbacks
-        api_configs = [
-            # Standard Ollama API
-            {
-                "url": f"{self.base_url}/api/generate",
-                "payload": {
-                    "model": model,
-                    "prompt": prompt,
-                    "stream": False,
-                    "options": {
+        # Get Ollama version to determine which endpoints to prioritize
+        ollama_version = config.OLLAMA_VERSION
+        logger.info(f"Using Ollama version: {ollama_version}")
+        
+        # Configure API endpoints based on Ollama version
+        # For version 0.6.x, prioritize standard endpoints
+        if ollama_version.startswith("0.6"):
+            api_configs = [
+                # Standard Ollama API for 0.6.x - primary endpoint for text generation
+                {
+                    "url": f"{self.base_url}/api/generate",
+                    "payload": {
+                        "model": model,
+                        "prompt": prompt,
+                        "stream": False,
+                        "options": {
+                            "temperature": temperature,
+                            "num_predict": max_tokens
+                        }
+                    },
+                    "extract": lambda data: data.get("response", "")
+                },
+                # Chat API for 0.6.x - alternative endpoint
+                {
+                    "url": f"{self.base_url}/api/chat",
+                    "payload": {
+                        "model": model,
+                        "messages": [{"role": "user", "content": prompt}],
+                        "stream": False,
+                        "options": {
+                            "temperature": temperature,
+                            "num_predict": max_tokens
+                        }
+                    },
+                    "extract": lambda data: data.get("message", {}).get("content", "")
+                }
+            ]
+        else:
+            # For other versions, try a broader range of endpoints
+            api_configs = [
+                # Standard Ollama API
+                {
+                    "url": f"{self.base_url}/api/generate",
+                    "payload": {
+                        "model": model,
+                        "prompt": prompt,
+                        "stream": False,
+                        "options": {
+                            "temperature": temperature,
+                            "num_predict": max_tokens
+                        }
+                    },
+                    "extract": lambda data: data.get("response", "")
+                },
+                # Newer Ollama chat API
+                {
+                    "url": f"{self.base_url}/api/chat",
+                    "payload": {
+                        "model": model,
+                        "messages": [{"role": "user", "content": prompt}],
+                        "stream": False,
+                        "options": {
+                            "temperature": temperature,
+                            "num_predict": max_tokens
+                        }
+                    },
+                    "extract": lambda data: data.get("message", {}).get("content", "")
+                },
+                # OpenAI-compatible endpoint (newer Ollama versions)
+                {
+                    "url": f"{self.base_url}/v1/chat/completions",
+                    "payload": {
+                        "model": model,
+                        "messages": [{"role": "user", "content": prompt}],
                         "temperature": temperature,
-                        "num_predict": max_tokens
-                    }
+                        "max_tokens": max_tokens
+                    },
+                    "extract": lambda data: data.get("choices", [{}])[0].get("message", {}).get("content", "")
                 },
-                "extract": lambda data: data.get("response", "")
-            },
-            # Newer Ollama chat API
-            {
-                "url": f"{self.base_url}/api/chat",
-                "payload": {
-                    "model": model,
-                    "messages": [{"role": "user", "content": prompt}],
-                    "stream": False,
-                    "options": {
+                # OpenAI-compatible completions endpoint (fallback)
+                {
+                    "url": f"{self.base_url}/v1/completions",
+                    "payload": {
+                        "model": model,
+                        "prompt": prompt,
                         "temperature": temperature,
-                        "num_predict": max_tokens
-                    }
-                },
-                "extract": lambda data: data.get("message", {}).get("content", "")
-            },
-            # OpenAI-compatible endpoint (newer Ollama versions)
-            {
-                "url": f"{self.base_url}/v1/chat/completions",
-                "payload": {
-                    "model": model,
-                    "messages": [{"role": "user", "content": prompt}],
-                    "temperature": temperature,
-                    "max_tokens": max_tokens
-                },
-                "extract": lambda data: data.get("choices", [{}])[0].get("message", {}).get("content", "")
-            },
-            # OpenAI-compatible completions endpoint (fallback)
-            {
-                "url": f"{self.base_url}/v1/completions",
-                "payload": {
-                    "model": model,
-                    "prompt": prompt,
-                    "temperature": temperature,
-                    "max_tokens": max_tokens
-                },
-                "extract": lambda data: data.get("choices", [{}])[0].get("text", "")
-            }
-        ]
+                        "max_tokens": max_tokens
+                    },
+                    "extract": lambda data: data.get("choices", [{}])[0].get("text", "")
+                }
+            ]
         
         errors = []
         for config in api_configs:
@@ -863,9 +901,38 @@ class OllamaClient:
             List of float values representing the embedding or fallback embedding
         """
         model = model or self.model
+        ollama_version = config.OLLAMA_VERSION
+        logger.info(f"Getting embeddings with Ollama version: {ollama_version}")
         
         try:
-            # Try standard Ollama embeddings API
+            # For Ollama 0.6.x
+            if ollama_version.startswith("0.6"):
+                # In 0.6.4, embeddings are accessed via /api/embeddings with 'prompt' field
+                url = f"{self.base_url}/api/embeddings"
+                logger.info(f"Using Ollama 0.6.x embeddings endpoint: {url}")
+                
+                # The 'prompt' field is used in 0.6.x
+                payload = {
+                    "model": model,
+                    "prompt": text
+                }
+                
+                try:
+                    response = requests.post(url, json=payload, timeout=10)
+                    response.raise_for_status()
+                    data = response.json()
+                    if "embedding" in data:
+                        logger.info(f"Successfully retrieved embedding from {url} (embedding field)")
+                        return data["embedding"]
+                    else:
+                        logger.warning(f"Unexpected response format from {url}: missing 'embedding' field")
+                        return [0.0] * 384  # Return zero vector as fallback
+                except Exception as e:
+                    logger.error(f"Error with Ollama 0.6.x embeddings: {str(e)}")
+                    return [0.0] * 384  # Return zero vector as fallback
+            
+            # For other Ollama versions - try various formats
+            # Try standard Ollama embeddings API first
             url = f"{self.base_url}/api/embeddings"
             payload = {
                 "model": model,
@@ -873,15 +940,19 @@ class OllamaClient:
             }
             
             try:
+                logger.info(f"Trying embeddings endpoint with 'prompt' field: {url}")
                 response = requests.post(url, json=payload, timeout=10)
                 response.raise_for_status()
                 data = response.json()
-                return data.get("embedding", [])
+                if "embedding" in data:
+                    logger.info(f"Successfully retrieved embedding from {url} (embedding field)")
+                    return data["embedding"]
+                else:
+                    logger.warning(f"Unexpected response format from {url}: missing 'embedding' field")
             except requests.exceptions.HTTPError as e:
                 if e.response.status_code == 404:
-                    # If 404, try with new Ollama embeddings format
-                    logger.info(f"Trying newer Ollama embeddings API format (404 on {url})")
-                    # Different models have embeddings at different API endpoints
+                    # If 404, try with alternative format (input field)
+                    logger.info(f"Trying newer Ollama embeddings API format with 'input' field (404 on {url})")
                     embeddings_url = f"{self.base_url}/api/embeddings"
                     payload = {
                         "model": model,
@@ -892,10 +963,13 @@ class OllamaClient:
                     data = response.json()
                     # Try different response formats
                     if "embedding" in data:
+                        logger.info(f"Successfully retrieved embedding from {embeddings_url} (embedding field)")
                         return data["embedding"]
                     elif "data" in data and len(data["data"]) > 0:
+                        logger.info(f"Successfully retrieved embedding from {embeddings_url} (data field)")
                         return data["data"][0].get("embedding", [])
                     else:
+                        logger.warning(f"Unexpected response format from {embeddings_url}")
                         raise ValueError("Unexpected response format from embeddings API")
                 else:
                     raise
@@ -919,10 +993,70 @@ class OllamaClient:
             Generated response
         """
         model = model or self.model
+        ollama_version = config.OLLAMA_VERSION
+        logger.info(f"Using chat with Ollama version: {ollama_version}")
         
         # Format messages into a single prompt for models that don't support chat format natively
         prompt = self._format_chat_messages(messages)
         
+        # For Ollama 0.6.x, try specific endpoints in order
+        if ollama_version.startswith("0.6"):
+            api_configs = [
+                # Chat API for 0.6.x - primary endpoint for chat
+                {
+                    "url": f"{self.base_url}/api/chat",
+                    "payload": {
+                        "model": model,
+                        "messages": messages,
+                        "stream": False,
+                        "options": {
+                            "temperature": temperature,
+                            "num_predict": max_tokens
+                        }
+                    },
+                    "extract": lambda data: data.get("message", {}).get("content", "")
+                },
+                # Fallback to generate API for 0.6.x
+                {
+                    "url": f"{self.base_url}/api/generate",
+                    "payload": {
+                        "model": model,
+                        "prompt": prompt,
+                        "stream": False,
+                        "options": {
+                            "temperature": temperature,
+                            "num_predict": max_tokens
+                        }
+                    },
+                    "extract": lambda data: data.get("response", "")
+                }
+            ]
+            
+            errors = []
+            for config in api_configs:
+                try:
+                    logger.info(f"Trying Ollama chat endpoint: {config['url']}")
+                    response = requests.post(
+                        config["url"], 
+                        json=config["payload"], 
+                        timeout=30
+                    )
+                    response.raise_for_status()
+                    data = response.json()
+                    result = config["extract"](data)
+                    logger.info(f"Successfully generated chat response using {config['url']}")
+                    return result
+                except Exception as e:
+                    error_msg = f"Error with {config['url']}: {str(e)}"
+                    logger.warning(error_msg)
+                    errors.append(error_msg)
+            
+            # If we've tried all endpoints and none worked, return a consolidated error
+            error_msg = f"Error generating chat response with OLLAMA - all endpoints failed: {'; '.join(errors)}"
+            logger.error(error_msg)
+            return error_msg
+        
+        # For other versions, try the standard approach first, then fall back
         try:
             url = f"{self.base_url}/api/chat"
             payload = {
@@ -935,6 +1069,7 @@ class OllamaClient:
                 }
             }
             
+            logger.info(f"Trying standard chat endpoint: {url}")
             response = requests.post(url, json=payload, timeout=30)
             response.raise_for_status()
             
