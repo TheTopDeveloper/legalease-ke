@@ -35,7 +35,7 @@
                     </a>
                 </li>
                 <li>
-                    <a class="dropdown-item" href="{{ url_for('milestone.milestones', case_id=case.id) }}">
+                    <a class="dropdown-item" href="{{ url_for('milestone.list_milestones', case_id=case.id) }}">
                         <i class="fas fa-flag"></i> Case Milestones
                     </a>
                 </li>
@@ -254,7 +254,7 @@
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Case Milestones</h5>
-                <a href="{{ url_for('milestone.milestones', case_id=case.id) }}" class="btn btn-sm btn-primary">
+                <a href="{{ url_for('milestone.list_milestones', case_id=case.id) }}" class="btn btn-sm btn-primary">
                     <i class="fas fa-flag"></i> View All
                 </a>
             </div>
